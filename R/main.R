@@ -3,36 +3,79 @@
 #' @import readr
 #' @import stringr
 #' @import dplyr
+NULL
 
 
-# This function loads a genbed file, which is simply a BED-like tsv file,
-# with a header line (optional) containing column names, and the types of
-# the first three columns are guaranteed to be "cii"
-#
-# col_names: can be NULL (infer from header), or a character vector
-# (user-provided column names).
-#
+#' Check whether a url is remote or local
+is_remote_url <- function(url) {
+  schema <- str_match(url, "([a-z0-9]+)://.+")[, 2]
+  
+  sapply(schema, function(s) {
+    if (is.na(s))
+      FALSE
+    else {
+      if (!is.na(match(s, c("ftp", "sftp", "http", "https"))))
+        TRUE
+      else if (s == "file")
+        FALSE
+      else
+        stop(paste0("Unknown schema: ", s))
+    }
+  })
+}
+
+
+#' Check if a file name is a gzip file
+#' 
+is_gzip_file <- function(file_path) {
+  str_split(file_path,
+            pattern = "\\.") %>% map_chr( ~ tail(., n = 1)) == "gz"
+}
+
+
+#' Load a data file in GENBED format
+#'
+#' This function loads a genbed file, which is simply a BED-like tsv file,
+#' with a header line (optional) containing column names, and the types of
+#' the first three columns are guaranteed to be "cii"
+#' 
+#' @param file_path Path or URL to the data file. Can be a local path, file://, 
+#' http://, https://, ftp:// and sftp://
+#' @param col_names can be NULL (infer from file), or a character vector
+#' (user-provided column names). In the infer-from-file scenario, if there is 
+#' a column header, we will have the column names. However, if the column header
+#' is missing, then we will have the following column names: chrom, start, end,
+#' X4, X5, ...
+#' @param na Character vector of strings to interpret as missing values.
+#' @param col_types A character string represents column names. Refer to
+#' \code{col_type} in readr. If NULL, then the types for the first three columns
+#' are character, integer, integer, and the rest are guessed from the data.
 #' @export
 load_genbed <-
   function(file_path,
            col_names = NULL,
-           na = NULL,
+           na = c("", "NA"),
            col_types = NULL,
            ...) {
-    if (any(startsWith(file_path, c("http://", "https://"))) &
-        endsWith(file_path, ".gz")) {
-      tmpbed <- tempfile(fileext = ".gz")
+    stopifnot(length(file_path) == 1)
+    
+    is_remote <- is_remote_url(file_path)
+    if (is_remote) {
+      tmpbed <-
+        paste0(tempdir(check = TRUE), "/", tail(str_split(url, "/")[[1]], n = 1))
       download.file(url = file_path, destfile = tmpbed)
-      genbed <-
-        load_genbed(
+      
+      tryCatch({
+        return(load_genbed(
           tmpbed,
           col_names = col_names,
           na = na,
           col_types = col_types,
           ...
-        )
-      unlink(tmpbed)
-      return(genbed)
+        ))
+      }, finally = {
+        unlink(tmpbed)
+      })
     }
     
     # Try identify column names from the header
@@ -66,6 +109,8 @@ load_genbed <-
           length(str_split(string = first_data_line, pattern = "\t")[[1]])
       }
       
+      stopifnot(n_fields >= 3)
+      
       # Try extracting column names
       if (is.null(last_comment_line)) {
         col_names <- paste("X", 1:n_fields, sep = "")
@@ -88,9 +133,6 @@ load_genbed <-
       col_types <-
         paste(c("cii", rep_len("?", length(col_names) - 3)), collapse = "")
     }
-    
-    # string for missing values
-    na <- c(c("", "NA"), na) %>% unique()
     
     genbed <- read_tsv(
       file = file_path,

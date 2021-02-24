@@ -1,13 +1,13 @@
 Package: bioessentials
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Home-made essential tools for bioinformatics project
+Version: 0.1.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Haizi",
+           family = "Zheng",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "haizi.zh@gmail.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: This package provides tools to read and write BED/BEDGRAPH files.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -16,4 +16,8 @@ RoxygenNote: 7.1.1
 Imports: 
     stringr,
     readr,
-    dplyr
+    dplyr,
+    here
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
