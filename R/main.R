@@ -3,6 +3,7 @@
 #' @import readr
 #' @import stringr
 #' @import dplyr
+#' @importFrom purrr modify_at map_chr
 NULL
 
 
@@ -33,6 +34,49 @@ is_gzip_file <- function(file_path) {
 }
 
 
+#' Load GENBED using tabix
+#' 
+#' @param file_path Path to the data file. Should be compressed by BGZIP,
+#' locally present, and come along with a paired tabix index file
+load_genbed_tabix <- function(file_path,
+                              region,
+                              col_names = NULL,
+                              na = c("", "NA"),
+                              col_types = NULL,
+                              ...) {
+  genbed <-
+    bedr::tabix(
+      region = region,
+      file.name = file_path,
+      check.chr = FALSE,
+      verbose = FALSE
+    ) %>% as_tibble()
+  
+  if (!is.null(col_names)) {
+    colnames(genbed) <- col_names
+  } else if (all(colnames(genbed) == paste0("V", seq_along(colnames(genbed))))) {
+    # Columns are default values: V1, V2, ...
+    colnames(genbed) <- paste0("X", seq_along(colnames(genbed)))
+    colnames(genbed)[1:3] <- c("chrom", "start", "end")
+  }
+  
+  # Try to convert the 4th column to numeric
+  # In the original data table, identify rows with NA scores. Then identify
+  # this kind of rows in converted score. If the indices match, the string-to-number
+  # conversion is successful.
+  na_idx <- genbed[[4]] %in% na
+  score_dbl <-  as.numeric(genbed[[4]][!na_idx])
+  if (all(!is.na(score_dbl))) {
+    genbed[[4]] <- NA
+    genbed[[4]][!na_idx] <- score_dbl
+  }
+  
+  genbed %>%
+    modify_at(1, as.character) %>%
+    modify_at(2:3, as.integer)
+}
+
+
 #' Load a data file in GENBED format
 #'
 #' This function loads a genbed file, which is simply a BED-like tsv file,
@@ -53,33 +97,14 @@ is_gzip_file <- function(file_path) {
 #' @export
 load_genbed <-
   function(file_path,
+           region = NULL,
            col_names = NULL,
            na = c("", "NA"),
            col_types = NULL,
            ...) {
     stopifnot(length(file_path) == 1)
     
-    is_remote <- is_remote_url(file_path)
-    if (is_remote) {
-      tmpbed <-
-        paste0(tempdir(check = TRUE), "/", tail(str_split(url, "/")[[1]], n = 1))
-      download.file(url = file_path, destfile = tmpbed)
-      
-      tryCatch({
-        return(load_genbed(
-          tmpbed,
-          col_names = col_names,
-          na = na,
-          col_types = col_types,
-          ...
-        ))
-      }, finally = {
-        unlink(tmpbed)
-      })
-    }
-    
-    # Try identify column names from the header
-    get_col_names <- function() {
+    get_col_names <- function(file_path) {
       con <- file(file_path, "r")
       last_comment_line <- NULL
       first_data_line <- NULL
@@ -125,24 +150,65 @@ load_genbed <-
       return(col_names)
     }
     
-    if (is.null(col_names)) {
-      col_names <- get_col_names()
-    }
-    
-    if (is.null(col_types)) {
-      col_types <-
-        paste(c("cii", rep_len("?", length(col_names) - 3)), collapse = "")
-    }
-    
-    genbed <- read_tsv(
-      file = file_path,
-      comment = "#",
-      col_names = col_names,
-      col_types = col_types,
-      na = na
-    )
-    
-    return(genbed)
+    tryCatch({
+      temp_dir <- tempdir(check = TRUE)
+      temp_path <- NULL
+      temp_index_path <- NULL
+      is_remote <- is_remote_url(file_path)
+      
+      # For remote files (either the data or the index), download them to 
+      # the temporary dir 
+      if (is_remote) {
+        url <- file_path
+        temp_path <-
+          paste0(temp_dir, "/", tail(str_split(url, "/")[[1]], n = 1))
+        download.file(url = url, destfile = temp_path)
+        file_path <- temp_path
+        
+        # Attempt to download the tabix tbi file
+        if (endsWith(url, ".gz") && !is.null(region)) {
+          index_url <- paste0(url, ".tbi")
+          if (RCurl::url.exists(index_url)) {
+            temp_index_path <- paste0(temp_path, ".tbi")
+            download.file(url = index_url, destfile = temp_index_path)
+          }
+        }
+      }
+      
+      # Try identify column names from the header
+      if (is.null(col_names)) {
+        col_names <- get_col_names(file_path = file_path)
+      }
+      
+      if (is.null(col_types)) {
+        col_types <-
+          paste(c("cii", rep_len("?", length(col_names) - 3)), collapse = "")
+      }
+      
+      if (is.null(region)) {
+        genbed <- read_tsv(
+          file = file_path,
+          comment = "#",
+          col_names = col_names,
+          col_types = col_types,
+          na = na,
+          ...
+        )
+      } else{
+        genbed <-
+          load_genbed_tabix(
+            file_path = file_path,
+            region = region,
+            na = na,
+            col_names = col_names,
+            ...
+          )
+      }
+      
+      return(genbed)
+    }, finally = {
+      unlink(c(temp_path, temp_index_path, temp_dir))
+    })
   }
 
 

@@ -6,6 +6,7 @@
 \usage{
 load_genbed(
   file_path,
+  region = NULL,
   col_names = NULL,
   na = c("", "NA"),
   col_types = NULL,
@@ -13,6 +14,9 @@ load_genbed(
 )
 }
 \arguments{
+\item{file_path}{Path or URL to the data file. Can be a local path, file://,
+http://, https://, ftp:// and sftp://}
+
 \item{col_names}{can be NULL (infer from file), or a character vector
 (user-provided column names). In the infer-from-file scenario, if there is
 a column header, we will have the column names. However, if the column header

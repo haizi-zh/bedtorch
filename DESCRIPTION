@@ -6,7 +6,7 @@ Authors@R:
            family = "Zheng",
            role = c("aut", "cre"),
            email = "haizi.zh@gmail.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0001-6165-0179"))
 Description: This package provides tools to read and write BED/BEDGRAPH files.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -17,7 +17,12 @@ Imports:
     stringr,
     readr,
     dplyr,
-    here
+    bedr (== 1.0.7.1),
+    RCurl
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    logging,
+    here
 Config/testthat/edition: 3
+Remotes: 
+    haizi-zh/bedr
