@@ -17,6 +17,7 @@ Imports:
     stringr,
     readr,
     dplyr,
+    purrr,
     bedr (== 1.0.7.1),
     RCurl
 Suggests: 
@@ -25,4 +26,4 @@ Suggests:
     here
 Config/testthat/edition: 3
 Remotes: 
-    haizi-zh/bedr
+    haizi-zh/bedr@1.0.7.1
