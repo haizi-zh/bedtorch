@@ -1,6 +1,6 @@
 Package: bioessentials
 Title: Home-made essential tools for bioinformatics project
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",

@@ -31,7 +31,7 @@ test_that("Loading a gzippped bedGraph file works", {
       summarize_all(data, class) == c("character", "integer", "integer", "numeric", "character")
     ))
     expect_equal(mean(data$start), 80616334L)
-    expect_equal(mean(data$score, na.rm = TRUE), -0.000330179264, tolerance = 1e-8)
+    expect_equal(mean(data$score, na.rm = TRUE),-0.000330179264, tolerance = 1e-8)
   }
 })
 
@@ -42,8 +42,11 @@ test_that("Selectively loading a gzippped bedGraph file works", {
     "https://github.com/haizi-zh/bioessentials/raw/main/data-raw/example-02.bedGraph.gz"
   )) {
     data <-
-      load_genbed(file_path = file_path,
-                  region = c("1:1000000-1000001", "3"))
+      load_genbed(
+        file_path = file_path,
+        region = c("1:1000000-1000001", "3"),
+        is_bedgraph = TRUE
+      )
     expect_equal(nrow(data), 388)
     expect_true(all(
       colnames(data) == c("chrom", "start", "end", "score", "comp_method")
@@ -63,7 +66,8 @@ test_that("Selectively loading bedGraph file with header and NA values works",
               load_genbed(
                 "https://github.com/haizi-zh/bioessentials/raw/main/data-raw/example-03.bedGraph.gz",
                 region = "22:30000001-50000000",
-                na = "."
+                na = ".",
+                is_bedgraph = TRUE
               )
             expect_equal(nrow(data), 40L)
             expect_true(all(colnames(data) == c("chr", "start", "end", "count")))
@@ -78,9 +82,12 @@ test_that("Selectively loading bedGraph file with header and NA values works",
 test_that("Setting column names to a headless bedGraph file works", {
   names <- c("chr", "s", "e", "value")
   data <-
-    load_genbed(here("data-raw/example-01.bedGraph"),
-                na = ".",
-                col_names = names)
+    load_genbed(
+      here("data-raw/example-01.bedGraph"),
+      na = ".",
+      col_names = names,
+      is_bedgraph = TRUE
+    )
   expect_equal(nrow(data), 71L)
   expect_true(all(colnames(data) == names))
   expect_true(all(
@@ -92,7 +99,10 @@ test_that("Setting column names to a headless bedGraph file works", {
 
 
 test_that("Loading bedGraph file with header works", {
-  data <- load_genbed(here("data-raw/example-03.bedGraph"), na = ".")
+  data <-
+    load_genbed(here("data-raw/example-03.bedGraph"),
+                na = ".",
+                is_bedgraph = TRUE)
   expect_equal(nrow(data), 71L)
   expect_true(all(colnames(data) == c("chr", "start", "end", "count")))
   expect_true(all(

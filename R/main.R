@@ -43,6 +43,7 @@ load_genbed_tabix <- function(file_path,
                               col_names = NULL,
                               na = c("", "NA"),
                               col_types = NULL,
+                              is_bedgraph = is_bedgraph,
                               ...) {
   genbed <-
     bedr::tabix(
@@ -60,15 +61,17 @@ load_genbed_tabix <- function(file_path,
     colnames(genbed)[1:3] <- c("chrom", "start", "end")
   }
   
-  # Try to convert the 4th column to numeric
-  # In the original data table, identify rows with NA scores. Then identify
-  # this kind of rows in converted score. If the indices match, the string-to-number
-  # conversion is successful.
-  na_idx <- genbed[[4]] %in% na
-  score_dbl <-  as.numeric(genbed[[4]][!na_idx])
-  if (all(!is.na(score_dbl))) {
-    genbed[[4]] <- NA
-    genbed[[4]][!na_idx] <- score_dbl
+  if (is_bedgraph) {
+    # Try to convert the 4th column to numeric
+    # In the original data table, identify rows with NA scores. Then identify
+    # this kind of rows in converted score. If the indices match, the string-to-number
+    # conversion is successful.
+    na_idx <- genbed[[4]] %in% na
+    score_dbl <-  as.numeric(genbed[[4]][!na_idx])
+    if (all(!is.na(score_dbl))) {
+      genbed[[4]] <- NA
+      genbed[[4]][!na_idx] <- score_dbl
+    }
   }
   
   genbed %>%
@@ -94,6 +97,9 @@ load_genbed_tabix <- function(file_path,
 #' @param col_types A character string represents column names. Refer to
 #' \code{col_type} in readr. If NULL, then the types for the first three columns
 #' are character, integer, integer, and the rest are guessed from the data.
+#' @param is_bedgraph A logic value indicating whether the input is BED or
+#' BEDGRAPH. The difference between these two is that, the 4th column is character
+#' for BED, and numeric for BEDGRAPH
 #' @export
 load_genbed <-
   function(file_path,
@@ -101,6 +107,7 @@ load_genbed <-
            col_names = NULL,
            na = c("", "NA"),
            col_types = NULL,
+           is_bedgraph = FALSE,
            ...) {
     stopifnot(length(file_path) == 1)
     
@@ -201,6 +208,7 @@ load_genbed <-
             region = region,
             na = na,
             col_names = col_names,
+            is_bedgraph = is_bedgraph,
             ...
           )
       }
