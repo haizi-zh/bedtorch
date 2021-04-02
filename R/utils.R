@@ -1,8 +1,7 @@
-#' Find a new column name which does not conflict with existing names
-#' 
-#' @examples
-#' # Returns "chrom.1"
-#' .available_colname(dt, "chrom")
+# Find a new column name which does not conflict with existing names
+# 
+# # Returns "chrom.1"
+# .available_colname(dt, "chrom")
 .available_colname <- function(dt, name) {
   fields <- colnames(dt)
   

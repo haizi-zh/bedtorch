@@ -14,20 +14,73 @@ intersect_bed(
 )
 }
 \arguments{
-\item{mode}{\code{default}: Similar to \verb{bedtools intersect}'s default behavior.
+\item{x}{A \code{data.table} object.}
 
-\code{wa}: Similar to \verb{bedtools intersect}'s \code{-wa} argument.
+\item{y}{A \code{data.table} object.}
 
-\code{wb}: Similar to \verb{bedtools intersect}'s \code{-wb} argument.
+\item{mode}{Mode of the intersect operation. Can be one of the following:
 
-\code{unique}: Similar to \verb{bedtools intersect}'s \code{-u} argument.}
+\code{default}: Similar to \verb{bedtools intersect}'s default behavior.
+
+\code{exclude}: Return features in \code{x} that do not overlap with \code{y}. Similar to
+\verb{bedtools intersect}'s \code{-u} argument.
+
+\code{wa}: Write the original entry in \code{x} for each overlap. Similar to
+\verb{bedtools intersect}'s \code{-wa} argument.
+
+\code{wb}: Write the original entry in \code{y} for each overlap. Useful for knowing
+what A overlaps. Similar to \verb{bedtools intersect}'s \code{-wb} argument.
+
+\code{wo}: Write the original \code{x} and \code{y} entries plus the number of base pairs
+of overlap between the two features. Only A features with overlap are
+reported.
+
+\code{unique}: Write original \code{x} entry once if any overlaps found in \code{y}. In
+other words, just report the fact at least one overlap was found in \code{y}.
+Similar to \verb{bedtools intersect}'s \code{-u} argument.
+
+\code{loj}: Perform a “left outer join”. That is, for each feature in \code{x} report
+each overlap with \code{j}. If no overlaps are found, report a NULL feature for B.}
 
 \item{max_gap}{The largest gap for two intervals to be considered as
 overlapping. Default is 0 (no gap allowed).}
 
-\item{min_overalp}{The smallest overlapping region for two intervals to be
+\item{min_overlap}{The smallest overlapping region for two intervals to be
 considered as overlapping. Default is 1.}
+
+\item{min_overlap_type}{A character value indicating how \code{min_overlap} is
+interpreted. \code{bp} means \code{min_overlap} is the number of base pairs. \code{frac1}
+means \code{min_overlap} is the minimum overlap required as a fraction of \code{x}.
+Similarly, \code{frac2} means \code{min_overlap} is the minimum overlap required as a
+fraction of \code{y}. Similar to \verb{bedtools intersect}'s \code{-f} and \code{-F} arguments.}
+}
+\value{
+A \code{data.table} representing the intersection of \code{x} and \code{y}
 }
 \description{
 Apply \code{intersect} operation between two tables
+}
+\examples{
+# Load BED tables
+tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+
+# Basic usages
+result <- intersect_bed(tbl_x, tbl_y)
+
+# Exclude regions defined by tbl_y from tbl_x
+result <- intersect_bed(tbl_x, tbl_y, mode = "exclude")
+
+# For each overlap, return the original entries in tbl_x. For a interval in
+# tbl_x, it is considered as overlapping only if 50\% of it overlaps with an
+# interval in tbl_y.
+result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 0.5, min_overlap_type = "frac1")
+
+# For each overlap, return the original entries in both tbl_x and tbl_y, plus
+# the number of overlapping base pairs. The minimum range for two intervals to
+# be considered as overlapping is 5bp
+result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 5, min_overlap_type = "bp")
+}
+\references{
+Manual page of \verb{bedtools intersect}: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}
 }

@@ -2,22 +2,30 @@
 % Please edit documentation in R/io.R
 \name{write_bed}
 \alias{write_bed}
-\title{Write data frame to disk in BED format}
+\title{Write a \code{data.table} to file}
 \usage{
-write_bed(dt, file_path, col_names = TRUE, create_index = FALSE, ...)
+write_bed(x, file_path, tabix_index = TRUE, ...)
 }
 \arguments{
-\item{dt}{Data frame to write.}
+\item{x}{A \code{data.table} object to write.}
 
-\item{file_path}{Output file name.}
+\item{file_path}{Path of the output file. If the extension name is \code{.gz} or
+\code{.bgz}, the output will be compressed in BGZIP format.}
 
-\item{col_names}{A logical value indicating whether to output colum names.}
+\item{tabix_index}{If \code{TRUE}, and \code{file_path} indicates a gzip file, will
+create create the tabix index file.}
 
-\item{create_index}{A logical value indicating whether to create an index
-file. Ignored if the output is not gzipped.}
+\item{...}{Other arguments passed to methods. Compliant with \code{data.table::fwrite}.}
 }
 \description{
-If the target file indicates gzip-compression, will invoke bgzip rather than
-standard gzip. Another feature is, if the output file should contain header
-lines, they will start with \verb{#}, as specified in BED format specification.
+Can be a plain text file or a BGZIP file.
+}
+\examples{
+bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+
+# Write data to uncompressed file
+write_bed(bedtbl,  tempfile(fileext = ".bed"))
+
+# Write data to file and create tabix index
+write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
 }

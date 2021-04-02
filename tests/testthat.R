@@ -1,4 +1,4 @@
 library(testthat)
-library(betorch)
+library(bedtorch)
 
 test_check("bedtorch")
