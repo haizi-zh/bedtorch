@@ -10,6 +10,7 @@ load_genbed_tabix(
   col_names = NULL,
   na = c("", "NA"),
   col_types = NULL,
+  is_bedgraph = is_bedgraph,
   ...
 )
 }

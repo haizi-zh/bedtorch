@@ -10,6 +10,7 @@ load_genbed(
   col_names = NULL,
   na = c("", "NA"),
   col_types = NULL,
+  is_bedgraph = FALSE,
   ...
 )
 }
@@ -28,6 +29,10 @@ X4, X5, ...}
 \item{col_types}{A character string represents column names. Refer to
 \code{col_type} in readr. If NULL, then the types for the first three columns
 are character, integer, integer, and the rest are guessed from the data.}
+
+\item{is_bedgraph}{A logic value indicating whether the input is BED or
+BEDGRAPH. The difference between these two is that, the 4th column is character
+for BED, and numeric for BEDGRAPH}
 }
 \description{
 This function loads a genbed file, which is simply a BED-like tsv file,

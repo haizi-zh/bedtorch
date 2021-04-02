@@ -1,9 +1,9 @@
 # Home-made essentials tools for bioinformatics
 
-#' @import readr
 #' @import stringr
-#' @import dplyr
-#' @importFrom purrr modify_at map_chr
+#' @importFrom purrr map map_int map_dbl map_lgl map_chr walk
+#' @importFrom dplyr `%>%`
+#' @importFrom data.table setnames setkey fread fwrite shift setDT
 NULL
 
 

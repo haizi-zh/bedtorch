@@ -1,6 +1,6 @@
 Package: bioessentials
 Title: Home-made essential tools for bioinformatics project
-Version: 0.1.2
+Version: 0.1.5
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
@@ -19,7 +19,9 @@ Imports:
     dplyr,
     purrr,
     bedr (== 1.0.7.4),
-    RCurl
+    RCurl,
+    data.table,
+    seqminer (== 8.1.2)
 Suggests: 
     testthat (>= 3.0.0),
     logging,
@@ -27,3 +29,4 @@ Suggests:
 Config/testthat/edition: 3
 Remotes: 
     haizi-zh/bedr@master
+    haizi-zh/seqminer@dev
