@@ -106,6 +106,9 @@ head(intersect_bed(tbl_x, tbl_y))
 
 ## See also
 
+For more details, refer to the documentation page:
+<https://haizi-zh.github.io/bedtorch/>
+
 Many features are inspired by bedtools. Thus, it’s helpful to get
 familiar with bedtool’s documentation:
 <https://bedtools.readthedocs.io/en/latest/index.html>

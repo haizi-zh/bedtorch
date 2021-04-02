@@ -18,8 +18,6 @@ Imports:
     readr,
     dplyr,
     purrr,
-    bedr (== 1.0.7.4),
-    RCurl,
     data.table,
     seqminer (>= 8.1.2),
     Rsamtools
@@ -29,5 +27,5 @@ Suggests:
     logging
 Config/testthat/edition: 3
 Remotes: 
-    haizi-zh/bedr@master,
-    haizi-zh/seqminer@master
+    haizi-zh/seqminer@master,
+    bioc::Rsamtools
