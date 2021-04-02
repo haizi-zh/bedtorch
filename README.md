@@ -1,2 +1,3 @@
-# bioessentials
-Home-made essentials tools for bioinformatics
+# bedtorch
+
+R package for fast BED-file manipulation

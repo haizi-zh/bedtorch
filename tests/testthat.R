@@ -1,4 +1,4 @@
 library(testthat)
-library(bioessentials)
+library(betorch)
 
-test_check("bioessentials")
+test_check("bedtorch")

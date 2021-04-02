@@ -9,7 +9,8 @@ intersect_bed(
   y,
   mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
   max_gap = 0,
-  min_overlap = 1
+  min_overlap = 1,
+  min_overlap_type = c("bp", "frac1", "frac2")
 )
 }
 \arguments{

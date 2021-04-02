@@ -1,5 +1,5 @@
-Package: bioessentials
-Title: Home-made essential tools for bioinformatics project
+Package: bedtorch
+Title: R package for fast BED-file manipulation
 Version: 0.1.5
 Authors@R: 
     person(given = "Haizi",
@@ -24,8 +24,8 @@ Imports:
     seqminer (== 8.1.2)
 Suggests: 
     testthat (>= 3.0.0),
-    logging,
-    here
+    here,
+    logging
 Config/testthat/edition: 3
 Remotes: 
     haizi-zh/bedr@master

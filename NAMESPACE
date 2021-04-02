@@ -2,9 +2,7 @@
 
 export(load_bed)
 export(load_fragments)
-export(load_genbed)
 export(write_bed)
-export(write_genbed)
 import(stringr)
 importFrom(data.table,fread)
 importFrom(data.table,fwrite)

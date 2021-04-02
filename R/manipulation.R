@@ -304,3 +304,31 @@ grow_bed <- function(x, grow = 1L, grow_type = c("bp", "frac"), mode = c("both",
   setkey(x, "chrom", "start", "end")
   x[]
 }
+
+
+map_bed <- function(data, scaffold, operation) {
+  stopifnot(!is.null(operation) &&
+              all(names(operation) %in% colnames(data)))
+  
+  result <- intersect_bed(data, scaffold[, 1:3], mode = "wo")
+  
+  # chrom/start/end from scaffold now becomes the main chrom/start/end
+  fields <- colnames(result) %>% tail(-3) %>% head(-1)
+  fields <- c(tail(fields, 3), head(fields, -3))
+  result <- result[, ..fields]
+  setnames(result,
+           old = 1:3, 
+           new = c("chrom", "start", "end"))
+  setkey(result, "chrom", "start", "end")
+  
+  result[, {
+    # dt1 <- list(start = start, end = end)
+    dt2 <- names(operation) %>% map(function(field) {
+      func <- operation[[field]]
+      func(.SD[[field]])
+    })
+    names(dt2) <- names(operation)
+    dt2
+    # c(dt1, dt2)
+  }, by = c("chrom", "start", "end")][scaffold[, 1:3]]
+}
