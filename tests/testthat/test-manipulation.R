@@ -193,3 +193,19 @@ test_that("Subtracting BED tables works", {
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
+
+test_that("Generating complement BED works", {
+  dt1 <- read_bed(("example_merge.bed"))
+  
+  result <- complement_bed(dt1)
+  target <- read_bed("example_complement_r1.bed")
+  setnames(target, new = colnames(result))
+  expect_equal(result, target)
+  
+  dt1 <- read_bed(("example2.bed"))
+  
+  result <- complement_bed(dt1)
+  target <- read_bed("example_complement_r2.bed")
+  setnames(target, new = colnames(result))
+  expect_equal(result, target)
+})

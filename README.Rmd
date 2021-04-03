@@ -100,7 +100,7 @@ Benchmark platform information:
 -   CPU: 2.7 GHz Quad-Core Intel Core i7
 -   Memory: 16 GB LPDDR3
 
-![](https://raw.githubusercontent.com/haizi-zh/bedtorch/main/data-raw/benchmark.png "Benchmark")
+<img src=https://raw.githubusercontent.com/haizi-zh/bedtorch/main/data-raw/benchmark.png width=64%/>
 
 From the benchmark result, we can see that for all three tasks, `bedtorch` uses much less time than `bedtools`.
 

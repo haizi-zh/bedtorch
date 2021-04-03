@@ -1,0 +1,25 @@
+url: https://haizi-zh.github.io/bedtorch/
+
+destination: "docs"
+
+template:
+  params:
+    bootswatch: flatly
+
+reference:
+  - title: "Read and write"
+    desc: >
+      Read and write BED-like data files.
+    contents:
+      - read_bed
+      - write_bed
+  - title: "Data manipulation"
+    desc: >
+      Perform various manipulations on BED-like data.
+    contents:
+      - map_bed
+      - merge_bed
+      - slop_bed
+      - intersect_bed
+      - subtract_bed
+      - complement_bed
