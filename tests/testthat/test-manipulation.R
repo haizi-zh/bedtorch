@@ -209,3 +209,16 @@ test_that("Generating complement BED works", {
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
+
+
+test_that("Shuffling BED works", {
+  dt1 <- read_bed(("example2.bed"))
+  dt2 <- read_bed(("example2_window.bed"))
+  
+  result <- shuffle_bed(dt1, excluded_region = dt2)
+  # Cross-chrom check
+  expect_equal(dt1[, .N, by = chrom][[2]], result[, .N, by = chrom][[2]])
+  expect_equal(dt1[, sum(end - start), by = chrom][[2]], result[, sum(end - start), by = chrom][[2]])
+  # Excluded region check
+  expect_equal(nrow(intersect(result, dt2)), 0)
+})

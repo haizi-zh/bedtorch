@@ -72,6 +72,11 @@ read_tabix_bed <- function(file_path, range) {
 #' Furthermore, this function supports range-loading by providing a genomic
 #' range in the following syntax: "chr1:1-100".
 #' 
+#' Note: for loading remote data files, currently this function depends on
+#' tabix.c 0.2.5, which doesn't not support HTTPS protocol. In the next step, I
+#' plan to turn to htslib, and the this function can load remote data files
+#' through HTTPS.
+#' 
 #' @param file_path Path to the data file. It can be either a local file, or a remote URL.
 #' @param range A genomic range character vector. Must follow standard genomic
 #'   range notation format, e.g. chr1:1001-2000

@@ -619,4 +619,104 @@ complement_bed <- function(x,
 }
 
 
+#' Shuffle intervals
+#' 
+#' This function randomly permutes genomic locations among a genome defined in a
+#' genome file. Note: the permutation stays in the same chromosome.
+#' Cross-chromosome shuffle is not supported at this point.
+#' @param x A `data.table`.
+#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
+#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
+#'   need to be the path of a user-provided file.
+#' @param excluded_region A `data.table` containing regions that you don't want
+#'   to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
+#'   within such regions.
+#' @return A `data.table` containing shuffled features.
+#' @examples
+#' # Load BED tables
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#'
+#' # Basic usage
+#' result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded)
+#' @references Manual page of `bedtools shuffle`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/shuffle.html}
+#' @export
+shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NULL) {
+  if (length(unique(x$chrom)) > 1) {
+    return(rbindlist(unique(x$chrom) %>% map(function(chrom0) {
+      shuffle_bed(x[chrom == chrom0], chrom_sizes, excluded_region)
+    })))
+  }
+
+  # Single chrom
+  chrom0 <- x$chrom[1]
+  
+  stopifnot(!is.null(chrom_sizes))
+  chrom_sizes <-
+    tryCatch({
+      match.arg(chrom_sizes)
+    }, error = function(e) {
+      return(chrom_sizes)
+    }) %>% load_chrom_sizes()
+  chrom_sizes <-
+    chrom_sizes[, `:=`(start = 0L, end = as.integer(size))][chrom == chrom0, .(chrom, start, end)]
+  setkey(chrom_sizes, "chrom", "start", "end")
+  chrom_sz <- chrom_sizes[, end - start]
+  
+  if (!is.null(excluded_region)) {
+    excluded_region <- merge_bed(excluded_region[chrom == chrom0])
+    available_width <- chrom_sz - excluded_region[, sum(end - start)]
+    available_region <- subtract_bed(chrom_sizes, excluded_region)
+    available_scaffold <- as.integer(c(0, available_region[, end - start] %>% cumsum()))
+  } else {
+    available_width <- chrom_sz
+    available_scaffold <- 0L
+  }
+  
+  # Map the scaffold coordinate to the real genomic coordinate
+  map2coord <- function(pos_scaffold, width) {
+    # pos_scaffold falls into #block_id region
+    pred1 <- available_scaffold > pos_scaffold
+    pred2 <- available_scaffold >= pos_scaffold + width
+    if (any(pred1 != pred2)) {
+      # Start/end of the simulated fragment are in different blocks
+      return(NA)
+    }
+    if (!any(pred1)) {
+      # pos_scaffold is out of range
+      return(NA)
+    }
+    
+    block_id <- min(which(pred1)) - 1
+    available_region[block_id, start + pos_scaffold - available_scaffold[block_id]]
+  }
+  
+  
+  # Generate the random intervals
+  x_scaffold <- x[, 1:3][, s1 := as.integer(NA)]
+  while(TRUE) {
+    # All fragments are shuffled
+    if (nrow(x_scaffold[is.na(s1)]) == 0)
+      break
+    
+    x_scaffold[is.na(s1), s1 := {
+      random_start <- purrr:::map2_int(sample.int(
+        n = available_width,
+        size = nrow(.SD),
+        replace = TRUE
+      ) - 1L,
+      end - start,
+      map2coord)
+      random_start
+    }][, e1 := s1 + (end - start)]
+  }
+  
+  x_scaffold[, `:=`(start=NULL, end=NULL)]
+  setnames(x_scaffold, c("s1", "e1"), c("start", "end"))
+  result <- cbind(x_scaffold, x[, -1:-3])
+  setkey(result, "chrom", "start", "end")
+  result
+}
+
 

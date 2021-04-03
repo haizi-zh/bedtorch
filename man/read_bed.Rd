@@ -20,6 +20,12 @@ either local or remote, and can be either plain text or gzip-compressed.
 Furthermore, this function supports range-loading by providing a genomic
 range in the following syntax: "chr1:1-100".
 }
+\details{
+Note: for loading remote data files, currently this function depends on
+tabix.c 0.2.5, which doesn't not support HTTPS protocol. In the next step, I
+plan to turn to htslib, and the this function can load remote data files
+through HTTPS.
+}
 \examples{
 bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
