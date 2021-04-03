@@ -64,26 +64,48 @@
 <a href="#bedtorch" class="anchor"></a>bedtorch</h1></div>
 <!-- badges: start -->
 
+<!-- badges: end -->
 <div id="motivation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#motivation" class="anchor"></a>Motivation</h2>
 <p>The goal of bedtorch is to provide a fast and native toolsuite for BED file manipulation.</p>
-<p>In bioinformatics studies, an important type of jobs is related to BED and BED-like file manipulation. For example, filtering cfDNA fragments based on length, identifying genomic regions overlapping with certain genes, filtering features based on epigenetic profiles such as histone modification levels, finding out SNVs in a certain genomic interval, etc.</p>
-<p>In shell, many of such tasks can be done by some highly-optimized tools, such as bedtools and bedops. However, sometimes people wants to achieve this in R environment, not by some external command line tools. This is especially true when people are developing their methods in R.</p>
-<p>R’s native <code>data.frame</code> type seems to be a good model for BED-like data, but in many scenarios it’s peformance is poor, and more importantly, it lacks many advanced features compared with <code>dplyr</code> and <code>data.table</code>. Another choice is using <code>bedr</code>, which is bridge linking R codes and bedtools together. However, this workflow requires lots of disk IO, since data frames in R needs to be written to temporary folders before being fed to bedtools. To make things even worse, output from bedtools are captured and transferred back to R session’s space via <code>system2</code>. This can be extremely slow when the dataset’s size is large. Moreover, data transferred back to R will lose any information about data type, index (in the case of <code>data.table</code>), column names, etc. Users are on their own to rebuild the data frame (<code>tibble</code> or <code>data.table</code>), and reset data type, column names, etc. This can be very tedious, error-prone and slow (for rebuilding index). Therefore, it would be helpful if there is a R package providing these functionalities natively.</p>
-<p>bedtorch is an attempt for this. Under the hood, every BED dataset is represented as a <code>data.table</code> object. Users can apply various operations on it, such as intersect, merge, etc. Users can also perform any <code>data.table</code> operations as needed.</p>
-<p>In terms of the core computation, <code>bedtorch</code>’s performance is comparable to bedtools. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via bedtorch, many tasks can be done about one magnitude faster.</p>
+<p>In bioinformatics studies, an important type of jobs is related to BED and BED-like file manipulation. To name a few example:</p>
+<ul>
+<li>Filtering cfDNA fragments based on length</li>
+<li>Identifying genomic regions overlapping with certain genes</li>
+<li>Filtering features based on epigenetic profiles such as histone modification levels</li>
+<li>Extracting SNVs in a certain genomic interval</li>
+</ul>
+<p>Many of such tasks can be done by some highly-optimized tools, such as <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a> and <a href="https://bedops.readthedocs.io/en/latest/">bedops</a>. However, these are binary tools which only works in shell. Sometimes, especially for developers using R, it’s desirable to invoke these tools in R codes.</p>
+<p>One solution is using functions that invokes system commands (<a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system2"><code>system2</code></a> or <a href="https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/system"><code>system</code></a>). <a href="https://cran.r-project.org/web/packages/bedr/vignettes/Using-bedr.html"><code>bedr</code></a>, a popular package, is one good example. It’s a bridge linking between R codes and shell tools. Under the hood, it writes data into the temporary directory, calls certain command line tools such as <code>tabix</code>, <code>bedtools</code>, or <code>bedops</code>, parses the output and re-generate a data frame in R space.</p>
+<p>Generally this approach is very helpful. However, it’s worth noting some disadvantages.</p>
+<ul>
+<li>This workflow requires lots of disk IO, since data frames in R needs to be written to temporary directories before being fed to command line tools.</li>
+<li>Command line output is captured and transferred back to R s space. The data transfer is done by stdin/stdout pipes. For R, reading large amount of text content from stdin can be extremely slow. As a result, most of time when large dataset is involved, <code>bedr</code> is hardly usable.</li>
+<li>
+<code>bedr</code> captures command line output as plain text. Therefore, when the data is transferred back to R, most of the information about data types, index (in the case of <code>data.table</code>), column names, etc., are lost. It’s the package user’s responsibility to make sure data types are correct, column names are restored, column indices have been rebuilt (in the case of <code>data.table</code>, which can be very time consuming). Often this job is tedious, error-prone and introduces very large overheads.</li>
+<li>It requires the command line tools to be present in <code>PATH</code>. This depends on the end user’s system environment and the R developer can do nothing about it. It puts additional burden to deployment, especially when the end user is not an IT professional.</li>
+</ul>
+<p>Another approach is using native R data types to represent BED-like data. R’s native <code>data.frame</code> seems to be a good model, but in many scenarios, it’s performance is poor. More importantly, it lacks many advanced features compared with <code>dplyr</code> and <code>data.table</code>.</p>
+<p>It would be desirable to have an R package, which store BED-like data as <code>data.table</code> objects, and provide native support for common BED manipulations, such as merge, intersect, filter, etc.</p>
 </div>
-<div id="installation" class="section level2">
+<div id="details" class="section level2">
 <h2 class="hasAnchor">
-<a href="#installation" class="anchor"></a>Installation</h2>
+<a href="#details" class="anchor"></a>Details</h2>
+<p><code>bedtorch</code> is an attempt for this. Under the hood, every BED dataset is represented as a <code>data.table</code> object. Users can apply various operations on it, such as intersect, merge, etc. Users can also perform any <code>data.table</code> operations as needed.</p>
+<p>In terms of the core computation, <code>bedtorch</code>’s performance is comparable to <code>bedtools</code>. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via <code>bedtorch</code>, many tasks can be done about one magnitude faster.</p>
+<p>Additionally, <code>bedtorch</code> can write dataset directly to BGZIP-format files. <a href="http://www.htslib.org/doc/bgzip.html">BGZIP</a> is a variant of gzip and is widely used in bioinformatics. It’s compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all <code>.gz</code> files as gzip-compressed, thus doesn’t take advantage of BED index, and cannot output BGZIP files.</p>
+<p>To address this, <code>bedtorch</code> can directly write a dataset to disk in BGZIP format, and (optionally) create the index.</p>
+<div id="installation" class="section level3">
+<h3 class="hasAnchor">
+<a href="#installation" class="anchor"></a>Installation</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># install.packages("devtools")</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"haizi-zh/bedtorch"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="example" class="section level2">
-<h2 class="hasAnchor">
-<a href="#example" class="anchor"></a>Example</h2>
+<div id="example" class="section level3">
+<h3 class="hasAnchor">
+<a href="#example" class="anchor"></a>Example</h3>
 <p>This is a basic example which shows you how to solve a common problem:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">bedtorch</span><span class="op">)</span>
@@ -123,9 +145,10 @@
 <span class="co">#&gt; 5:    21    47  50     2</span>
 <span class="co">#&gt; 6:    21    53  55     5</span></code></pre></div>
 </div>
-<div id="see-also" class="section level2">
+</div>
+<div id="reference" class="section level2">
 <h2 class="hasAnchor">
-<a href="#see-also" class="anchor"></a>See also</h2>
+<a href="#reference" class="anchor"></a>Reference</h2>
 <p>For more details, refer to the documentation page: <a href="https://haizi-zh.github.io/bedtorch/" class="uri">https://haizi-zh.github.io/bedtorch/</a></p>
 <p>Many features are inspired by bedtools. Thus, it’s helpful to get familiar with bedtool’s documentation: <a href="https://bedtools.readthedocs.io/en/latest/index.html" class="uri">https://bedtools.readthedocs.io/en/latest/index.html</a></p>
 </div>
