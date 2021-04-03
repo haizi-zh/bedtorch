@@ -7,7 +7,6 @@
 
 [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
 [![test-coverage](https://github.com/haizi-zh/bedtorch/workflows/test-coverage/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
-
 <!-- badges: end -->
 
 ## Motivation

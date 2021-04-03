@@ -183,3 +183,13 @@ test_that("Mapping intervals works", {
   expect_equal(result, target)
 })
 
+
+test_that("Subtracting BED tables works", {
+  dt1 <- read_bed(("example2.bed"))
+  dt2 <- read_bed(("example2_window.bed"))
+  
+  result <- subtract_bed(dt1, dt2)
+  target <- read_bed("example2_subtract_r1.bed")
+  setnames(target, new = colnames(result))
+  expect_equal(result, target)
+})

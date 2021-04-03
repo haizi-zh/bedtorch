@@ -493,3 +493,91 @@ map_bed <- function(data, scaffold, operation,
     dt2
   }, by = c("chrom", "start", "end")][scaffold[, 1:3]]
 }
+
+
+#' Subtract 
+#' 
+#' This function searches for intervals in `y` that overlaps with `x`, and
+#' remove the overlapping portion of `x`.
+#' @param x A `data.table` object.
+#' @param y A `data.table` object.
+#' @param min_overlap See [bedtorch::intersect_bed()].
+#' @param min_overlap_type [bedtorch::intersect_bed()].
+#' @return A `data.table` after subtracting `y` from `x`
+#' @examples
+#' # Load BED tables
+#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#'
+#' # Basic usage
+#' result <- subtract_bed(tbl_x, tbl_y)
+#'
+#' # Perform the mapping, requiring the minimum overlapping of 5bp
+#' result <- subtract_bed(tbl_x, tbl_y, min_overlap = 5, min_overlap_type = "bp")
+#' @references Manual page of `bedtools subtract`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/subtract.html}
+#' @seealso [bedtorch::intersect_bed()]
+#' @export
+subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac1", "frac2")) {
+  y <- merge_bed(y)
+  overlap_scaffold <-
+    intersect_bed(
+      x[, 1:3],
+      y[, 1:3],
+      mode = "wo",
+      min_overlap = min_overlap,
+      min_overlap_type = min_overlap_type
+    )
+  result <- overlap_scaffold[x]
+  
+  helper <- function(.SD, chrom, start, end) {
+    if (is.na(.SD[[1]][1])) {
+      return(.SD)
+    }
+    
+    start_s <- c(start, .SD[[3]])
+    end_s <- pmax(c(.SD[[2]], end), start_s)
+    
+    valid_idx <- end_s > start_s
+    start_s <- start_s[valid_idx]
+    end_s <- end_s[valid_idx]
+    cnt <- length(start_s)
+    
+    if (cnt == 0)
+      return(NULL)
+    
+    rhs <- list(start_s = start_s, end_s = end_s)
+    
+    lhs <- lapply(1:(ncol(.SD) - 2), function(col_idx) {
+      if (cnt > 1) {
+        rep(.SD[[col_idx]][1], cnt)
+      } else
+        .SD[[col_idx]][1]
+    })
+    names(lhs) <- colnames(.SD)[1:length(lhs)]
+    c(lhs, rhs)
+  }
+  
+  # Preprocess
+  # Remove overlap
+  result[, (7) := NULL]
+  result[, `:=`(start_s = start, end_s = end)]
+  
+  result <- result[, {
+    helper(.SD, chrom, start, end)
+  }, by = c("chrom", "start", "end")]
+  
+  # Example
+  # chrom start   end chrom.1 start.1 end.1 score1 score2 start_s end_s
+  # 1:     1  1057  1146       1     842  1136     86    188    1136  1146
+  # 2:     1  1130  1228       1     842  1136    116    185    1136  1151
+  # 3:     1  1397  1486       1    1151  1413     86    193    1413  1418
+  # 4:     1  1710  1799       1    1418  1796    110    199    1796  1799
+  # 5:     1  1788  1895       1    1418  1796     96    176    1796  1805
+  result[, 2:6 := NULL]
+  setnames(result, c("start_s", "end_s"), c("start", "end"))
+  result <-
+    result %>% dplyr::relocate(c("start", "end"), .after = "chrom")
+  setkey(result, "chrom", "start", "end")
+  result[]
+}
