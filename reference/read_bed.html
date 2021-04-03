@@ -143,6 +143,12 @@ range notation format, e.g. chr1:1001-2000</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Note: for loading remote data files, currently this function depends on
+tabix.c 0.2.5, which doesn't not support HTTPS protocol. In the next step, I
+plan to turn to htslib, and the this function can load remote data files
+through HTTPS.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='https://Rdatatable.gitlab.io/data.table/reference/fread.html'>data.table::fread()</a></code></p></div>
