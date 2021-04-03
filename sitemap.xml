@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//index.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/complement_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/intersect_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/map_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/merge_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/read_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/slop_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/subtract_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/write_bed.html</loc>
+  </url>
+</urlset>

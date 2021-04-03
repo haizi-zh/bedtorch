@@ -12,8 +12,8 @@
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <!-- Bootstrap -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script>
 
@@ -121,8 +121,8 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
+          <h2 id="section-read-and-write" class="hasAnchor"><a href="#section-read-and-write" class="anchor"></a>Read and write</h2>
+          <p class="section-desc"><p>Read and write BED-like data files.</p></p>
         </th>
       </tr>
       
@@ -133,10 +133,29 @@
       <tr>
         
         <td>
-          <p><code><a href="intersect_bed.html">intersect_bed()</a></code> </p>
+          <p><code><a href="read_bed.html">read_bed()</a></code> </p>
         </td>
-        <td><p>Apply <code>intersect</code> operation between two tables</p></td>
+        <td><p>Load a BED-format file</p></td>
       </tr><tr>
+        
+        <td>
+          <p><code><a href="write_bed.html">write_bed()</a></code> </p>
+        </td>
+        <td><p>Write a <code>data.table</code> to file</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-data-manipulation" class="hasAnchor"><a href="#section-data-manipulation" class="anchor"></a>Data manipulation</h2>
+          <p class="section-desc"><p>Perform various manipulations on BED-like data.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
         
         <td>
           <p><code><a href="map_bed.html">map_bed()</a></code> </p>
@@ -151,15 +170,15 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="read_bed.html">read_bed()</a></code> </p>
-        </td>
-        <td><p>Load a BED-format file</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="slop_bed.html">slop_bed()</a></code> </p>
         </td>
         <td><p>Slop intervals</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="intersect_bed.html">intersect_bed()</a></code> </p>
+        </td>
+        <td><p>Apply <code>intersect</code> operation between two tables</p></td>
       </tr><tr>
         
         <td>
@@ -169,9 +188,9 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="write_bed.html">write_bed()</a></code> </p>
+          <p><code><a href="complement_bed.html">complement_bed()</a></code> </p>
         </td>
-        <td><p>Write a <code>data.table</code> to file</p></td>
+        <td><p>Generate complement</p></td>
       </tr>
     </tbody>
     </table>
