@@ -145,6 +145,20 @@
 <span class="co">#&gt; 5:    21    47  50     2</span>
 <span class="co">#&gt; 6:    21    53  55     5</span></code></pre></div>
 </div>
+<div id="performance" class="section level3">
+<h3 class="hasAnchor">
+<a href="#performance" class="anchor"></a>Performance</h3>
+<p>The following is the result of a simple benchmark for three common BED manipulations: merge, intersect and map.</p>
+<p>Benchmark platform information:</p>
+<ul>
+<li>OS: macOS Big Sur 11.1</li>
+<li>CPU: 2.7 GHz Quad-Core Intel Core i7</li>
+<li>Memory: 16 GB LPDDR3</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/haizi-zh/bedtorch/main/data-raw/benchmark.png" title="Benchmark"></p>
+<p>From the benchmark result, we can see that for all three tasks, <code>bedtorch</code> uses much less time than <code>bedtools</code>.</p>
+<p>Note: this does not mean <code>bedtools</code> is indeed slower than <code>bedtorch</code> at performing the actual computation. Don’t forget <code>bedtools</code> requires large amount of disk IO, while <code>bedtorch</code> does not.</p>
+</div>
 </div>
 <div id="reference" class="section level2">
 <h2 class="hasAnchor">
