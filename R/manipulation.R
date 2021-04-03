@@ -581,3 +581,42 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
   setkey(result, "chrom", "start", "end")
   result[]
 }
+
+
+#' Generate complement
+#' 
+#' This function returns all intervals in a genome that are not covered by at least one interval in the input.
+#' @param x A `data.table`.
+#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
+#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
+#'   need to be the path of a user-provided file.
+#' @return A `data.table` which is the complement of `x`.
+#' @examples
+#' # Load BED tables
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#'
+#' # Basic usage
+#' result <- complement_bed(tbl, "hg19")
+#' @references Manual page of `bedtools complement`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/complement.html}
+#' @seealso [bedtorch::subtract_bed()]
+#' @export
+complement_bed <- function(x,
+                           chrom_sizes = c("hg19", "hg38")) {
+  stopifnot(!is.null(chrom_sizes))
+  chrom_sizes <- {
+    chrom_sizes <- tryCatch({
+      match.arg(chrom_sizes)
+    }, error = function(e) {
+      return(chrom_sizes)
+    })
+    load_chrom_sizes(chrom_sizes)
+  }
+  chrom_sizes <-
+    chrom_sizes[, `:=`(start = 0L, end = as.integer(size))][, .(chrom, start, end)]
+  setkey(chrom_sizes, "chrom", "start", "end")
+  subtract_bed(chrom_sizes, x)
+}
+
+
+
