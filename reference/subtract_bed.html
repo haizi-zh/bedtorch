@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • bedtorch</title>
+<title>Subtract — subtract_bed • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,9 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Subtract — subtract_bed" />
+<meta property="og:description" content="This function searches for intervals in y that overlaps with x, and
+remove the overlapping portion of x." />
 
 
 
@@ -58,7 +60,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -105,78 +107,69 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Subtract</h1>
+    <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/manipulation.R'><code>R/manipulation.R</code></a></small>
+    <div class="hidden name"><code>subtract_bed.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>This function searches for intervals in <code>y</code> that overlaps with <code>x</code>, and
+remove the overlapping portion of <code>x</code>.</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>subtract_bed</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  <span class='va'>y</span>,
+  min_overlap <span class='op'>=</span> <span class='fl'>1</span>,
+  min_overlap_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bp"</span>, <span class='st'>"frac1"</span>, <span class='st'>"frac2"</span><span class='op'>)</span>
+<span class='op'>)</span></pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="intersect_bed.html">intersect_bed()</a></code> </p>
-        </td>
-        <td><p>Apply <code>intersect</code> operation between two tables</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="map_bed.html">map_bed()</a></code> </p>
-        </td>
-        <td><p>Map over scaffold intervals</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="merge_bed.html">merge_bed()</a></code> </p>
-        </td>
-        <td><p>Merge overlapping intervals</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="read_bed.html">read_bed()</a></code> </p>
-        </td>
-        <td><p>Load a BED-format file</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="slop_bed.html">slop_bed()</a></code> </p>
-        </td>
-        <td><p>Slop intervals</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="subtract_bed.html">subtract_bed()</a></code> </p>
-        </td>
-        <td><p>Subtract</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="write_bed.html">write_bed()</a></code> </p>
-        </td>
-        <td><p>Write a <code>data.table</code> to file</p></td>
-      </tr>
-    </tbody>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>x</th>
+      <td><p>A <code>data.table</code> object.</p></td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td><p>A <code>data.table</code> object.</p></td>
+    </tr>
+    <tr>
+      <th>min_overlap</th>
+      <td><p>See <code><a href='intersect_bed.html'>intersect_bed()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>min_overlap_type</th>
+      <td><p><code><a href='intersect_bed.html'>intersect_bed()</a></code>.</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A <code>data.table</code> after subtracting <code>y</code> from <code>x</code></p>
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Manual page of <code>bedtools subtract</code>:
+<a href='https://bedtools.readthedocs.io/en/latest/content/tools/subtract.html'>https://bedtools.readthedocs.io/en/latest/content/tools/subtract.html</a></p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='intersect_bed.html'>intersect_bed()</a></code></p></div>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='co'># Load BED tables</span>
+<span class='va'>tbl_x</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
+<span class='va'>tbl_y</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_intersect_y.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
+
+<span class='co'># Basic usage</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>subtract_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span><span class='op'>)</span>
+
+<span class='co'># Perform the mapping, requiring the minimum overlapping of 5bp</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>subtract_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, min_overlap <span class='op'>=</span> <span class='fl'>5</span>, min_overlap_type <span class='op'>=</span> <span class='st'>"bp"</span><span class='op'>)</span>
+</div></pre>
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>
