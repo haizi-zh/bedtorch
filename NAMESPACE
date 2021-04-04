@@ -3,6 +3,7 @@
 export(cluster_bed)
 export(complement_bed)
 export(intersect_bed)
+export(jaccard_bed)
 export(make_random_bed)
 export(make_windows)
 export(map_bed)

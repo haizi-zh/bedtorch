@@ -247,3 +247,15 @@ test_that("Clustering BED intervals works", {
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
+
+
+test_that("Calculating Jaccard distance works", {
+  dt1 <- read_bed(("example2.bed"))
+  dt2 <- read_bed(("example2_window.bed"))
+  
+  result <- jaccard_bed(dt1, dt2)
+  expect_equal(result$intersection[1], 25241)
+  expect_equal(result$union[1], 227080)
+  expect_equal(result$n_intersections[1], 141)
+  expect_true(abs(result$jaccard[1] - 0.111155) < 1e-5)
+})

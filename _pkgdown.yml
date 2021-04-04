@@ -25,6 +25,9 @@ reference:
       - subtract_bed
       - complement_bed
       - shuffle_bed
+  - title: "Statistics"
+    contents:
+      - jaccard_bed
   - title: "Other utilities"
     contents:
       - make_windows

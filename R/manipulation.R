@@ -922,3 +922,57 @@ make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), 
   
   result
 }
+
+
+#' Jaccard distance
+#' 
+#' Calculate Jaccard distance between two BED-like data sets
+#' 
+#' @param x A `data.table`.
+#' @param y A `data.table`.
+#' @param min_overlap The smallest overlapping region for two intervals to be
+#'   considered as overlapping. Default is 1.
+#' @param min_overlap_type A character value indicating how `min_overlap` is
+#'   interpreted. `bp` means `min_overlap` is the number of base pairs. `frac1`
+#'   means `min_overlap` is the minimum overlap required as a fraction of `x`.
+#'   Similarly, `frac2` means `min_overlap` is the minimum overlap required as a
+#'   fraction of `y`. Similar to `bedtools intersect`'s `-f` and `-F` arguments.
+#' @return The Jaccard statistics.
+#' @seealso [bedtorch::intersect_bed()] 
+#' @examples 
+#' # Load BED tables
+#' x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' 
+#' # Basic usages
+#' result <- jaccard_bed(x, y) 
+#' head(result)
+#' @references Manual page of `bedtools jaccard`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/jaccard.html}
+#' @export
+jaccard_bed <- function(x,
+                        y,
+                        min_overlap = 1,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
+  x <- merge_bed(x)
+  y <- merge_bed(y)
+  
+  union_data <- rbindlist(list(x[, 1:3], y[, 1:3]))
+  setkey(union_data, "chrom", "start", "end")
+  union_data <- merge_bed(union_data)
+  
+  intersect_data <-
+    intersect_bed(x, y, min_overlap = min_overlap, min_overlap_type = min_overlap_type)
+  
+  union_sum <- union_data[, sum(end - start)]
+  intersect_sum <- intersect_data[, sum(end - start)]
+  
+  jaccard <- intersect_sum / union_sum
+  
+  data.table(
+    intersection = intersect_sum,
+    union = union_sum,
+    jaccard = jaccard,
+    n_intersections = nrow(intersect_data)
+  )
+}
