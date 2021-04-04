@@ -536,13 +536,19 @@ map_bed <- function(data, scaffold, operation,
            new = c("chrom", "start", "end"))
   setkey(result, "chrom", "start", "end")
   
+  op_names <- names(operation)
   result[, {
     # Apply functions
-    dt2 <- names(operation) %>% map(function(op_name) {
-      func <- operation[[op_name]]
-      func(.SD)
+    # dt2 <- names(operation) %>% map(function(op_name) {
+    #   func <- operation[[op_name]]
+    #   func(.SD)
+    # })
+    # names(dt2) <- names(operation)
+    # dt2
+    dt2 <- lapply(op_names, function(op_name) {
+      operation[[op_name]](.SD)
     })
-    names(dt2) <- names(operation)
+    names(dt2) <- op_names
     dt2
   }, by = c("chrom", "start", "end")][scaffold[, 1:3]]
 }
