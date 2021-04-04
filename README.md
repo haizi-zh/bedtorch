@@ -14,6 +14,7 @@ coverage](https://codecov.io/gh/haizi-zh/bedtorch/branch/main/graph/badge.svg)](
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CodeFactor](https://www.codefactor.io/repository/github/haizi-zh/bedtorch/badge)](https://www.codefactor.io/repository/github/haizi-zh/bedtorch)
+
 <!-- badges: end -->
 
 *For full documentation, refer to the [package documentation
@@ -118,15 +119,19 @@ devtools::install_github("haizi-zh/bedtorch")
 
 ### Example
 
-This is a basic example which shows you how to solve a common problem:
+Here are several basic examples which shows you how to solve a common
+problem:
+
+Read a BED file from disk:
 
 ``` r
 library(bedtorch)
 
 ## Load BED data
-bedtbl <-
-  read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-           range = "1:3001-4000")
+file_path <-
+  system.file("extdata", "example2.bed.gz", package = "bedtorch")
+
+bedtbl <- read_bed(file_path, range = "1:3001-4000")
 head(bedtbl)
 #>    chrom start  end score1 score2
 #> 1:     1  2925 3011    106    181
@@ -135,20 +140,43 @@ head(bedtbl)
 #> 4:     1  3164 3248     94    211
 #> 5:     1  3232 3345    107    205
 #> 6:     1  3300 3395     88    193
+```
 
-## Merge intervals, and take the mean of score in each merged group
-merged <- merge_bed(bedtbl,
-                    operation = list(
-                      mean_score = function(x)
-                        mean(x$score1)
-                    ))
+Write the previous data table to the temporary directory, and create the
+tabix index alongside:
+
+``` r
+write_bed(bedtbl,
+          file_path = tempfile(fileext = ".bed.gz"),
+          tabix_index = TRUE)
+```
+
+Merge intervals, and take the mean of score in each merged group:
+
+[<img src="https://bedtools.readthedocs.io/en/latest/_images/merge-glyph.png" alt="Image by bedtools" width="64%"/>](https://bedtools.readthedocs.io/en/latest/)
+
+*Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
+
+``` r
+operation = list(mean_score = function(x) mean(x$score1))
+merged <- merge_bed(bedtbl, operation = operation)
 head(merged)
 #>    chrom start  end mean_score
 #> 1:     1  2925 4016   99.07143
+```
 
-## Find intersections between two datasets
-tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+Find intersections between two datasets:
+
+[<img src="https://bedtools.readthedocs.io/en/latest/_images/intersect-glyph.png" alt="Image by bedtools" width="64%"/>](https://bedtools.readthedocs.io/en/latest/)
+
+*Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
+
+``` r
+file_path1 <- system.file("extdata", "example_merge.bed", package = "bedtorch")
+file_path2 <- system.file("extdata", "example_intersect_y.bed", package = "bedtorch")
+
+tbl_x <- read_bed(file_path1)
+tbl_y <- read_bed(file_path2)
 head(intersect_bed(tbl_x, tbl_y))
 #>    chrom start end score
 #> 1:    21    22  25     7
@@ -157,6 +185,35 @@ head(intersect_bed(tbl_x, tbl_y))
 #> 4:    21    47  49     1
 #> 5:    21    47  50     2
 #> 6:    21    53  55     5
+```
+
+Shuffle a BED data table across the genome:
+
+[<img src="https://bedtools.readthedocs.io/en/latest/_images/shuffle-glyph.png" alt="Image by bedtools" width="64%"/>](https://bedtools.readthedocs.io/en/latest/)
+
+*Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
+
+``` r
+head(shuffle_bed(tbl_x))
+#>    chrom    start      end score
+#> 1:    21  2056766  2056772     9
+#> 2:    21 11889243 11889248     4
+#> 3:    21 20243430 20243433     7
+#> 4:    21 20594071 20594078     5
+#> 5:    21 24460076 24460080     7
+#> 6:    21 26074760 26074763     5
+```
+
+Calculate Jaccard statistics between the two BED data tables:
+
+[<img src="https://bedtools.readthedocs.io/en/latest/_images/jaccard-glyph.png" alt="Image by bedtools" width="64%"/>](https://bedtools.readthedocs.io/en/latest/)
+
+*Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
+
+``` r
+head(jaccard_bed(tbl_x, tbl_y))
+#>    intersection union   jaccard n_intersections
+#> 1:           33    94 0.3510638               8
 ```
 
 ### Performance
