@@ -19,12 +19,12 @@
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #' merged <- merge_bed(bedtbl)
-#' head(result)
+#' head(merged)
 #' 
 #' merged <- merge_bed(bedtbl, max_dist = 10, 
 #'           operation = list(score1 = function(x) mean(x$score), 
 #'                            score2 = function(x) sum(x$score)))
-#' head(result)
+#' head(merged)
 #' @references Manual page of `bedtools merge`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/merge.html}
 #' @export
@@ -425,7 +425,7 @@ slop_bed <-
     
     if (!is.null(chrom_sizes)) {
       n1 <- nrow(x)
-      idx <- x[, 1:3][chrom_sizes, nomatch=0][, id := 1:.N]
+      idx <- x[, 1:3][chrom_sizes, nomatch=0][, id := seq_len(.N)]
       n2 <- nrow(idx)
       
       if (n2 < n1)
@@ -561,13 +561,13 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
     
     rhs <- list(start_s = start_s, end_s = end_s)
     
-    lhs <- lapply(1:(ncol(.SD) - 2), function(col_idx) {
+    lhs <- lapply(seq_len(ncol(.SD) - 2), function(col_idx) {
       if (cnt > 1) {
         rep(.SD[[col_idx]][1], cnt)
       } else
         .SD[[col_idx]][1]
     })
-    names(lhs) <- colnames(.SD)[1:length(lhs)]
+    names(lhs) <- colnames(.SD)[seq_along(lhs)]
     c(lhs, rhs)
   }
   
@@ -796,7 +796,7 @@ cluster_bed <- function(x, max_dist = 0) {
   cluster_map <- unique(x_with_cluster[, c("chrom", ..idx_colname)])
   setnames(cluster_map, c("chrom", "cluster"))
   # This is the global cluster ID
-  cluster_map[, g_cluster := 1:.N]
+  cluster_map[, g_cluster := seq_len(.N)]
   setkey(cluster_map, "chrom", "cluster")
   setkey(x_with_cluster, "chrom", "cluster")
   x_with_cluster = merge(x_with_cluster, cluster_map, all.x = TRUE)
@@ -867,6 +867,7 @@ make_windows <- function(window_size, chrom_sizes = c("hg19", "hg38"), chrom = N
 #'   for the specified chromosome(s).
 #' @param seed An integer seed for the random number generator. If `NULL`, the
 #'   seed is randomly chosen.
+#' @param sort Logical value. Should the random BED data be sorted?
 #' @return A `data.table` of generated intervals.
 #' @examples 
 #' # Generate 100 500kbp-intervals for chr20 and chr22, hg38

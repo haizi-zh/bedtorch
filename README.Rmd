@@ -16,9 +16,12 @@ knitr::opts_chunk$set(
 # bedtorch
 
 <!-- badges: start -->
-
-[![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) [![test-coverage](https://github.com/haizi-zh/bedtorch/workflows/test-coverage/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
-
+[![devel](https://img.shields.io/badge/devel%20version-0.1.6-blue.svg)](https://github.com/haizi-zh/bedtorch)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
+[![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) 
+[![Codecov test coverage](https://codecov.io/gh/haizi-zh/bedtorch/branch/main/graph/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CodeFactor](https://www.codefactor.io/repository/github/haizi-zh/bedtorch/badge)](https://www.codefactor.io/repository/github/haizi-zh/bedtorch)
 <!-- badges: end -->
 
 *For full documentation, refer to the [package documentation site](https://haizi-zh.github.io/bedtorch/).*

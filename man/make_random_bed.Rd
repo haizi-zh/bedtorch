@@ -27,6 +27,8 @@ for the specified chromosome(s).}
 
 \item{seed}{An integer seed for the random number generator. If \code{NULL}, the
 seed is randomly chosen.}
+
+\item{sort}{Logical value. Should the random BED data be sorted?}
 }
 \value{
 A \code{data.table} of generated intervals.
