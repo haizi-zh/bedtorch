@@ -221,4 +221,29 @@ test_that("Shuffling BED works", {
   expect_equal(dt1[, sum(end - start), by = chrom][[2]], result[, sum(end - start), by = chrom][[2]])
   # Excluded region check
   expect_equal(nrow(intersect(result, dt2)), 0)
+  
+  # Without excluded_region
+  result <- shuffle_bed(dt1[1:100])
+  # Cross-chrom check
+  expect_equal(dt1[1:100, .N, by = chrom][[2]], result[, .N, by = chrom][[2]])
+  expect_equal(dt1[1:100, sum(end - start), by = chrom][[2]], result[, sum(end - start), by = chrom][[2]])
+  
+  # Set RNG seed
+  
+  expect_equal(shuffle_bed(dt1[1:100], seed = 1),
+               shuffle_bed(dt1[1:100], seed = 1))
+})
+
+test_that("Clustering BED intervals works", {
+  dt1 <- read_bed(("example2.bed"))
+  
+  result <- cluster_bed(dt1)
+  target <- read_bed("example2_cluster_r1.bed")
+  setnames(target, new = colnames(result))
+  expect_equal(result, target)
+  
+  result <- cluster_bed(dt1, max_dist = 10)
+  target <- read_bed("example2_cluster_r2.bed")
+  setnames(target, new = colnames(result))
+  expect_equal(result, target)
 })

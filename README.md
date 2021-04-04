@@ -7,12 +7,16 @@
 
 [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
 [![test-coverage](https://github.com/haizi-zh/bedtorch/workflows/test-coverage/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
+
 <!-- badges: end -->
+
+*For full documentation, refer to the [package documentation
+site](https://haizi-zh.github.io/bedtorch/).*
 
 ## Motivation
 
-The goal of bedtorch is to provide a fast and native toolsuite for BED
-file manipulation.
+The goal of bedtorch is to provide a fast BED file manipulation tool
+suite native in R.
 
 In bioinformatics studies, an important type of jobs is related to BED
 and BED-like file manipulation. To name a few example:
@@ -96,6 +100,9 @@ index, and cannot output BGZIP files.
 To address this, `bedtorch` can directly write a dataset to disk in
 BGZIP format, and (optionally) create the index.
 
+For more details, refer to the [package reference
+page](https://haizi-zh.github.io/bedtorch/reference/index.html).
+
 ### Installation
 
 ``` r
@@ -157,7 +164,7 @@ Benchmark platform information:
 -   CPU: 2.7 GHz Quad-Core Intel Core i7
 -   Memory: 16 GB LPDDR3
 
-<img src=https://raw.githubusercontent.com/haizi-zh/bedtorch/main/data-raw/benchmark.png width=64%/>
+<img src="https://raw.githubusercontent.com/haizi-zh/bedtorch/main/data-raw/benchmark.png" width="64%/"/>
 
 From the benchmark result, we can see that for all three tasks,
 `bedtorch` uses much less time than `bedtools`.
@@ -166,10 +173,7 @@ Note: this does not mean `bedtools` is indeed slower than `bedtorch` at
 performing the actual computation. Don’t forget `bedtools` requires
 large amount of disk IO, while `bedtorch` does not.
 
-## Reference
-
-For more details, refer to the documentation page:
-<https://haizi-zh.github.io/bedtorch/>
+## See also
 
 Many features are inspired by bedtools. Thus, it’s helpful to get
 familiar with bedtool’s documentation:

@@ -39,10 +39,12 @@ tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "b
 
 # Basic usage
 result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)))
+head(result)
 
 # Perform the mapping, requiring the minimum overlapping of 5bp
 result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)), 
                   min_overlap = 5, min_overlap_type = "bp")
+head(result)
 }
 \references{
 Manual page of \verb{bedtools map}:

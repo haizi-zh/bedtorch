@@ -46,9 +46,11 @@ result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "both")
 
 # Slop by 10 only on the right end
 result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "right")
+head(result)
 
 # Slop by 20\% on the left end
 result <- slop_bed(tbl, slop = 0.2, slop_type = "frac", mode = "left")
+head(result)
 }
 \references{
 Manual page of \verb{bedtools slop}: \url{https://bedtools.readthedocs.io/en/latest/content/tools/slop.html}

@@ -84,8 +84,11 @@ read_tabix_bed <- function(file_path, range) {
 #' @seealso [data.table::fread()]
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' head(bedtbl)
+#' 
 #' bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
 #'                    range = "1:3001-4000")
+#' head(bedtbl)
 #' 
 #' # Does not work. Currently HTTPS is not supported
 #' # bedtbl <- read_bed("https://yourdomain.com/example-02.bedGraph.gz", 

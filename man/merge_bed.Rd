@@ -32,9 +32,12 @@ This operation is similar to \verb{bedtools merge}.
 \examples{
 bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 merged <- merge_bed(bedtbl)
+head(result)
+
 merged <- merge_bed(bedtbl, max_dist = 10, 
           operation = list(score1 = function(x) mean(x$score), 
                            score2 = function(x) sum(x$score)))
+head(result)
 }
 \references{
 Manual page of \verb{bedtools merge}:

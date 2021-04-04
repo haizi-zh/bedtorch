@@ -34,9 +34,11 @@ tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "b
 
 # Basic usage
 result <- subtract_bed(tbl_x, tbl_y)
+head(result)
 
 # Perform the mapping, requiring the minimum overlapping of 5bp
 result <- subtract_bed(tbl_x, tbl_y, min_overlap = 5, min_overlap_type = "bp")
+head(result)
 }
 \references{
 Manual page of \verb{bedtools subtract}:

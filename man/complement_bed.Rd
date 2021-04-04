@@ -25,6 +25,7 @@ tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"
 
 # Basic usage
 result <- complement_bed(tbl, "hg19")
+head(result)
 }
 \references{
 Manual page of \verb{bedtools complement}:

@@ -67,19 +67,23 @@ tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "b
 
 # Basic usages
 result <- intersect_bed(tbl_x, tbl_y)
+head(result)
 
 # Exclude regions defined by tbl_y from tbl_x
 result <- intersect_bed(tbl_x, tbl_y, mode = "exclude")
+head(result)
 
 # For each overlap, return the original entries in tbl_x. For a interval in
 # tbl_x, it is considered as overlapping only if 50\% of it overlaps with an
 # interval in tbl_y.
 result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 0.5, min_overlap_type = "frac1")
+head(result)
 
 # For each overlap, return the original entries in both tbl_x and tbl_y, plus
 # the number of overlapping base pairs. The minimum range for two intervals to
 # be considered as overlapping is 5bp
 result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 5, min_overlap_type = "bp")
+head(result)
 }
 \references{
 Manual page of \verb{bedtools intersect}: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}

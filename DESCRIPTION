@@ -1,14 +1,14 @@
 Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
-Version: 0.1.5
+Date: 2021-04-03
+Version: 0.1.6
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
            role = c("aut", "cre"),
-           email = "haizi.zh@gmail.com",
-           comment = c(ORCID = "0000-0001-6165-0179"))
-Description: The goal of bedtorch is to provide a fast and native toolsuite for BED file manipulation.
+           email = "haizi.zh@gmail.com")
+Description: The goal of bedtorch is to provide a fast BED file manipulation tool suite native in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

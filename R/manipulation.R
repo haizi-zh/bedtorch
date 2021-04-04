@@ -19,9 +19,12 @@
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #' merged <- merge_bed(bedtbl)
+#' head(result)
+#' 
 #' merged <- merge_bed(bedtbl, max_dist = 10, 
 #'           operation = list(score1 = function(x) mean(x$score), 
 #'                            score2 = function(x) sum(x$score)))
+#' head(result)
 #' @references Manual page of `bedtools merge`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/merge.html}
 #' @export
@@ -138,19 +141,23 @@ min_overlap_filter <- function(x, y, overlap_table, min_overlap, min_overlap_typ
 #' 
 #' # Basic usages
 #' result <- intersect_bed(tbl_x, tbl_y)
+#' head(result)
 #' 
 #' # Exclude regions defined by tbl_y from tbl_x
 #' result <- intersect_bed(tbl_x, tbl_y, mode = "exclude")
+#' head(result)
 #' 
 #' # For each overlap, return the original entries in tbl_x. For a interval in
 #' # tbl_x, it is considered as overlapping only if 50% of it overlaps with an
 #' # interval in tbl_y.
 #' result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 0.5, min_overlap_type = "frac1")
+#' head(result)
 #' 
 #' # For each overlap, return the original entries in both tbl_x and tbl_y, plus
 #' # the number of overlapping base pairs. The minimum range for two intervals to
 #' # be considered as overlapping is 5bp
 #' result <- intersect_bed(tbl_x, tbl_y, mode = "wa", min_overlap = 5, min_overlap_type = "bp")
+#' head(result)
 #' @references Manual page of `bedtools intersect`: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}
 #' @export
 intersect_bed <-
@@ -340,9 +347,11 @@ load_chrom_sizes <- function(ref_genome) {
 #' 
 #' # Slop by 10 only on the right end
 #' result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "right")
+#' head(result)
 #' 
 #' # Slop by 20% on the left end
 #' result <- slop_bed(tbl, slop = 0.2, slop_type = "frac", mode = "left")
+#' head(result)
 #' @references Manual page of `bedtools slop`: \url{https://bedtools.readthedocs.io/en/latest/content/tools/slop.html}
 #' @export
 slop_bed <-
@@ -452,10 +461,12 @@ slop_bed <-
 #'
 #' # Basic usage
 #' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)))
+#' head(result)
 #'
 #' # Perform the mapping, requiring the minimum overlapping of 5bp
 #' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)), 
 #'                   min_overlap = 5, min_overlap_type = "bp")
+#' head(result)
 #' @references Manual page of `bedtools map`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/map.html}
 #' @seealso [bedtorch::merge_bed()], [bedtorch::intersect_bed()]
@@ -511,9 +522,11 @@ map_bed <- function(data, scaffold, operation,
 #'
 #' # Basic usage
 #' result <- subtract_bed(tbl_x, tbl_y)
+#' head(result)
 #'
 #' # Perform the mapping, requiring the minimum overlapping of 5bp
 #' result <- subtract_bed(tbl_x, tbl_y, min_overlap = 5, min_overlap_type = "bp")
+#' head(result)
 #' @references Manual page of `bedtools subtract`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/subtract.html}
 #' @seealso [bedtorch::intersect_bed()]
@@ -597,6 +610,7 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
 #'
 #' # Basic usage
 #' result <- complement_bed(tbl, "hg19")
+#' head(result)
 #' @references Manual page of `bedtools complement`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/complement.html}
 #' @seealso [bedtorch::subtract_bed()]
@@ -631,6 +645,11 @@ complement_bed <- function(x,
 #' @param excluded_region A `data.table` containing regions that you don't want
 #'   to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 #'   within such regions.
+#' @param sort Logical value indicating whether to sort the shuffled features.
+#'   When the input data set is large, sorting can be very expensive. If you
+#'   don't need the output to be sorted, set `sort` to `FALSE`.
+#' @param seed An integer seed for the random number generator. If `NULL`, the
+#'   seed is randomly chosen.
 #' @return A `data.table` containing shuffled features.
 #' @examples
 #' # Load BED tables
@@ -638,11 +657,22 @@ complement_bed <- function(x,
 #' excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
 #'
 #' # Basic usage
-#' result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded)
+#' result <- shuffle_bed(tbl)
+#' head(result)
+#' 
+#' # Shuffle the data, but exclude certain regions. Plus, set the RNG seed to 1
+#' result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded, seed = 1)
+#' head(result)
 #' @references Manual page of `bedtools shuffle`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/shuffle.html}
 #' @export
-shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NULL) {
+shuffle_bed <-
+  function(x,
+           chrom_sizes = c("hg19", "hg38"),
+           excluded_region = NULL,
+           sort = TRUE,
+           seed = NULL) {
+    
   if (length(unique(x$chrom)) > 1) {
     return(rbindlist(unique(x$chrom) %>% map(function(chrom0) {
       shuffle_bed(x[chrom == chrom0], chrom_sizes, excluded_region)
@@ -671,7 +701,8 @@ shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NU
     available_scaffold <- as.integer(c(0, available_region[, end - start] %>% cumsum()))
   } else {
     available_width <- chrom_sz
-    available_scaffold <- 0L
+    available_region <- chrom_sizes
+    available_scaffold <- c(0L, chrom_sz)
   }
   
   # Map the scaffold coordinate to the real genomic coordinate
@@ -694,6 +725,9 @@ shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NU
   
   
   # Generate the random intervals
+  if (!is.null(seed))
+    set.seed(seed = seed)
+
   x_scaffold <- x[, 1:3][, s1 := as.integer(NA)]
   while(TRUE) {
     # All fragments are shuffled
@@ -701,7 +735,7 @@ shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NU
       break
     
     x_scaffold[is.na(s1), s1 := {
-      random_start <- purrr:::map2_int(sample.int(
+      random_start <- purrr::map2_int(sample.int(
         n = available_width,
         size = nrow(.SD),
         replace = TRUE
@@ -715,8 +749,175 @@ shuffle_bed <- function(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NU
   x_scaffold[, `:=`(start=NULL, end=NULL)]
   setnames(x_scaffold, c("s1", "e1"), c("start", "end"))
   result <- cbind(x_scaffold, x[, -1:-3])
-  setkey(result, "chrom", "start", "end")
+  if (sort)
+    setkey(result, "chrom", "start", "end")
   result
 }
 
 
+#' Cluster intervals
+#' 
+#' This operation is similar to `bedtools cluster`. It reports each set of
+#' overlapping or “book-ended” features in an interval file.
+#' @param x A `data.table`
+#' @param max_dist Maximum distance between features allowed for features to be
+#'   merged. Default is 0. That is, overlapping and/or book-ended features are
+#'   merged.
+#' @return A `data.table`. Compared
+#' @examples 
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' 
+#' # Basic usage
+#' clustered <- cluster_bed(tbl)
+#' head(clustered)
+#' 
+#' # Change the maximum distance allowed
+#' clustered <- cluster_bed(tbl, max_dist = 10)
+#' head(clustered)
+#' @seealso [bedtorch::merge_bed()]
+#' @references Manual page of `bedtools cluster`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html}
+#' @export
+cluster_bed <- function(x, max_dist = 0) {
+  stopifnot(max_dist >= 0)
+  
+  idx_colname <- .available_colname(x, "cluster")
+  x_with_cluster <- x[, {
+    cluster_id <-
+      head(c(0, cumsum(
+        shift(start, n = -1) > cummax(end) + max_dist
+      )), n = -1) + 1L
+    cluster_col <- list()
+    cluster_col[[idx_colname]] <- cluster_id
+    c(.SD, cluster_col)
+  }, by = chrom]
+  
+  # Cluster id over chromosomes
+  cluster_map <- unique(x_with_cluster[, c("chrom", ..idx_colname)])
+  setnames(cluster_map, c("chrom", "cluster"))
+  # This is the global cluster ID
+  cluster_map[, g_cluster := 1:.N]
+  setkey(cluster_map, "chrom", "cluster")
+  setkey(x_with_cluster, "chrom", "cluster")
+  x_with_cluster = merge(x_with_cluster, cluster_map, all.x = TRUE)
+  setkey(x_with_cluster, "chrom", "start", "end")
+  x_with_cluster[, (idx_colname) := NULL]
+  setnames(x_with_cluster, "g_cluster", "cluster")
+  x_with_cluster[]
+}
+
+
+#' Make windows along genome
+#' 
+#' Make windows with the size of `window_size` along genome. Must provide
+#' `chrom_sizes` so that intervals are restricted by chromosome sizes.
+#' @param window_size An integer value. Size of the windows in base pairs.
+#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
+#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
+#'   need to be the path of a user-provided file.
+#' @param chrom A character vector. If provided, only generate windows for the
+#'   specified chromosome(s).
+#' @return A `data.table` of generated intervals.
+#' @examples 
+#' # Generate 500kbp intervals for chr20 and chr22, hg38
+#' result <- make_windows(window_size = 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
+#' head(result)
+#' 
+#' # Generate 5Mbp intervals for all chromosomes of hg19 (default reference genome)
+#' result <- make_windows(window_size = 5e6L)
+#' head(result)
+#' @export
+make_windows <- function(window_size, chrom_sizes = c("hg19", "hg38"), chrom = NULL) {
+  # BED for chrom_sizes
+  stopifnot(!is.null(chrom_sizes))
+  chrom_sizes <-
+    tryCatch({
+      match.arg(chrom_sizes)
+    }, error = function(e) {
+      return(chrom_sizes)
+    }) %>% load_chrom_sizes()
+  
+  chrom_list <- chrom
+  if (!is.null(chrom_list))
+    chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
+  
+  window_table <- chrom_sizes[, {
+    start <- seq(from = 0, to = size, by = window_size)
+    if (tail(start, n = 1) == size)
+      start <- head(start, n = -1)
+    end <- pmin(start + window_size, size)
+    list(start = as.integer(start), end = as.integer(end))
+  }, by = chrom]
+  setkey(window_table, "chrom", "start", "end")
+  window_table
+}
+
+
+#' Randomly place intervals of fixed width across genome
+#' 
+#' This function is aware of chromosome size differences and intervals are
+#' randomly generated in proportion to chromosome sizes. In another word, larger
+#' chromosomes will have more randomly generated intervals.
+#' @param n Number of intervals to generate.
+#' @param interval_width An integer value of the width of the interval.
+#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
+#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
+#'   need to be the path of a user-provided file.
+#' @param chrom A character vector. If provided, only generate random intervals
+#'   for the specified chromosome(s).
+#' @param seed An integer seed for the random number generator. If `NULL`, the
+#'   seed is randomly chosen.
+#' @return A `data.table` of generated intervals.
+#' @examples 
+#' # Generate 100 500kbp-intervals for chr20 and chr22, hg38
+#' result <- make_random_bed(100, 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
+#' head(result)
+#' 
+#' # Generate 100 500bp unsorted intervals for all chromosomes of hg19 (default reference genome)
+#' result <- make_random_bed(100, interval_width = 500, chrom_sizes = "hg19", sort = FALSE)
+#' head(result)
+#' @references Manual page for `bedtools random`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/random.html}
+#' @export
+make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), chrom = NULL, seed = NULL, sort = TRUE) {
+  # BED for chrom_sizes
+  stopifnot(!is.null(chrom_sizes))
+  chrom_sizes <-
+    tryCatch({
+      match.arg(chrom_sizes)
+    }, error = function(e) {
+      return(chrom_sizes)
+    }) %>% load_chrom_sizes()
+  
+  chrom_list <- chrom
+  if (!is.null(chrom_list))
+    chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
+  
+  # Generate n intervals and assign chrom
+  sample_chrom <-
+    chrom_sizes$chrom[sample.int(
+      n = nrow(chrom_sizes),
+      size = n,
+      replace = TRUE,
+      prob = chrom_sizes$size
+    )]
+  
+  # Generate the random intervals
+  if (!is.null(seed))
+    set.seed(seed = seed)
+  
+  result <- chrom_sizes[, .(chrom = sample_chrom, v = 1)]
+  result <- result[, {
+    chrom0 <- chrom
+    size <- chrom_sizes[chrom == chrom0]$size
+    
+    start = sample.int(n = size - interval_width + 1, size = nrow(.SD)) - 1L
+    end = start + interval_width
+    list(start = start, end = end)
+  }, by = chrom]
+  
+  if (sort)
+    setkey(result, "chrom", "start", "end")
+  
+  result
+}

@@ -19,8 +19,13 @@ reference:
     contents:
       - map_bed
       - merge_bed
+      - cluster_bed
       - slop_bed
       - intersect_bed
       - subtract_bed
       - complement_bed
       - shuffle_bed
+  - title: "Other utilities"
+    contents:
+      - make_windows
+      - make_random_bed

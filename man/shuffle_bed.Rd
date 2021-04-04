@@ -4,7 +4,13 @@
 \alias{shuffle_bed}
 \title{Shuffle intervals}
 \usage{
-shuffle_bed(x, chrom_sizes = c("hg19", "hg38"), excluded_region = NULL)
+shuffle_bed(
+  x,
+  chrom_sizes = c("hg19", "hg38"),
+  excluded_region = NULL,
+  sort = TRUE,
+  seed = NULL
+)
 }
 \arguments{
 \item{x}{A \code{data.table}.}
@@ -16,6 +22,13 @@ need to be the path of a user-provided file.}
 \item{excluded_region}{A \code{data.table} containing regions that you don't want
 to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 within such regions.}
+
+\item{sort}{Logical value indicating whether to sort the shuffled features.
+When the input data set is large, sorting can be very expensive. If you
+don't need the output to be sorted, set \code{sort} to \code{FALSE}.}
+
+\item{seed}{An integer seed for the random number generator. If \code{NULL}, the
+seed is randomly chosen.}
 }
 \value{
 A \code{data.table} containing shuffled features.
@@ -31,7 +44,12 @@ tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"
 excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
 
 # Basic usage
-result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded)
+result <- shuffle_bed(tbl)
+head(result)
+
+# Shuffle the data, but exclude certain regions. Plus, set the RNG seed to 1
+result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded, seed = 1)
+head(result)
 }
 \references{
 Manual page of \verb{bedtools shuffle}:
