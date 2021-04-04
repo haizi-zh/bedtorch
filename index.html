@@ -71,6 +71,7 @@
 <a href="#bedtorch" class="anchor"></a>bedtorch</h1></div>
 <!-- badges: start -->
 
+<!-- badges: end -->
 <p><em>For full documentation, refer to the <a href="https://haizi-zh.github.io/bedtorch/">package documentation site</a>.</em></p>
 <div id="motivation" class="section level2">
 <h2 class="hasAnchor">
@@ -138,6 +139,8 @@
           file_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bed.gz"</span><span class="op">)</span>,
           tabix_index <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p>Merge intervals, and take the mean of score in each merged group:</p>
+<p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/merge-glyph.png" alt="Image by bedtools" width="64%"></a></p>
+<p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">operation</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>mean_score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">score1</span><span class="op">)</span><span class="op">)</span>
 <span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_bed.html">merge_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>, operation <span class="op">=</span> <span class="va">operation</span><span class="op">)</span>
@@ -145,6 +148,8 @@
 <span class="co">#&gt;    chrom start  end mean_score</span>
 <span class="co">#&gt; 1:     1  2925 4016   99.07143</span></code></pre></div>
 <p>Find intersections between two datasets:</p>
+<p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/intersect-glyph.png" alt="Image by bedtools" width="64%"></a></p>
+<p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">file_path1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_merge.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
 <span class="va">file_path2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_intersect_y.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
@@ -160,16 +165,20 @@
 <span class="co">#&gt; 5:    21    47  50     2</span>
 <span class="co">#&gt; 6:    21    53  55     5</span></code></pre></div>
 <p>Shuffle a BED data table across the genome:</p>
+<p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/shuffle-glyph.png" alt="Image by bedtools" width="64%"></a></p>
+<p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/shuffle_bed.html">shuffle_bed</a></span><span class="op">(</span><span class="va">tbl_x</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;    chrom    start      end score</span>
-<span class="co">#&gt; 1:    21  3125896  3125902     9</span>
-<span class="co">#&gt; 2:    21  5938720  5938726     5</span>
-<span class="co">#&gt; 3:    21  6339364  6339368     7</span>
-<span class="co">#&gt; 4:    21 11788606 11788611     2</span>
-<span class="co">#&gt; 5:    21 17211494 17211497     7</span>
-<span class="co">#&gt; 6:    21 18934203 18934206     5</span></code></pre></div>
+<span class="co">#&gt; 1:    21  2056766  2056772     9</span>
+<span class="co">#&gt; 2:    21 11889243 11889248     4</span>
+<span class="co">#&gt; 3:    21 20243430 20243433     7</span>
+<span class="co">#&gt; 4:    21 20594071 20594078     5</span>
+<span class="co">#&gt; 5:    21 24460076 24460080     7</span>
+<span class="co">#&gt; 6:    21 26074760 26074763     5</span></code></pre></div>
 <p>Calculate Jaccard statistics between the two BED data tables:</p>
+<p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/jaccard-glyph.png" alt="Image by bedtools" width="64%"></a></p>
+<p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/jaccard_bed.html">jaccard_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;    intersection union   jaccard n_intersections</span>
