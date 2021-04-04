@@ -114,14 +114,16 @@
 <div id="example" class="section level3">
 <h3 class="hasAnchor">
 <a href="#example" class="anchor"></a>Example</h3>
-<p>This is a basic example which shows you how to solve a common problem:</p>
+<p>Here are several basic examples which shows you how to solve a common problem:</p>
+<p>Read a BED file from disk:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/haizi-zh/bedtorch">bedtorch</a></span><span class="op">)</span>
 
 <span class="co">## Load BED data</span>
-<span class="va">bedtbl</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example2.bed.gz"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>,
-           range <span class="op">=</span> <span class="st">"1:3001-4000"</span><span class="op">)</span>
+<span class="va">file_path</span> <span class="op">&lt;-</span>
+  <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example2.bed.gz"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
+
+<span class="va">bedtbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path</span>, range <span class="op">=</span> <span class="st">"1:3001-4000"</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">bedtbl</span><span class="op">)</span>
 <span class="co">#&gt;    chrom start  end score1 score2</span>
 <span class="co">#&gt; 1:     1  2925 3011    106    181</span>
@@ -129,21 +131,26 @@
 <span class="co">#&gt; 3:     1  3091 3193    118    212</span>
 <span class="co">#&gt; 4:     1  3164 3248     94    211</span>
 <span class="co">#&gt; 5:     1  3232 3345    107    205</span>
-<span class="co">#&gt; 6:     1  3300 3395     88    193</span>
-
-<span class="co">## Merge intervals, and take the mean of score in each merged group</span>
-<span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_bed.html">merge_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>,
-                    operation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-                      mean_score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-                        <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">score1</span><span class="op">)</span>
-                    <span class="op">)</span><span class="op">)</span>
+<span class="co">#&gt; 6:     1  3300 3395     88    193</span></code></pre></div>
+<p>Write the previous data table to the temporary directory, and create the tabix index alongside:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/write_bed.html">write_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>,
+          file_path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bed.gz"</span><span class="op">)</span>,
+          tabix_index <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p>Merge intervals, and take the mean of score in each merged group:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">operation</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>mean_score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">score1</span><span class="op">)</span><span class="op">)</span>
+<span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_bed.html">merge_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>, operation <span class="op">=</span> <span class="va">operation</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>
 <span class="co">#&gt;    chrom start  end mean_score</span>
-<span class="co">#&gt; 1:     1  2925 4016   99.07143</span>
+<span class="co">#&gt; 1:     1  2925 4016   99.07143</span></code></pre></div>
+<p>Find intersections between two datasets:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">file_path1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_merge.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
+<span class="va">file_path2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_intersect_y.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
 
-<span class="co">## Find intersections between two datasets</span>
-<span class="va">tbl_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_merge.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span><span class="op">)</span>
-<span class="va">tbl_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_intersect_y.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span><span class="op">)</span>
+<span class="va">tbl_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path1</span><span class="op">)</span>
+<span class="va">tbl_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path2</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/intersect_bed.html">intersect_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;    chrom start end score</span>
 <span class="co">#&gt; 1:    21    22  25     7</span>
@@ -152,6 +159,21 @@
 <span class="co">#&gt; 4:    21    47  49     1</span>
 <span class="co">#&gt; 5:    21    47  50     2</span>
 <span class="co">#&gt; 6:    21    53  55     5</span></code></pre></div>
+<p>Shuffle a BED data table across the genome:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/shuffle_bed.html">shuffle_bed</a></span><span class="op">(</span><span class="va">tbl_x</span><span class="op">)</span><span class="op">)</span>
+<span class="co">#&gt;    chrom    start      end score</span>
+<span class="co">#&gt; 1:    21  3125896  3125902     9</span>
+<span class="co">#&gt; 2:    21  5938720  5938726     5</span>
+<span class="co">#&gt; 3:    21  6339364  6339368     7</span>
+<span class="co">#&gt; 4:    21 11788606 11788611     2</span>
+<span class="co">#&gt; 5:    21 17211494 17211497     7</span>
+<span class="co">#&gt; 6:    21 18934203 18934206     5</span></code></pre></div>
+<p>Calculate Jaccard statistics between the two BED data tables:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/jaccard_bed.html">jaccard_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span><span class="op">)</span>
+<span class="co">#&gt;    intersection union   jaccard n_intersections</span>
+<span class="co">#&gt; 1:           33    94 0.3510638               8</span></code></pre></div>
 </div>
 <div id="performance" class="section level3">
 <h3 class="hasAnchor">
