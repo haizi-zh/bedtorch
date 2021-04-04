@@ -23,7 +23,8 @@ Imports:
     data.table,
     seqminer (>= 8.1.2),
     Rsamtools (>= 2.4.0),
-    R.utils
+    R.utils,
+    assertthat
 Suggests: 
     testthat (>= 3.0.0),
     devtools (>= 2.3.0)

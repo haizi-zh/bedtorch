@@ -34,3 +34,4 @@ reference:
     contents:
       - make_windows
       - make_random_bed
+      - check_binaries
