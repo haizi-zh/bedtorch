@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Slop intervals — slop_bed • bedtorch</title>
+<title>Make windows along genome — make_windows • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,9 @@
 
 
 
-<meta property="og:title" content="Slop intervals — slop_bed" />
-<meta property="og:description" content="Similar to bedtools slop, this function increases the size of each feature
-in a feature file by a user-defined number of bases. Will restrict the
-resizing to the size of the chromosome." />
+<meta property="og:title" content="Make windows along genome — make_windows" />
+<meta property="og:description" content="Make windows with the size of window_size along genome. Must provide
+chrom_sizes so that intervals are restricted by chromosome sizes." />
 
 
 
@@ -110,90 +109,63 @@ resizing to the size of the chromosome." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Slop intervals</h1>
+    <h1>Make windows along genome</h1>
     <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/manipulation.R'><code>R/manipulation.R</code></a></small>
-    <div class="hidden name"><code>slop_bed.Rd</code></div>
+    <div class="hidden name"><code>make_windows.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Similar to <code>bedtools slop</code>, this function increases the size of each feature
-in a feature file by a user-defined number of bases. Will restrict the
-resizing to the size of the chromosome.</p>
+    <p>Make windows with the size of <code>window_size</code> along genome. Must provide
+<code>chrom_sizes</code> so that intervals are restricted by chromosome sizes.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>slop_bed</span><span class='op'>(</span>
-  <span class='va'>x</span>,
-  chrom_sizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hg19"</span>, <span class='st'>"hg38"</span><span class='op'>)</span>,
-  slop <span class='op'>=</span> <span class='fl'>1L</span>,
-  slop_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bp"</span>, <span class='st'>"frac"</span><span class='op'>)</span>,
-  mode <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"both"</span>, <span class='st'>"left"</span>, <span class='st'>"right"</span><span class='op'>)</span>
-<span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>make_windows</span><span class='op'>(</span><span class='va'>window_size</span>, chrom_sizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hg19"</span>, <span class='st'>"hg38"</span><span class='op'>)</span>, chrom <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>x</th>
-      <td><p>A <code>data.table</code> object.</p></td>
+      <th>window_size</th>
+      <td><p>An integer value. Size of the windows in base pairs.</p></td>
     </tr>
     <tr>
       <th>chrom_sizes</th>
       <td><p>Provide the chromosome sizes data. If <code>hg19</code> or <code>hg38</code>,
 the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file. If <code>NULL</code>, the resizing will
-not be restricted to the size of the chromosome.</p></td>
+need to be the path of a user-provided file.</p></td>
     </tr>
     <tr>
-      <th>slop</th>
-      <td><p>The number of base pairs to slop, or the percentage of the
-interval's width (refer to <code>bedtools slop</code>'s <code>-pct</code> argument).</p></td>
-    </tr>
-    <tr>
-      <th>slop_type</th>
-      <td><p>If <code>bp</code>, <code>slop</code> is an integer indicating the number of base
-pairs. If <code>frac</code>, <code>slop</code> is a float point number indicating the percentage.</p></td>
-    </tr>
-    <tr>
-      <th>mode</th>
-      <td><p>If <code>both</code>, the resizing takes place on both ends of the interval.
-Otherwise, the resizing is only for the <code>left</code> end or the <code>right</code> end.</p></td>
+      <th>chrom</th>
+      <td><p>A character vector. If provided, only generate windows for the
+specified chromosome(s).</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A slopped <code>data.tabe</code> object.</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Manual page of <code>bedtools slop</code>: <a href='https://bedtools.readthedocs.io/en/latest/content/tools/slop.html'>https://bedtools.readthedocs.io/en/latest/content/tools/slop.html</a></p>
+    <p>A <code>data.table</code> of generated intervals.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Load data</span>
-<span class='va'>tbl</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'># Slop by 10 on both ends</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>slop_bed</span><span class='op'>(</span><span class='va'>tbl</span>, slop <span class='op'>=</span> <span class='fl'>10L</span>, slop_type <span class='op'>=</span> <span class='st'>"bp"</span>, mode <span class='op'>=</span> <span class='st'>"both"</span><span class='op'>)</span>
-
-<span class='co'># Slop by 10 only on the right end</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>slop_bed</span><span class='op'>(</span><span class='va'>tbl</span>, slop <span class='op'>=</span> <span class='fl'>10L</span>, slop_type <span class='op'>=</span> <span class='st'>"bp"</span>, mode <span class='op'>=</span> <span class='st'>"right"</span><span class='op'>)</span>
+    <pre class="examples"><div class='input'><span class='co'># Generate 500kbp intervals for chr20 and chr22, hg38</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>500e3L</span>, chrom_sizes <span class='op'>=</span> <span class='st'>"hg38"</span>, chrom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr20"</span>, <span class='st'>"chr22"</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;    chrom start end score
-#&gt; 1:    21     3  16     8
-#&gt; 2:    21    10  26     5
-#&gt; 3:    21    12  27     4
-#&gt; 4:    21    15  32     5
-#&gt; 5:    21    22  35     7
-#&gt; 6:    21    26  40     7</div><div class='input'>
-<span class='co'># Slop by 20% on the left end</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>slop_bed</span><span class='op'>(</span><span class='va'>tbl</span>, slop <span class='op'>=</span> <span class='fl'>0.2</span>, slop_type <span class='op'>=</span> <span class='st'>"frac"</span>, mode <span class='op'>=</span> <span class='st'>"left"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom   start     end
+#&gt; 1: chr20       0  500000
+#&gt; 2: chr20  500000 1000000
+#&gt; 3: chr20 1000000 1500000
+#&gt; 4: chr20 1500000 2000000
+#&gt; 5: chr20 2000000 2500000
+#&gt; 6: chr20 2500000 3000000</div><div class='input'>
+<span class='co'># Generate 5Mbp intervals for all chromosomes of hg19 (default reference genome)</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>5e6L</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;    chrom start end score
-#&gt; 1:    21     3   6     8
-#&gt; 2:    21     9  16     5
-#&gt; 3:    21    11  17     4
-#&gt; 4:    21    14  22     5
-#&gt; 5:    21    22  25     7
-#&gt; 6:    21    26  30     7</div></pre>
+</div><div class='output co'>#&gt;    chrom    start      end
+#&gt; 1:     1        0  5000000
+#&gt; 2:     1  5000000 10000000
+#&gt; 3:     1 10000000 15000000
+#&gt; 4:     1 15000000 20000000
+#&gt; 5:     1 20000000 25000000
+#&gt; 6:     1 25000000 30000000</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

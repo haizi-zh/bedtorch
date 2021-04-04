@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
       </span>
     </div>
 
@@ -190,20 +190,44 @@ fraction of <code>y</code>. Similar to <code>bedtools intersect</code>'s <code>-
 
 <span class='co'># Basic usages</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>intersect_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span><span class='op'>)</span>
-
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score
+#&gt; 1:    21    22  25     7
+#&gt; 2:    21    26  30     7
+#&gt; 3:    21    29  35     9
+#&gt; 4:    21    47  49     1
+#&gt; 5:    21    47  50     2
+#&gt; 6:    21    53  55     5</div><div class='input'>
 <span class='co'># Exclude regions defined by tbl_y from tbl_x</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>intersect_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, mode <span class='op'>=</span> <span class='st'>"exclude"</span><span class='op'>)</span>
-
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score
+#&gt; 1:    21     3   6     8
+#&gt; 2:    21    10  16     5
+#&gt; 3:    21    12  17     4
+#&gt; 4:    21    15  22     5
+#&gt; 5:    22    27  36     3
+#&gt; 6:    22    30  33    10</div><div class='input'>
 <span class='co'># For each overlap, return the original entries in tbl_x. For a interval in</span>
 <span class='co'># tbl_x, it is considered as overlapping only if 50% of it overlaps with an</span>
 <span class='co'># interval in tbl_y.</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>intersect_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, mode <span class='op'>=</span> <span class='st'>"wa"</span>, min_overlap <span class='op'>=</span> <span class='fl'>0.5</span>, min_overlap_type <span class='op'>=</span> <span class='st'>"frac1"</span><span class='op'>)</span>
-
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score
+#&gt; 1:    21    22  25     7
+#&gt; 2:    21    26  30     7
+#&gt; 3:    21    29  35     9
+#&gt; 4:    21    45  50     2
+#&gt; 5:    21    53  56     5
+#&gt; 6:    22    42  44     9</div><div class='input'>
 <span class='co'># For each overlap, return the original entries in both tbl_x and tbl_y, plus</span>
 <span class='co'># the number of overlapping base pairs. The minimum range for two intervals to</span>
 <span class='co'># be considered as overlapping is 5bp</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>intersect_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, mode <span class='op'>=</span> <span class='st'>"wa"</span>, min_overlap <span class='op'>=</span> <span class='fl'>5</span>, min_overlap_type <span class='op'>=</span> <span class='st'>"bp"</span><span class='op'>)</span>
-</div></pre>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score
+#&gt; 1:    21    29  35     9
+#&gt; 2:    22    51  59     9</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

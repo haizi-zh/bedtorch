@@ -74,7 +74,7 @@ Cross-chromosome shuffle is not supported at this point." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
       </span>
     </div>
 
@@ -121,7 +121,13 @@ genome file. Note: the permutation stays in the same chromosome.
 Cross-chromosome shuffle is not supported at this point.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>shuffle_bed</span><span class='op'>(</span><span class='va'>x</span>, chrom_sizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hg19"</span>, <span class='st'>"hg38"</span><span class='op'>)</span>, excluded_region <span class='op'>=</span> <span class='cn'>NULL</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>shuffle_bed</span><span class='op'>(</span>
+  <span class='va'>x</span>,
+  chrom_sizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hg19"</span>, <span class='st'>"hg38"</span><span class='op'>)</span>,
+  excluded_region <span class='op'>=</span> <span class='cn'>NULL</span>,
+  sort <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  seed <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -142,6 +148,17 @@ need to be the path of a user-provided file.</p></td>
 to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 within such regions.</p></td>
     </tr>
+    <tr>
+      <th>sort</th>
+      <td><p>Logical value indicating whether to sort the shuffled features.
+When the input data set is large, sorting can be very expensive. If you
+don't need the output to be sorted, set <code>sort</code> to <code>FALSE</code>.</p></td>
+    </tr>
+    <tr>
+      <th>seed</th>
+      <td><p>An integer seed for the random number generator. If <code>NULL</code>, the
+seed is randomly chosen.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -158,8 +175,25 @@ within such regions.</p></td>
 <span class='va'>excluded</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_intersect_y.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
 
 <span class='co'># Basic usage</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>shuffle_bed</span><span class='op'>(</span><span class='va'>tbl</span>, chrom_sizes <span class='op'>=</span> <span class='st'>"hg19"</span>, excluded_region <span class='op'>=</span> <span class='va'>excluded</span><span class='op'>)</span>
-</div></pre>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>shuffle_bed</span><span class='op'>(</span><span class='va'>tbl</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom    start      end score
+#&gt; 1:    21 21661197 21661200     7
+#&gt; 2:    21 21763004 21763010     9
+#&gt; 3:    21 24956705 24956711     5
+#&gt; 4:    21 26230960 26230965     4
+#&gt; 5:    21 34709645 34709648     5
+#&gt; 6:    21 36356384 36356389     2</div><div class='input'>
+<span class='co'># Shuffle the data, but exclude certain regions. Plus, set the RNG seed to 1</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>shuffle_bed</span><span class='op'>(</span><span class='va'>tbl</span>, chrom_sizes <span class='op'>=</span> <span class='st'>"hg19"</span>, excluded_region <span class='op'>=</span> <span class='va'>excluded</span>, seed <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom    start      end score
+#&gt; 1:    21  7597628  7597634     9
+#&gt; 2:    21  7690399  7690402     5
+#&gt; 3:    21 12978677 12978683     5
+#&gt; 4:    21 14565432 14565435     7
+#&gt; 5:    21 24075324 24075329     2
+#&gt; 6:    21 26125219 26125226     5</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

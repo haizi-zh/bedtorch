@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
       </span>
     </div>
 
@@ -151,7 +151,14 @@ need to be the path of a user-provided file.</p></td>
 
 <span class='co'># Basic usage</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>complement_bed</span><span class='op'>(</span><span class='va'>tbl</span>, <span class='st'>"hg19"</span><span class='op'>)</span>
-</div></pre>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start       end
+#&gt; 1:     1     0 249250621
+#&gt; 2:     2     0 243199373
+#&gt; 3:     3     0 198022430
+#&gt; 4:     4     0 191154276
+#&gt; 5:     5     0 180915260
+#&gt; 6:     6     0 171115067</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

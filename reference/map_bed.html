@@ -73,7 +73,7 @@ statistics and/or summary operations on those features." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
       </span>
     </div>
 
@@ -172,11 +172,19 @@ This is similar to <code><a href='merge_bed.html'>merge_bed()</a></code></p></td
 
 <span class='co'># Basic usage</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>map_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, operation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>score_mean <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>$</span><span class='va'>score</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score_mean
+#&gt; 1:    21    22  36   7.666667
+#&gt; 2:    21    47  55   2.666667
+#&gt; 3:    22    40  60   6.666667</div><div class='input'>
 <span class='co'># Perform the mapping, requiring the minimum overlapping of 5bp</span>
 <span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>map_bed</span><span class='op'>(</span><span class='va'>tbl_x</span>, <span class='va'>tbl_y</span>, operation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>score_mean <span class='op'>=</span> <span class='kw'>function</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>$</span><span class='va'>score</span><span class='op'>)</span><span class='op'>)</span>, 
                   min_overlap <span class='op'>=</span> <span class='fl'>5</span>, min_overlap_type <span class='op'>=</span> <span class='st'>"bp"</span><span class='op'>)</span>
-</div></pre>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score_mean
+#&gt; 1:    21    22  36          9
+#&gt; 2:    21    47  55         NA
+#&gt; 3:    22    40  60          9</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

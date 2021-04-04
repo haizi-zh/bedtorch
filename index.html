@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="R package for fast BED-file manipulation">
-<meta property="og:description" content="The goal of bedtorch is to provide a fast and native toolsuite for BED file manipulation.">
+<meta property="og:description" content="The goal of bedtorch is to provide a fast BED file manipulation tool suite native in R.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.6</span>
       </span>
     </div>
 
@@ -71,10 +71,12 @@
 <a href="#bedtorch" class="anchor"></a>bedtorch</h1></div>
 <!-- badges: start -->
 
+<!-- badges: end -->
+<p><em>For full documentation, refer to the <a href="https://haizi-zh.github.io/bedtorch/">package documentation site</a>.</em></p>
 <div id="motivation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#motivation" class="anchor"></a>Motivation</h2>
-<p>The goal of bedtorch is to provide a fast and native toolsuite for BED file manipulation.</p>
+<p>The goal of bedtorch is to provide a fast BED file manipulation tool suite native in R.</p>
 <p>In bioinformatics studies, an important type of jobs is related to BED and BED-like file manipulation. To name a few example:</p>
 <ul>
 <li>Filtering cfDNA fragments based on length</li>
@@ -102,6 +104,7 @@
 <p>In terms of the core computation, <code>bedtorch</code>’s performance is comparable to <code>bedtools</code>. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via <code>bedtorch</code>, many tasks can be done about one magnitude faster.</p>
 <p>Additionally, <code>bedtorch</code> can write dataset directly to BGZIP-format files. <a href="http://www.htslib.org/doc/bgzip.html">BGZIP</a> is a variant of gzip and is widely used in bioinformatics. It’s compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all <code>.gz</code> files as gzip-compressed, thus doesn’t take advantage of BED index, and cannot output BGZIP files.</p>
 <p>To address this, <code>bedtorch</code> can directly write a dataset to disk in BGZIP format, and (optionally) create the index.</p>
+<p>For more details, refer to the <a href="https://haizi-zh.github.io/bedtorch/reference/index.html">package reference page</a>.</p>
 <div id="installation" class="section level3">
 <h3 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h3>
@@ -166,10 +169,9 @@
 <p>Note: this does not mean <code>bedtools</code> is indeed slower than <code>bedtorch</code> at performing the actual computation. Don’t forget <code>bedtools</code> requires large amount of disk IO, while <code>bedtorch</code> does not.</p>
 </div>
 </div>
-<div id="reference" class="section level2">
+<div id="see-also" class="section level2">
 <h2 class="hasAnchor">
-<a href="#reference" class="anchor"></a>Reference</h2>
-<p>For more details, refer to the documentation page: <a href="https://haizi-zh.github.io/bedtorch/" class="uri">https://haizi-zh.github.io/bedtorch/</a></p>
+<a href="#see-also" class="anchor"></a>See also</h2>
 <p>Many features are inspired by bedtools. Thus, it’s helpful to get familiar with bedtool’s documentation: <a href="https://bedtools.readthedocs.io/en/latest/index.html" class="uri">https://bedtools.readthedocs.io/en/latest/index.html</a></p>
 </div>
 </div>
@@ -193,7 +195,7 @@
 <div class="developers">
 <h2>Developers</h2>
 <ul class="list-unstyled">
-<li>Haizi Zheng <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-6165-0179" target="orcid.widget" aria-label="ORCID"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>Haizi Zheng <br><small class="roles"> Author, maintainer </small>  </li>
 </ul>
 </div>
 

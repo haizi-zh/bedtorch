@@ -4,10 +4,19 @@
     <loc>https://haizi-zh.github.io/bedtorch//index.html</loc>
   </url>
   <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/cluster_bed.html</loc>
+  </url>
+  <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/complement_bed.html</loc>
   </url>
   <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/intersect_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/make_random_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/make_windows.html</loc>
   </url>
   <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/map_bed.html</loc>

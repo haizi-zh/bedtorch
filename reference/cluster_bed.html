@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Write a data.table to file — write_bed • bedtorch</title>
+<title>Cluster intervals — cluster_bed • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,9 @@
 
 
 
-<meta property="og:title" content="Write a data.table to file — write_bed" />
-<meta property="og:description" content="Can be a plain text file or a BGZIP file." />
+<meta property="og:title" content="Cluster intervals — cluster_bed" />
+<meta property="og:description" content="This operation is similar to bedtools cluster. It reports each set of
+overlapping or “book-ended” features in an interval file." />
 
 
 
@@ -108,50 +109,67 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Write a <code>data.table</code> to file</h1>
-    <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/io.R'><code>R/io.R</code></a></small>
-    <div class="hidden name"><code>write_bed.Rd</code></div>
+    <h1>Cluster intervals</h1>
+    <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/manipulation.R'><code>R/manipulation.R</code></a></small>
+    <div class="hidden name"><code>cluster_bed.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Can be a plain text file or a BGZIP file.</p>
+    <p>This operation is similar to <code>bedtools cluster</code>. It reports each set of
+overlapping or “book-ended” features in an interval file.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>write_bed</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>file_path</span>, tabix_index <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>x</span>, max_dist <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>A <code>data.table</code> object to write.</p></td>
+      <td><p>A <code>data.table</code></p></td>
     </tr>
     <tr>
-      <th>file_path</th>
-      <td><p>Path of the output file. If the extension name is <code>.gz</code> or
-<code>.bgz</code>, the output will be compressed in BGZIP format.</p></td>
-    </tr>
-    <tr>
-      <th>tabix_index</th>
-      <td><p>If <code>TRUE</code>, and <code>file_path</code> indicates a gzip file, will
-create create the tabix index file.</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Other arguments passed to methods. Compliant with <code><a href='https://Rdatatable.gitlab.io/data.table/reference/fwrite.html'>data.table::fwrite</a></code>.</p></td>
+      <th>max_dist</th>
+      <td><p>Maximum distance between features allowed for features to be
+merged. Default is 0. That is, overlapping and/or book-ended features are
+merged.</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    <p>A <code>data.table</code>. Compared</p>
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>Manual page of <code>bedtools cluster</code>:
+<a href='https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html'>https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html</a></p>
+    <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
+
+    <div class='dont-index'><p><code><a href='merge_bed.html'>merge_bed()</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>bedtbl</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
+    <pre class="examples"><div class='input'><span class='va'>tbl</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span><span class='op'>)</span>
 
-<span class='co'># Write data to uncompressed file</span>
-<span class='fu'>write_bed</span><span class='op'>(</span><span class='va'>bedtbl</span>,  <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span>fileext <span class='op'>=</span> <span class='st'>".bed"</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'># Write data to file and create tabix index</span>
-<span class='fu'>write_bed</span><span class='op'>(</span><span class='va'>bedtbl</span>, <span class='fu'><a href='https://rdrr.io/r/base/tempfile.html'>tempfile</a></span><span class='op'>(</span>fileext <span class='op'>=</span> <span class='st'>".bed.gz"</span><span class='op'>)</span>, tabix_index <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-</div></pre>
+<span class='co'># Basic usage</span>
+<span class='va'>clustered</span> <span class='op'>&lt;-</span> <span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>tbl</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>clustered</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score cluster
+#&gt; 1:    21     3   6     8       1
+#&gt; 2:    21    10  16     5       2
+#&gt; 3:    21    12  17     4       2
+#&gt; 4:    21    15  22     5       2
+#&gt; 5:    21    22  25     7       2
+#&gt; 6:    21    26  30     7       3</div><div class='input'>
+<span class='co'># Change the maximum distance allowed</span>
+<span class='va'>clustered</span> <span class='op'>&lt;-</span> <span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>tbl</span>, max_dist <span class='op'>=</span> <span class='fl'>10</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>clustered</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;    chrom start end score cluster
+#&gt; 1:    21     3   6     8       1
+#&gt; 2:    21    10  16     5       1
+#&gt; 3:    21    12  17     4       1
+#&gt; 4:    21    15  22     5       1
+#&gt; 5:    21    22  25     7       1
+#&gt; 6:    21    26  30     7       1</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
