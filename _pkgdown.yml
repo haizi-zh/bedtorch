@@ -28,6 +28,7 @@ reference:
   - title: "Statistics"
     contents:
       - jaccard_bed
+      - reldist_bed
   - title: "Other utilities"
     contents:
       - make_windows

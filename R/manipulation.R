@@ -976,3 +976,100 @@ jaccard_bed <- function(x,
     n_intersections = nrow(intersect_data)
   )
 }
+
+
+#' Relative distance distribution
+#' 
+#' Calculate the relative distance distribution between two BED data tables.
+#' @param x A `data.table`.
+#' @param y A `data.table`.
+#' @return The relative distance distribution.
+#' @examples 
+#' # Load BED tables
+#' x <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"))
+#' y <- read_bed(system.file("extdata", "example2_window.bed", package = "bedtorch"))
+#' 
+#' # Basic usages
+#' reldist_bed(x, y) 
+#' @references 
+#' Manual page of `bedtools reldist`:
+#'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/reldist.html}
+#'   
+#' Exploring Massive, Genome Scale Datasets with the GenometriCorr Package.
+#' Favorov A, Mularoni L, Cope LM, Medvedeva Y, Mironov AA, et al. (2012) PLoS
+#' Comput Biol 8(5): e1002529.
+#' \href{https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002529}{doi:10.1371/journal.pcbi.1002529}
+#' @export
+reldist_bed <- function(x, y) {
+  helper <- function(x, y) {
+    if (min(nrow(x), nrow(y)) == 0)
+      return(NULL)
+
+    # This helper function runs only for single chrom
+    stopifnot(length(unique(x$chrom)) == 1)
+    stopifnot(length(unique(y$chrom)) == 1)
+    
+    # Midpoints
+    # x <- x[, 1:3][, midpoint := as.integer(round(start + (end - start - 1) / 2))][, type := "x"]
+    # y <- y[, 1:3][, midpoint := as.integer(round(start + (end - start - 1) / 2))][, type := "y"]
+    x <- x[, 1:3][, midpoint := as.integer(((start + end) / 2))][, type := "x"]
+    y <- y[, 1:3][, midpoint := as.integer(((start + end) / 2))][, type := "y"]
+    
+    
+    m <- rbindlist(list(x, y))
+    setkey(m, "midpoint", "type")
+    
+    ptr1 <- NULL
+    ptr2 <- NULL
+    result <- rep(NA, nrow(m))
+    
+    seq_len(nrow(m)) %>% walk(function(idx) {
+      if (m$type[idx] == "y") {
+        if (!is.null(ptr1))
+          ptr2 <<- c(ptr2, idx)
+      } else {
+        if (is.null(ptr1))
+          ptr1 <<- idx
+        else {
+          if (is.null(ptr2))
+            ptr1 <<- idx
+          else {
+            # Complete one cycle: have found the pattern x->y->x
+            p1 <- m$midpoint[ptr1]
+            p2 <- m$midpoint[ptr2]
+            p3 <- m$midpoint[idx]
+            
+            # Update the result vector
+            if (any(is.na(c(p1, p2, p3))))
+              browser()
+            if (any(is.null(c(p1, p2, p3))))
+              browser()
+            reldist <- pmin(p2 - p1, p3 - p2) / (p3 - p1)
+            if (any(is.infinite(reldist)))
+              browser()
+            result[ptr2] <<- reldist
+            
+            ptr1 <<- idx
+            ptr2 <<- NULL
+          }
+        }
+      }
+    })
+    
+    m <- m[, reldist := result][!is.na(result)]
+    m$reldist
+  }
+  
+  result <- unique(c(as.character(x$chrom), as.character(y$chrom))) %>%
+    map(function(v) {
+      helper(x[chrom == v], y[chrom ==v])
+    }) %>%
+    unlist()
+
+  h <- hist(result, breaks = seq(0, 0.5, by = 0.01))
+  data.table(
+    reldist = head(h$breaks, n = -1),
+    count = h$counts,
+    total = length(result)
+  )[, freq := count / total][count != 0]
+}
