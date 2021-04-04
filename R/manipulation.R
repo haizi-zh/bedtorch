@@ -300,6 +300,48 @@ intersect_bed <-
 }
 
 
+#' Exclude certain regions
+#' 
+#' Return original entries in `x` that do not overlap with any intervals in `y`.
+#' Essentially, this function is just a short-hand for
+#' [bedtorch::intersect_bed()] in `exclude` mode.
+#' @param x A `data.table` object.
+#' @param y A `data.table` object.
+#' @param max_gap The largest gap for two intervals to be considered as
+#'   overlapping. Default is 0 (no gap allowed).
+#' @param min_overlap The smallest overlapping region for two intervals to be
+#'   considered as overlapping. Default is 1.
+#' @param min_overlap_type A character value indicating how `min_overlap` is
+#'   interpreted. `bp` means `min_overlap` is the number of base pairs. `frac1`
+#'   means `min_overlap` is the minimum overlap required as a fraction of `x`.
+#'   Similarly, `frac2` means `min_overlap` is the minimum overlap required as a
+#'   fraction of `y`. Similar to `bedtools intersect`'s `-f` and `-F` arguments.
+#' @return A `data.table`.
+#' @examples 
+#' # Load BED tables
+#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' 
+#' # Basic usages
+#' head(exclude_bed(tbl_x, tbl_y))
+#' @seealso [bedtorch::intersect_bed()]
+#' @references Manual page of `bedtools intersect`: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}
+#' @export
+exclude_bed <- function(x,
+                        y,
+                        max_gap = 0,
+                        min_overlap = 1,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
+  intersect_bed(
+    x,
+    y,
+    mode = "exclude",
+    max_gap = max_gap,
+    min_overlap = min_overlap,
+    min_overlap_type = min_overlap_type
+  )
+}
+
 # Load chrom sizes from hg19 or hg38, or any user-provided data file
 load_chrom_sizes <- function(ref_genome) {
   chrom_sizes_file <- switch(

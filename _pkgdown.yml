@@ -23,6 +23,7 @@ reference:
       - slop_bed
       - intersect_bed
       - subtract_bed
+      - exclude_bed
       - complement_bed
       - shuffle_bed
   - title: "Statistics"
