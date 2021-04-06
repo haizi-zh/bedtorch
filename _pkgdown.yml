@@ -35,3 +35,5 @@ reference:
       - make_windows
       - make_random_bed
       - check_binaries
+      - rollsum
+      - rollmean

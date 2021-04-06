@@ -20,14 +20,17 @@ Imports:
     stringr,
     dplyr,
     purrr,
+    tidyr,
     data.table,
     seqminer (>= 8.1.2),
     Rsamtools (>= 2.4.0),
     R.utils,
-    assertthat
+    assertthat,
+    Rcpp
 Suggests: 
     testthat (>= 3.0.0),
-    devtools (>= 2.3.0)
+    devtools (>= 2.3.0),
+    zoo
 Config/testthat/edition: 3
 URL: https://github.com/haizi-zh/bedtorch
 BugRePORTS: https://github.com/haizi-zh/bedtorch/issues
@@ -35,3 +38,5 @@ BiocType: Software
 Remotes: 
     haizi-zh/seqminer@master,
     bioc::Rsamtools
+LinkingTo: 
+    Rcpp
