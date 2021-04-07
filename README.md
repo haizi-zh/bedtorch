@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![devel](https://img.shields.io/badge/devel%20version-0.1.6-blue.svg)](https://github.com/haizi-zh/bedtorch)
+[![devel](https://img.shields.io/badge/devel%20version-0.1.8-blue.svg)](https://github.com/haizi-zh/bedtorch)
 [![License:
 MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
 [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
@@ -142,6 +142,30 @@ head(bedtbl)
 #> 6:     1  3300 3395     88    193
 ```
 
+Read a remote BGZIP BED file for a certain region:
+
+``` r
+# Load remote BGZIP files with tabix index specified
+# Here we need to explicitly indicate `compression` as `bgzip` since we are
+# using short URL for `tabix_index`, so that the function cannot guess
+# compression type using the URL
+head(
+  read_bed(
+    "https://git.io/JYATB",
+    range = "22:20000001-30000001",
+    tabix_index = "https://git.io/JYAkT",
+    compression = "bgzip"
+  )
+)
+#>    chrom    start      end       score comp_method
+#> 1:    22 20000000 20500000 -0.06135351    cofrag/3
+#> 2:    22 20500000 21000000 -0.04227518    cofrag/3
+#> 3:    22 21000000 21500000  0.02681753    cofrag/3
+#> 4:    22 21500000 22000000  0.03863082    cofrag/3
+#> 5:    22 22000000 22500000  0.02651413    cofrag/3
+#> 6:    22 22500000 23000000 -0.04258119    cofrag/3
+```
+
 Write the previous data table to the temporary directory, and create the
 tabix index alongside:
 
@@ -196,12 +220,12 @@ Shuffle a BED data table across the genome:
 ``` r
 head(shuffle_bed(tbl_x))
 #>    chrom    start      end score
-#> 1:    21  2056766  2056772     9
-#> 2:    21 11889243 11889248     4
-#> 3:    21 20243430 20243433     7
-#> 4:    21 20594071 20594078     5
-#> 5:    21 24460076 24460080     7
-#> 6:    21 26074760 26074763     5
+#> 1:    21  1844055  1844061     5
+#> 2:    21  4395921  4395926     2
+#> 3:    21  7126283  7126286     8
+#> 4:    21 13696619 13696624     4
+#> 5:    21 20712863 20712870     5
+#> 6:    21 22183905 22183911     9
 ```
 
 Calculate Jaccard statistics between the two BED data tables:

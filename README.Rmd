@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
-[![devel](https://img.shields.io/badge/devel%20version-0.1.6-blue.svg)](https://github.com/haizi-zh/bedtorch) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT) [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) [![Codecov test coverage](https://codecov.io/gh/haizi-zh/bedtorch/branch/main/graph/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![CodeFactor](https://www.codefactor.io/repository/github/haizi-zh/bedtorch/badge)](https://www.codefactor.io/repository/github/haizi-zh/bedtorch)
+[![devel](https://img.shields.io/badge/devel%20version-0.1.8-blue.svg)](https://github.com/haizi-zh/bedtorch) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT) [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) [![Codecov test coverage](https://codecov.io/gh/haizi-zh/bedtorch/branch/main/graph/badge.svg)](https://github.com/haizi-zh/bedtorch/actions) [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental) [![CodeFactor](https://www.codefactor.io/repository/github/haizi-zh/bedtorch/badge)](https://www.codefactor.io/repository/github/haizi-zh/bedtorch)
 
 <!-- badges: end -->
 
@@ -83,6 +83,23 @@ file_path <-
 
 bedtbl <- read_bed(file_path, range = "1:3001-4000")
 head(bedtbl)
+```
+
+Read a remote BGZIP BED file for a certain region:
+
+```{r}
+# Load remote BGZIP files with tabix index specified
+# Here we need to explicitly indicate `compression` as `bgzip` since we are
+# using short URL for `tabix_index`, so that the function cannot guess
+# compression type using the URL
+head(
+  read_bed(
+    "https://git.io/JYATB",
+    range = "22:20000001-30000001",
+    tabix_index = "https://git.io/JYAkT",
+    compression = "bgzip"
+  )
+)
 ```
 
 Write the previous data table to the temporary directory, and create the tabix index alongside:

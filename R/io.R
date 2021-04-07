@@ -13,9 +13,44 @@ is_remote <- function(file_path) {
 }
 
 
+isTabixRange <- function(range) {
+  isValid <- function(x) {
+    ret = strsplit(x = x, split = ":")[[1]]
+    if (length(ret) == 1) { # e.g. "chr1"
+      return(TRUE)
+    }
+    if (length(ret) != 2) {
+      return(FALSE)
+    }
+    chrom = ret[1]
+    if (nchar(chrom) == 0) {
+      return (FALSE)
+    }
+    ret = strsplit(x = ret[2], split = "-")[[1]]
+    if (length(ret) == 2) {
+      beg = suppressWarnings(as.integer(ret[1]))
+      end = suppressWarnings(as.integer(ret[2]))
+      if (is.na(beg) || is.na(end) || beg > end) {
+        return(FALSE)
+      }
+    } else if (length(ret) == 1) {
+      beg = suppressWarnings(as.integer(ret[1]))
+      if (is.na(beg)) {
+        return(FALSE)
+      }
+    } else {
+      return(FALSE)
+    }
+    return(TRUE)
+  }
+  ranges <- unlist(strsplit(x = range, split = ","))
+  sapply(ranges, isValid)
+}
+
+
 # Make sure all ranges are valid
 normalize_tabix_range <- function(range) {
-  stopifnot(all(seqminer::isTabixRange(range)))
+  stopifnot(all(isTabixRange(range)))
   
   # If some of the ranges are in the form chr1 (while chromosome), change it to
   # chr1:1-2000000000, because the underlying tabix library does not allow
@@ -114,47 +149,57 @@ filter_by_region <- function(dt, range) {
 }
 
 
-# Load a gzipped and indexed BED-like file
-read_tabix_bed <- function(file_path, range, use_htslib = FALSE) {
+parse_range <- function(range) {
   # Make sure the genomic ranges are valid
   range <- normalize_tabix_range(range)
+  
+  range <- str_match(range, 
+                     pattern = "^([^:]+):([0-9]+)-([0-9]+)")
+  range_bed <- as.data.table(range)[, 2:4]
+  setnames(range_bed, c("chrom", "start", "end"))
+  range_bed[, `:=`(start = as.integer(start) - 1L, end = as.integer(end))]
+  post_process_table(range_bed)
+  
+  merge_bed(range_bed)
+}
 
-  na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-  filter_flag <- FALSE
-  if (!use_htslib) {
-    # Check if we can use tabix to extract the reads
-    tabix_exist <- check_binaries(binaries = "tabix", verbose = FALSE, stop_on_fail = TRUE)
-    index_exist <- file.exists(paste0(file_path, ".tbi"))
-    use_tabix <- tabix_exist && index_exist
+
+# Load a gzipped and indexed BED-like file
+read_tabix_bed <- function(file_path, range, index_path = NULL, download_index = FALSE) {
+  # Get UCSC-style range strings
+  range %<>%
+    parse_range %>%
+    pmap_chr(function(chrom, start, end)
+      str_interp("${chrom}:${start + 1L}-${end}"))
+  
+  # Check index existence
+  if (!is.null(index_path)) {
+    if (is_remote(index_path))
+      index_exists <- RCurl::url.exists(index_path)
+    else
+      index_exists <- file.exists(index_path)
     
-    if (use_tabix) {
-      tabix_regions <- paste0(as.character(range), collapse = " ")
-      tabix_cmd <- str_interp("tabix ${file_path} ${tabix_regions}")
-      dt <-
-        data.table::fread(cmd = tabix_cmd, na.strings = na_strings)
-    } else {
-      if (endsWith(file_path, ".gz")) {
-        warning("Either tabix or index does not exist. Resource to sequential scanning, which may negatively impact the performance.")
-      }
-      dt <- data.table::fread(file = file_path, na.strings = na_strings)
-      # Postpone the filtering to after assigning column names
-      filter_flag <- TRUE
+    if (!index_exists) {
+      warning(str_interp("Cannot find tabix index ${index_path}"))
+      index_path <- NULL
     }
-  } else {
-    dt <- seqminer::tabix.read.table(file_path, tabixRange = range)
-    data.table::setDT(dt)
+  } else if (is_remote(file_path)) {
+    index_path <- paste0(file_path, ".tbi")
+    index_exists <- RCurl::url.exists(index_path)
+    if (!index_exists)
+      stop(str_interp("Cannot find remote tabix index ${index_path}"))
   }
-  
-  if (nrow(dt) == 0)
-    return(dt)
-  
-  post_process_table(dt)
-  
-  if (filter_flag) {
-    dt <- filter_by_region(dt, range)
-  }
-  
-  dt
+ 
+  tempbed <- tempfile(fileext = ".bed")
+  on.exit(unlink(tempbed), add = TRUE)
+  c_read_tabix_table(
+    file_path,
+    range,
+    output_file = tempbed,
+    index_path = if (is.null(index_path)) "" else index_path,
+    download_index = download_index
+  )
+  read_bed(tempbed)
 }
 
 
@@ -173,45 +218,73 @@ read_tabix_bed <- function(file_path, range, use_htslib = FALSE) {
 #' @param file_path Path to the data file. It can be either a local file, or a remote URL.
 #' @param range A genomic range character vector. Must follow standard genomic
 #'   range notation format, e.g. chr1:1001-2000
+#' @param compression Indicate the compression type. If `detect`, this function
+#'   will try to guess from `file_path`.
+#' @param tabix_index A character value indicating the location of the tabix
+#'   index file. Can be either local or remote. If `NULL`, it will be derived
+#'   from `file_path`.
+#' @param download_index Whether to download (cache) the tabix index at current
+#'   directory.
 #' @param ... Other arguments to be passed to [data.table::fread()].
 #' @seealso [data.table::fread()]
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #' head(bedtbl)
 #' 
-#' # bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#' #                  range = "1:3001-4000")
-#' # head(bedtbl)
+#' # Basic usage
+#' bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+#'                  range = "1:3001-4000")
+#' head(bedtbl)
 #' 
-#' # Does not work. Currently HTTPS is not supported
-#' # bedtbl <- read_bed("https://yourdomain.com/example-02.bedGraph.gz", 
-#' #                    range = "1:1000-2000")
+#' # Load remote BGZIP files with tabix index specified
+#' # Here we need to explicitly indicate `compression` as `bgzip` since we are
+#' # using short URL for `tabix_index`, so that the function cannot guess
+#' # compression type using the URL
+#' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT", compression = "bgzip"))
 #' @export
-read_bed <- function(file_path, range = NULL, ...) {
-  if (is.null(range)) {
-    # Load directly
-    na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-    dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
-    post_process_table(dt)
-  } else {
-    stopifnot(length(range) == 1)
+read_bed <-
+  function(file_path,
+           range = NULL,
+           compression = c("detect", "bgzip", "text"),
+           tabix_index = NULL,
+           download_index = FALSE,
+           ...) {
+    compression <- match.arg(compression)
+    if (compression == "detect") {
+      compression <- if (is_gzip(file_path))
+        "bgzip"
+      else
+        "text"
+    }
     
-    if (is_gzip(file_path)) {
-      read_tabix_bed(file_path, range)
+    if (is.null(range)) {
+      # Load directly
+      na_strings <- c("NA", "na", "NaN", "nan", ".", "")
+      dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
+      post_process_table(dt)
     } else {
-      if (is_remote(file_path))
-        stop("range filtering is not available for remote BGZIP files")
-      else {
-        # Load directly
-        na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-        dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
-        post_process_table(dt)
-        
-        filter_by_region(dt, range)
+      stopifnot(length(range) == 1)
+      
+      if (compression == "bgzip") {
+        read_tabix_bed(file_path,
+                       range,
+                       index_path = tabix_index,
+                       download_index = download_index)
+      } else {
+        if (is_remote(file_path))
+          stop("range filtering is not available for remote uncompressed files")
+        else {
+          # Load directly
+          na_strings <- c("NA", "na", "NaN", "nan", ".", "")
+          dt <-
+            fread(file_path, sep = "\t", na.strings = na_strings, ...)
+          post_process_table(dt)
+          
+          filter_by_region(dt, range)
+        }
       }
     }
   }
-}
 
 
 #' Write a `data.table` to file

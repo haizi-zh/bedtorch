@@ -4,13 +4,30 @@
 \alias{read_bed}
 \title{Load a BED-format file}
 \usage{
-read_bed(file_path, range = NULL, ...)
+read_bed(
+  file_path,
+  range = NULL,
+  compression = c("detect", "bgzip", "text"),
+  tabix_index = NULL,
+  download_index = FALSE,
+  ...
+)
 }
 \arguments{
 \item{file_path}{Path to the data file. It can be either a local file, or a remote URL.}
 
 \item{range}{A genomic range character vector. Must follow standard genomic
 range notation format, e.g. chr1:1001-2000}
+
+\item{compression}{Indicate the compression type. If \code{detect}, this function
+will try to guess from \code{file_path}.}
+
+\item{tabix_index}{A character value indicating the location of the tabix
+index file. Can be either local or remote. If \code{NULL}, it will be derived
+from \code{file_path}.}
+
+\item{download_index}{Whether to download (cache) the tabix index at current
+directory.}
 
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
 }
@@ -30,13 +47,16 @@ through HTTPS.
 bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 head(bedtbl)
 
-# bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#                  range = "1:3001-4000")
-# head(bedtbl)
+# Basic usage
+bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+                 range = "1:3001-4000")
+head(bedtbl)
 
-# Does not work. Currently HTTPS is not supported
-# bedtbl <- read_bed("https://yourdomain.com/example-02.bedGraph.gz", 
-#                    range = "1:1000-2000")
+# Load remote BGZIP files with tabix index specified
+# Here we need to explicitly indicate `compression` as `bgzip` since we are
+# using short URL for `tabix_index`, so that the function cannot guess
+# compression type using the URL
+head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT", compression = "bgzip"))
 }
 \seealso{
 \code{\link[data.table:fread]{data.table::fread()}}

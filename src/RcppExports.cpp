@@ -5,15 +5,29 @@
 
 using namespace Rcpp;
 
-// one
-double one(double x);
-RcppExport SEXP _bedtorch_one(SEXP xSEXP) {
+// test_tabix
+int test_tabix(std::string file_path);
+RcppExport SEXP _bedtorch_test_tabix(SEXP file_pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(one(x));
+    Rcpp::traits::input_parameter< std::string >::type file_path(file_pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_tabix(file_path));
     return rcpp_result_gen;
+END_RCPP
+}
+// c_read_tabix_table
+void c_read_tabix_table(std::string file_path, StringVector regions, std::string output_file, std::string index_path, bool download_index);
+RcppExport SEXP _bedtorch_c_read_tabix_table(SEXP file_pathSEXP, SEXP regionsSEXP, SEXP output_fileSEXP, SEXP index_pathSEXP, SEXP download_indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type file_path(file_pathSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type regions(regionsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type output_file(output_fileSEXP);
+    Rcpp::traits::input_parameter< std::string >::type index_path(index_pathSEXP);
+    Rcpp::traits::input_parameter< bool >::type download_index(download_indexSEXP);
+    c_read_tabix_table(file_path, regions, output_file, index_path, download_index);
+    return R_NilValue;
 END_RCPP
 }
 // c_rollmean
@@ -48,7 +62,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bedtorch_one", (DL_FUNC) &_bedtorch_one, 1},
+    {"_bedtorch_test_tabix", (DL_FUNC) &_bedtorch_test_tabix, 1},
+    {"_bedtorch_c_read_tabix_table", (DL_FUNC) &_bedtorch_c_read_tabix_table, 5},
     {"_bedtorch_c_rollmean", (DL_FUNC) &_bedtorch_c_rollmean, 5},
     {"_bedtorch_c_rollsum", (DL_FUNC) &_bedtorch_c_rollsum, 5},
     {NULL, NULL, 0}

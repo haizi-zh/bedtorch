@@ -2,7 +2,7 @@ Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
 Date: 2021-04-03
-Version: 0.1.7
+Version: 0.1.8
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
@@ -22,11 +22,12 @@ Imports:
     purrr,
     tidyr,
     data.table,
-    seqminer (>= 8.1.2),
     Rsamtools (>= 2.4.0),
     R.utils,
     assertthat,
-    Rcpp
+    Rcpp,
+    Rhtslib (>= 1.30.0),
+    RCurl
 Suggests: 
     testthat (>= 3.0.0),
     devtools (>= 2.3.0),
@@ -36,7 +37,8 @@ URL: https://github.com/haizi-zh/bedtorch
 BugRePORTS: https://github.com/haizi-zh/bedtorch/issues
 BiocType: Software
 Remotes: 
-    haizi-zh/seqminer@master,
-    bioc::Rsamtools
+    bioc::Rsamtools,
+    haizi-zh/Rhtslib
 LinkingTo: 
-    Rcpp
+    Rcpp,
+    Rhtslib
