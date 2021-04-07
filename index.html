@@ -102,8 +102,8 @@
 <a href="#details" class="anchor"></a>Details</h2>
 <p><code>bedtorch</code> is an attempt for this. Under the hood, every BED dataset is represented as a <code>data.table</code> object. Users can apply various operations on it, such as intersect, merge, etc. Users can also perform any <code>data.table</code> operations as needed.</p>
 <p>In terms of the core computation, <code>bedtorch</code>’s performance is comparable to <code>bedtools</code>. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via <code>bedtorch</code>, many tasks can be done about one magnitude faster.</p>
-<p>Additionally, <code>bedtorch</code> can write dataset directly to BGZIP-format files. <a href="http://www.htslib.org/doc/bgzip.html">BGZIP</a> is a variant of gzip and is widely used in bioinformatics. It’s compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all <code>.gz</code> files as gzip-compressed, thus doesn’t take advantage of BED index, and cannot output BGZIP files.</p>
-<p>To address this, <code>bedtorch</code> can directly write a dataset to disk in BGZIP format, and (optionally) create the index.</p>
+<p>Additionally, <code>bedtorch</code> can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as <code>tabix</code> or <code>bgzip</code>. In the case of working with remote files, being capable of loading only a portion of the file will be very convenient.</p>
+<p><a href="http://www.htslib.org/doc/bgzip.html">BGZIP</a> is a variant of gzip and is widely used in bioinformatics. It’s compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all <code>.gz</code> files as gzip-compressed, thus doesn’t take advantage of BED index, and cannot output BGZIP files.</p>
 <p>For more details, refer to the <a href="https://haizi-zh.github.io/bedtorch/reference/index.html">package reference page</a>.</p>
 <div id="installation" class="section level3">
 <h3 class="hasAnchor">
@@ -191,12 +191,12 @@
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/shuffle_bed.html">shuffle_bed</a></span><span class="op">(</span><span class="va">tbl_x</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt;    chrom    start      end score</span>
-<span class="co">#&gt; 1:    21  1844055  1844061     5</span>
-<span class="co">#&gt; 2:    21  4395921  4395926     2</span>
-<span class="co">#&gt; 3:    21  7126283  7126286     8</span>
-<span class="co">#&gt; 4:    21 13696619 13696624     4</span>
-<span class="co">#&gt; 5:    21 20712863 20712870     5</span>
-<span class="co">#&gt; 6:    21 22183905 22183911     9</span></code></pre></div>
+<span class="co">#&gt; 1:    21   691856   691859     5</span>
+<span class="co">#&gt; 2:    21  4971831  4971844     1</span>
+<span class="co">#&gt; 3:    21  6426671  6426675     7</span>
+<span class="co">#&gt; 4:    21  9306421  9306426     4</span>
+<span class="co">#&gt; 5:    21 18130222 18130228     9</span>
+<span class="co">#&gt; 6:    21 24372333 24372336     7</span></code></pre></div>
 <p>Calculate Jaccard statistics between the two BED data tables:</p>
 <p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/jaccard-glyph.png" alt="Image by bedtools" width="64%"></a></p>
 <p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
