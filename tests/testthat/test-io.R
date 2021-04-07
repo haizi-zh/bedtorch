@@ -42,3 +42,25 @@ test_that("Post-processing BED table works", {
   # Check start and end
   expect_true(data2[, all(list(start, end) %>% map_lgl(is.integer))])
 })
+
+
+test_that("Write data to files works", {
+  dt <- read_bed(("example2.bed"))
+  
+  temp_bed1 <- tempfile(fileext = ".bed")
+  on.exit(unlink(temp_bed1), add = TRUE)
+  write_bed(dt, file_path = temp_bed1)
+  expect_true(file.exists(temp_bed1))
+  
+  temp_bed2 <- tempfile(fileext = ".bed.gz")
+  on.exit(unlink(temp_bed2), add = TRUE)
+  write_bed(dt, file_path = temp_bed2, tabix_index = FALSE)
+  expect_true(file.exists(temp_bed2))
+  expect_false(file.exists(paste0(temp_bed2, ".tbi")))
+  
+  temp_bed3 <- tempfile(fileext = ".bed.gz")
+  on.exit(unlink(temp_bed3), add = TRUE)
+  write_bed(dt, file_path = temp_bed3, tabix_index = TRUE)
+  expect_true(file.exists(temp_bed3))
+  expect_true(file.exists(paste0(temp_bed3, ".tbi")))
+})

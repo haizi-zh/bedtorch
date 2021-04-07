@@ -55,9 +55,9 @@ It would be desirable to have an R package, which store BED-like data as `data.t
 
 In terms of the core computation, `bedtorch`'s performance is comparable to `bedtools`. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via `bedtorch`, many tasks can be done about one magnitude faster.
 
-Additionally, `bedtorch` can write dataset directly to BGZIP-format files. [BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of gzip and is widely used in bioinformatics. It's compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all `.gz` files as gzip-compressed, thus doesn't take advantage of BED index, and cannot output BGZIP files.
+Additionally, `bedtorch` can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as `tabix` or `bgzip`. In the case of working with remote files, being capable of loading only a portion of the file will be very convenient. 
 
-To address this, `bedtorch` can directly write a dataset to disk in BGZIP format, and (optionally) create the index.
+[BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of gzip and is widely used in bioinformatics. It's compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all `.gz` files as gzip-compressed, thus doesn't take advantage of BED index, and cannot output BGZIP files.
 
 For more details, refer to the [package reference page](https://haizi-zh.github.io/bedtorch/reference/index.html).
 

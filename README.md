@@ -96,16 +96,20 @@ users can directly manipulate the dataset in memory, therefore in
 practice, via `bedtorch`, many tasks can be done about one magnitude
 faster.
 
-Additionally, `bedtorch` can write dataset directly to BGZIP-format
-files. [BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of
-gzip and is widely used in bioinformatics. It’s compatible with gzip,
-with an important additional feature: allows a compressed file to be
-indexed for fast query. However, R is unaware of BGZIP. It considers all
-`.gz` files as gzip-compressed, thus doesn’t take advantage of BED
-index, and cannot output BGZIP files.
+Additionally, `bedtorch` can write data frames directly to BGZIP-format
+files, and optionally create the tabix index. It can also directly load
+either local or remote BGZIP-format files at any particular genomic
+regions. This feature is done by htslib, therefore not requiring
+external command line tools such as `tabix` or `bgzip`. In the case of
+working with remote files, being capable of loading only a portion of
+the file will be very convenient.
 
-To address this, `bedtorch` can directly write a dataset to disk in
-BGZIP format, and (optionally) create the index.
+[BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of gzip and
+is widely used in bioinformatics. It’s compatible with gzip, with an
+important additional feature: allows a compressed file to be indexed for
+fast query. However, R is unaware of BGZIP. It considers all `.gz` files
+as gzip-compressed, thus doesn’t take advantage of BED index, and cannot
+output BGZIP files.
 
 For more details, refer to the [package reference
 page](https://haizi-zh.github.io/bedtorch/reference/index.html).
@@ -220,12 +224,12 @@ Shuffle a BED data table across the genome:
 ``` r
 head(shuffle_bed(tbl_x))
 #>    chrom    start      end score
-#> 1:    21  1844055  1844061     5
-#> 2:    21  4395921  4395926     2
-#> 3:    21  7126283  7126286     8
-#> 4:    21 13696619 13696624     4
-#> 5:    21 20712863 20712870     5
-#> 6:    21 22183905 22183911     9
+#> 1:    21   691856   691859     5
+#> 2:    21  4971831  4971844     1
+#> 3:    21  6426671  6426675     7
+#> 4:    21  9306421  9306426     4
+#> 5:    21 18130222 18130228     9
+#> 6:    21 24372333 24372336     7
 ```
 
 Calculate Jaccard statistics between the two BED data tables:

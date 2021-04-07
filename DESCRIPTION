@@ -22,7 +22,6 @@ Imports:
     purrr,
     tidyr,
     data.table,
-    Rsamtools (>= 2.4.0),
     R.utils,
     assertthat,
     Rcpp,
@@ -37,8 +36,8 @@ URL: https://github.com/haizi-zh/bedtorch
 BugRePORTS: https://github.com/haizi-zh/bedtorch/issues
 BiocType: Software
 Remotes: 
-    bioc::Rsamtools,
     haizi-zh/Rhtslib
 LinkingTo: 
     Rcpp,
     Rhtslib
+SystemRequirements: GNU make

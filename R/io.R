@@ -342,7 +342,7 @@ write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
                            # Output column names only for batch #1
                            col.names = (batch_idx == 1),
                            ...)
-        Rsamtools::bgzip(temp_txt, dest = temp_gz)
+        bgzip(temp_txt, output_file_path = temp_gz)
         unlink(temp_txt)
         
         if (batch_idx == 1)
@@ -352,9 +352,8 @@ write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
       })
     
     if (tabix_index) {
-      Rsamtools::indexTabix(file_path, format = "bed", zeroBased = TRUE)
+      build_tabix_index(file_path)
     }
-    ret <- TRUE
   } else {
     data.table::fwrite(x,
                        file = file_path,

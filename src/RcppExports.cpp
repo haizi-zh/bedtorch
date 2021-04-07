@@ -5,17 +5,6 @@
 
 using namespace Rcpp;
 
-// test_tabix
-int test_tabix(std::string file_path);
-RcppExport SEXP _bedtorch_test_tabix(SEXP file_pathSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type file_path(file_pathSEXP);
-    rcpp_result_gen = Rcpp::wrap(test_tabix(file_path));
-    return rcpp_result_gen;
-END_RCPP
-}
 // c_read_tabix_table
 void c_read_tabix_table(std::string file_path, StringVector regions, std::string output_file, std::string index_path, bool download_index);
 RcppExport SEXP _bedtorch_c_read_tabix_table(SEXP file_pathSEXP, SEXP regionsSEXP, SEXP output_fileSEXP, SEXP index_pathSEXP, SEXP download_indexSEXP) {
@@ -60,12 +49,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bgzip
+void bgzip(std::string input_file_path, std::string output_file_path);
+RcppExport SEXP _bedtorch_bgzip(SEXP input_file_pathSEXP, SEXP output_file_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type input_file_path(input_file_pathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type output_file_path(output_file_pathSEXP);
+    bgzip(input_file_path, output_file_path);
+    return R_NilValue;
+END_RCPP
+}
+// build_tabix_index
+void build_tabix_index(std::string file_path);
+RcppExport SEXP _bedtorch_build_tabix_index(SEXP file_pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type file_path(file_pathSEXP);
+    build_tabix_index(file_path);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bedtorch_test_tabix", (DL_FUNC) &_bedtorch_test_tabix, 1},
     {"_bedtorch_c_read_tabix_table", (DL_FUNC) &_bedtorch_c_read_tabix_table, 5},
     {"_bedtorch_c_rollmean", (DL_FUNC) &_bedtorch_c_rollmean, 5},
     {"_bedtorch_c_rollsum", (DL_FUNC) &_bedtorch_c_rollsum, 5},
+    {"_bedtorch_bgzip", (DL_FUNC) &_bedtorch_bgzip, 2},
+    {"_bedtorch_build_tabix_index", (DL_FUNC) &_bedtorch_build_tabix_index, 1},
     {NULL, NULL, 0}
 };
 
