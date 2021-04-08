@@ -5,6 +5,7 @@
 #' @importFrom tidyr expand_grid
 #' @importFrom dplyr `%>%`
 #' @importFrom data.table setnames setkey fread fwrite shift setDT data.table rbindlist as.data.table
+#' @importFrom BiocGenerics start end
 NULL
 
 ## usethis namespace: start

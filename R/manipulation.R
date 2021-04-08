@@ -60,6 +60,29 @@ merge_bed <- function(x,
 }
 
 
+merge_bed_gr <- function(x, max_dist = 0, operation = NULL) {
+  stopifnot(max_dist >= 0)
+  
+  merged <- GenomicRanges::reduce(x, min.gapwidth = max_dist + 1L)
+  
+  if (!is.null(operation)) {
+    hits <- GenomicRanges::findOverlaps(x, merged) %>% data.table::as.data.table()
+    x <- data.table::as.data.table(x)
+    hit_results <- hits[, {
+      results2 <- names(operation) %>% map(function(op_name) {
+        func <- operation[[op_name]]
+        func(x[[op_name]][.SD$queryHits])
+      })
+      names(results2) <- names(operation)
+      results2
+    }, by = "subjectHits"]
+    mcols(merged) <- hit_results
+  }
+  
+  merged
+}
+
+
 # For each interval pair, get the overlapping start and end
 overlapping_intervals <- function(x, y, overlap_table) {
   overlap_s <-
