@@ -25,7 +25,7 @@ Imports:
     R.utils,
     assertthat,
     Rcpp,
-    Rhtslib (>= 1.30.0),
+    Rhtslib12,
     RCurl
 Suggests: 
     testthat (>= 3.0.0),
@@ -36,8 +36,8 @@ URL: https://github.com/haizi-zh/bedtorch
 BugRePORTS: https://github.com/haizi-zh/bedtorch/issues
 BiocType: Software
 Remotes: 
-    haizi-zh/Rhtslib
+    haizi-zh/Rhtslib12
 LinkingTo: 
     Rcpp,
-    Rhtslib
+    Rhtslib12
 SystemRequirements: GNU make
