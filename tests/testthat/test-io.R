@@ -43,14 +43,54 @@ test_that("Post-processing BED table works", {
   expect_true(data2[, all(list(start, end) %>% map_lgl(is.integer))])
 })
 
+test_that("Reading data works", {
+  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37")
+  expect_equal(length(data), 3000L)
+  expect_equal(names(mcols(data)), c("score1", "score2"))
+  expect_false(is.null(GenomeInfoDb::seqinfo(data)))
+  
+  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
+  expect_equal(length(data), 3L)
+  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1300")
+  expect_equal(length(data), 4L)
+  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1212")
+  expect_equal(length(data), 4L)
+  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1211")
+  expect_equal(length(data), 3L)
+  
+  data <- read_bed("example2.bed.gz", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
+  expect_equal(names(mcols(data)), c("score1", "score2"))
+  expect_equal(length(data), 3L)
+})
+
+
+test_that("Reading remote data works", {
+  url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz"
+  index_url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz.tbi"
+  
+  data <- read_bed(url, use_gr = TRUE, genome = "GRCh37")
+  expect_equal(length(data), 3000L)
+  expect_equal(names(mcols(data)), c("score1", "score2"))
+  expect_false(is.null(GenomeInfoDb::seqinfo(data)))
+  
+  data <- read_bed(url, tabix_index = index_url, use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
+  expect_equal(names(mcols(data)), c("score1", "score2"))
+  expect_equal(length(data), 3L)
+  
+  url <- "https://raw.githubusercontent.com/haizi-zh/bedtorch/main/inst/extdata/example_merge.bed"
+  data <- read_bed(url, use_gr = TRUE, genome = "GRCh37")
+  expect_equal(length(data), 20L)
+})
+
 
 test_that("Write data to files works", {
-  dt <- read_bed(("example2.bed"))
+  dt <- read_bed("example2.bed")
   
   temp_bed1 <- tempfile(fileext = ".bed")
   on.exit(unlink(temp_bed1), add = TRUE)
   write_bed(dt, file_path = temp_bed1)
   expect_true(file.exists(temp_bed1))
+  expect_equal(read_bed(temp_bed1), dt)
   
   temp_bed2 <- tempfile(fileext = ".bed.gz")
   on.exit(unlink(temp_bed2), add = TRUE)
@@ -60,7 +100,13 @@ test_that("Write data to files works", {
   
   temp_bed3 <- tempfile(fileext = ".bed.gz")
   on.exit(unlink(temp_bed3), add = TRUE)
+  on.exit(unlink(paste0(temp_bed3, ".tbi")), add = TRUE)
   write_bed(dt, file_path = temp_bed3, tabix_index = TRUE)
   expect_true(file.exists(temp_bed3))
   expect_true(file.exists(paste0(temp_bed3, ".tbi")))
+  
+  temp_bed4 <- tempfile(fileext = ".bed.gz")
+  on.exit(unlink(temp_bed4), add = TRUE)
+  write_bed(dt, file_path = temp_bed4, tabix_index = FALSE, batch_size = 350)
+  expect_equal(read_bed(temp_bed4), dt)
 })

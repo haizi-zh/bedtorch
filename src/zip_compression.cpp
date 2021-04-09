@@ -13,13 +13,18 @@ void _zip_error(const char *txt, const char *err, int infd, int outfd)
     err ? Rf_error(txt, err) : Rf_error(txt);
 }
 
-void _zip_open(std::string input_file_path, std::string output_file_path, int *infd, int *outfd)
+void _zip_open(std::string input_file_path, std::string output_file_path, int *infd, int *outfd, bool append)
 {
-    int iflag = O_RDONLY, oflag = O_WRONLY | O_CREAT | O_TRUNC;
+    int iflag = O_RDONLY, oflag = O_WRONLY | O_CREAT;
 #ifdef _WIN32
     iflag |= O_BINARY;
     oflag |= O_BINARY;
 #endif
+
+    if (append)
+        oflag |= O_APPEND;
+    else
+        oflag |= O_TRUNC;
 
     *infd = open(input_file_path.c_str(), iflag);
     if (0 > *infd)
@@ -34,7 +39,7 @@ void _zip_open(std::string input_file_path, std::string output_file_path, int *i
 }
 
 // [[Rcpp::export]]
-void bgzip(std::string input_file_path, std::string output_file_path)
+void bgzip(std::string input_file_path, std::string output_file_path, bool append = false)
 {
     static const int BUF_SIZE = 64 * 1024;
     void *buffer;
@@ -44,7 +49,7 @@ void bgzip(std::string input_file_path, std::string output_file_path)
 
     buffer = R_alloc(BUF_SIZE, sizeof(void *));
 
-    _zip_open(input_file_path, output_file_path, &infd, &outfd);
+    _zip_open(input_file_path, output_file_path, &infd, &outfd, append);
     in = gzdopen(infd, "rb");
     if (NULL == in)
         _zip_error("opening input 'input_file_path'", NULL, infd, outfd);

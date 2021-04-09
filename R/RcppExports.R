@@ -13,8 +13,8 @@ c_rollsum <- function(x, k, na_pad = FALSE, na_rm = FALSE, align = 1L) {
     .Call(`_bedtorch_c_rollsum`, x, k, na_pad, na_rm, align)
 }
 
-bgzip <- function(input_file_path, output_file_path) {
-    invisible(.Call(`_bedtorch_bgzip`, input_file_path, output_file_path))
+bgzip <- function(input_file_path, output_file_path, append = FALSE) {
+    invisible(.Call(`_bedtorch_bgzip`, input_file_path, output_file_path, append))
 }
 
 build_tabix_index <- function(file_path) {

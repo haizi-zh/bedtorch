@@ -248,6 +248,8 @@ read_bed <-
            compression = c("detect", "bgzip", "text"),
            tabix_index = NULL,
            download_index = FALSE,
+           genome = NULL,
+           use_gr = TRUE,
            ...) {
     compression <- match.arg(compression)
     if (compression == "detect") {
@@ -260,16 +262,17 @@ read_bed <-
     if (is.null(range)) {
       # Load directly
       na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-      dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
-      post_process_table(dt)
+      dt <-
+        fread(file_path, sep = "\t", na.strings = na_strings, ...)
+      dt <- post_process_table(dt)
     } else {
       stopifnot(length(range) == 1)
       
       if (compression == "bgzip") {
-        read_tabix_bed(file_path,
-                       range,
-                       index_path = tabix_index,
-                       download_index = download_index)
+        dt <- read_tabix_bed(file_path,
+                             range,
+                             index_path = tabix_index,
+                             download_index = download_index)
       } else {
         if (is_remote(file_path))
           stop("range filtering is not available for remote uncompressed files")
@@ -280,10 +283,23 @@ read_bed <-
             fread(file_path, sep = "\t", na.strings = na_strings, ...)
           post_process_table(dt)
           
-          filter_by_region(dt, range)
+          dt <- filter_by_region(dt, range)
         }
       }
     }
+    
+    if (use_gr) {
+      GenomicRanges::makeGRangesFromDataFrame(
+        dt,
+        keep.extra.columns = TRUE,
+        seqinfo = if (is.null(genome))
+          NULL
+        else
+          GenomeInfoDb::Seqinfo(genome = genome),
+        starts.in.df.are.0based = TRUE
+      )
+    } else
+      dt
   }
 
 
@@ -306,8 +322,13 @@ read_bed <-
 #' # Write data to file and create tabix index
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
 #' @export
-write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
+write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
   compressed <- is_gzip(file_path)
+  
+  if (is(x, "GRanges")) {
+    x <- data.table::as.data.table(x)
+    x[, start := as.integer(start - 1L)]
+  }
   
   setnames(x, 1, "#chrom")
   on.exit(setnames(x, "#chrom", "chrom"), add = TRUE)
@@ -316,7 +337,8 @@ write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
     # Since we need to write the data table to disk as a temporary file, it's
     # important to operate by batches, i.e. in each batch, process rows no more
     # than batch_size
-    batch_size <- 1e6L
+    if (is.null(batch_size))
+      batch_size <- nrow(x)
     batch_plan <- seq(from = 1, to = nrow(x), by = batch_size)
     if (tail(batch_plan, n = 1) != nrow(x))
       batch_plan <- c(batch_plan, nrow(x))
@@ -324,8 +346,8 @@ write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
     1:(length(batch_plan) - 1) %>%
       walk(function(batch_idx) {
         temp_txt <- tempfile(fileext = ".tsv")
-        temp_gz <- tempfile(fileext = ".gz")
-        on.exit(unlink(c(temp_txt, temp_gz)), add = TRUE)
+        # temp_gz <- tempfile(fileext = ".gz")
+        on.exit(unlink(temp_txt), add = TRUE)
         
         if (batch_idx < length(batch_plan) - 1) {
           # Not the last batch
@@ -342,13 +364,7 @@ write_bed <- function(x, file_path, tabix_index = TRUE, ...) {
                            # Output column names only for batch #1
                            col.names = (batch_idx == 1),
                            ...)
-        bgzip(temp_txt, output_file_path = temp_gz)
-        unlink(temp_txt)
-        
-        if (batch_idx == 1)
-          system(str_interp("cat ${temp_gz} > ${file_path}"))
-        else
-          system(str_interp("cat ${temp_gz} >> ${file_path}"))
+        bgzip(temp_txt, output_file_path = file_path, append = (batch_idx > 1))
       })
     
     if (tabix_index) {

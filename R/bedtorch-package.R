@@ -1,11 +1,12 @@
 # Home-made essentials tools for bioinformatics
 
 #' @import stringr
-#' @importFrom purrr map map_int map_dbl map_lgl map_chr walk pwalk pmap_chr
+#' @importFrom purrr map map_int map_dbl map_lgl map_chr walk pwalk pmap_chr pmap_dfr
 #' @importFrom tidyr expand_grid
 #' @importFrom dplyr `%>%`
 #' @importFrom data.table setnames setkey fread fwrite shift setDT data.table rbindlist as.data.table
 #' @importFrom BiocGenerics start end
+#' @importFrom GenomicRanges mcols `mcols<-`
 NULL
 
 ## usethis namespace: start

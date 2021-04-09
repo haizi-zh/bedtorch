@@ -47,9 +47,9 @@ merge_bed <- function(x,
     # Apply functions
     
     if (!is.null(operation)) {
-      results2 <- names(operation) %>% map(function(op_name) {
+      results2 <- lapply(names(operation), function(op_name) {
         func <- operation[[op_name]]
-        func(.SD)
+        func(.SD[[op_name]])
       })
       names(results2) <- names(operation)
       c(results1, results2)
@@ -63,20 +63,19 @@ merge_bed <- function(x,
 merge_bed_gr <- function(x, max_dist = 0, operation = NULL) {
   stopifnot(max_dist >= 0)
   
-  merged <- GenomicRanges::reduce(x, min.gapwidth = max_dist + 1L)
+  merged <-
+    GenomicRanges::reduce(x,
+                          min.gapwidth = max_dist + 1L,
+                          with.revmap = !is.null(operation))
   
   if (!is.null(operation)) {
-    hits <- GenomicRanges::findOverlaps(x, merged) %>% data.table::as.data.table()
-    x <- data.table::as.data.table(x)
-    hit_results <- hits[, {
-      results2 <- names(operation) %>% map(function(op_name) {
-        func <- operation[[op_name]]
-        func(x[[op_name]][.SD$queryHits])
-      })
-      names(results2) <- names(operation)
-      results2
-    }, by = "subjectHits"]
-    mcols(merged) <- hit_results
+    aggregated <- names(operation) %>% map(function(op_name) {
+      func <- operation[[op_name]]
+      data <- mcols(x)[[op_name]]
+      func(IRanges::extractList(data, merged$revmap))
+    })
+    names(aggregated) <- names(operation)
+    mcols(merged) <- c(mcols(merged), aggregated)
   }
   
   merged
@@ -320,6 +319,11 @@ intersect_bed <-
   }
   
   stop(str_interp("${mode} not implemented yet"))
+}
+
+
+intersect_bed_gr <- function(x, y) {
+  IRanges::subsetByOverlaps(x, y)
 }
 
 
