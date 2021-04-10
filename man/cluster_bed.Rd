@@ -7,14 +7,14 @@
 cluster_bed(x, max_dist = 0)
 }
 \arguments{
-\item{x}{A \code{data.table}}
+\item{x}{A \code{GRanges}}
 
 \item{max_dist}{Maximum distance between features allowed for features to be
 merged. Default is 0. That is, overlapping and/or book-ended features are
 merged.}
 }
 \value{
-A \code{data.table}. Compared
+A \code{GRanges}. Compared
 }
 \description{
 This operation is similar to \verb{bedtools cluster}. It reports each set of

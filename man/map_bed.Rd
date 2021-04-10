@@ -8,14 +8,15 @@ map_bed(
   data,
   scaffold,
   operation,
-  min_overlap = 1,
+  max_gap = -1L,
+  min_overlap = 0L,
   min_overlap_type = c("bp", "frac1", "frac2")
 )
 }
 \arguments{
-\item{data}{A \code{data.table} object.}
+\item{data}{A \code{GRanges} object.}
 
-\item{scaffold}{A \code{data.table} object containing intervals upon which you
+\item{scaffold}{A \code{GRanges} object containing intervals upon which you
 want to map \code{data}.}
 
 \item{operation}{List of functions for the statistics and summary operations.
@@ -26,7 +27,7 @@ This is similar to \code{\link[=merge_bed]{merge_bed()}}}
 \item{min_overlap_type}{\code{\link[=intersect_bed]{intersect_bed()}}.}
 }
 \value{
-A mapped \code{data.table} object.
+A mapped \code{GRanges} object.
 }
 \description{
 Map overlapping features in \code{data} onto intervals in \code{scaffold} and apply

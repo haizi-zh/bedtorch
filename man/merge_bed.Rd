@@ -25,7 +25,7 @@ group, take the sum of the \code{score} column, and save to \code{max_score}. Si
 to \verb{bedtools merge}'s \code{-c} and \code{-o} arguments.}
 }
 \value{
-A \code{data.table} object containing merged intervals.
+A \code{GRanges} object containing merged intervals.
 }
 \description{
 This operation is similar to \verb{bedtools merge}.

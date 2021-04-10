@@ -12,9 +12,9 @@ jaccard_bed(
 )
 }
 \arguments{
-\item{x}{A \code{data.table}.}
+\item{x}{A \code{GRanges}.}
 
-\item{y}{A \code{data.table}.}
+\item{y}{A \code{GRanges}.}
 
 \item{min_overlap}{The smallest overlapping region for two intervals to be
 considered as overlapping. Default is 1.}

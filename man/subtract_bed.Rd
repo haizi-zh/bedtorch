@@ -12,16 +12,16 @@ subtract_bed(
 )
 }
 \arguments{
-\item{x}{A \code{data.table} object.}
+\item{x}{A \code{GRanges} object.}
 
-\item{y}{A \code{data.table} object.}
+\item{y}{A \code{GRanges} object.}
 
 \item{min_overlap}{See \code{\link[=intersect_bed]{intersect_bed()}}.}
 
 \item{min_overlap_type}{\code{\link[=intersect_bed]{intersect_bed()}}.}
 }
 \value{
-A \code{data.table} after subtracting \code{y} from \code{x}
+A \code{GRanges} after subtracting \code{y} from \code{x}
 }
 \description{
 This function searches for intervals in \code{y} that overlaps with \code{x}, and

@@ -1,0 +1,328 @@
+---
+title: "Benchmarks"
+output:
+  html_document:
+    df_print: paged
+  # html_notebook: ""
+---
+
+```{r, setup, include=FALSE}
+devtools::load_all()
+library(here)
+library(tidyverse)
+
+knitr::opts_knit$set(root.dir = here())
+knitr::opts_chunk$set(eval = FALSE, cache.comments = FALSE, collapse = TRUE)
+```
+
+
+Generate test data:
+
+```{r, eval=TRUE}
+generate_test_data <- function(n, interval_width, chrom = "1") {
+  start_pos <-
+    as.integer(cumsum(round(runif(n) * 2 * interval_width)))
+  end_pos <-
+    as.integer(start_pos + rpois(n, lambda = interval_width))
+  label <- ceiling(runif(n) * 5)
+  test_data1 <-
+    data.table::data.table(
+      chrom = chrom,
+      start = start_pos,
+      end = end_pos,
+      label = label
+    )
+  post_process_table(test_data1)
+  test_data2 <-
+    GenomicRanges::makeGRangesFromDataFrame(test_data1,
+                                            keep.extra.columns = TRUE,
+                                            starts.in.df.are.0based = TRUE)
+  return(list(test_data1, test_data2))
+}
+```
+
+
+## `merge_bed`
+
+Prepare dataset:
+
+```{r merge_bed}
+rm(list = ls())
+
+merge_bed_bm <- local({
+  expand_grid(size = as.integer(2**(0:12)*1e3L),
+              has_operation = c(TRUE, FALSE)) %>%
+    pmap_dfr(function(size, has_operation) {
+      logging::loginfo(str_interp("${size}, ${has_operation}"))
+      n <- size
+      start_pos <- as.integer(cumsum(round(runif(n) * 200)))
+      end_pos <- as.integer(start_pos + rpois(n, lambda = 100))
+      label <- round(runif(n) * 5)
+      test_data1 <-
+        data.table::data.table(
+          chrom = "21",
+          start = start_pos,
+          end = end_pos,
+          label = label
+        )
+      post_process_table(test_data1)
+      test_data2 <-
+        GenomicRanges::makeGRangesFromDataFrame(
+          test_data1,
+          keep.extra.columns = TRUE,
+          starts.in.df.are.0based = TRUE
+        )
+      
+      operation <- if (has_operation)
+        list(label = max)
+      else
+        NULL
+      
+      rbenchmark::benchmark(
+        # data.table = merge_bed(test_data1, operation = operation),
+        gr = merge_bed_gr(test_data2, operation = operation),
+        replications = 3,
+        columns = c('test', 'replications', 'elapsed')
+      ) %>% mutate(size = n, has_operation = has_operation)
+    })
+})
+
+write_tsv(merge_bed_bm, file = here("scripts/merge_bed_bm.tsv"), col_names = TRUE)
+```
+
+
+```{r, eval=TRUE, cache=TRUE, echo=TRUE}
+fread(here("scripts/merge_bed_bm.tsv"))[, .(test,
+                                            size = as.integer(size / 1e3L), 
+                                            elapsed = elapsed / replications,
+                                            has_operation)] %>%
+  ggpubr::ggline(x = "size", y = "elapsed", color = "test", facet.by = "has_operation") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "merge_bed performance", subtitle = "has_operation?")
+```
+
+Conclusion: the `GenomicRanges` implementation is much faster.
+
+## `intersect_bed`
+
+### Mode: `unique`
+
+```{r intersect_bed_unique}
+rm(list = ls())
+
+intersect_bed_bm <- local({
+  expand_grid(size = as.integer(2**(0:12)*1e3L)) %>%
+    pmap_dfr(function(size) {
+      logging::loginfo(str_interp("${size}"))
+      n <- size
+      start_pos <- as.integer(cumsum(round(runif(n) * 200)))
+      end_pos <- as.integer(start_pos + rpois(n, lambda = 100))
+      label <- round(runif(n) * 5)
+      test_data1 <-
+        data.table::data.table(
+          chrom = "21",
+          start = start_pos,
+          end = end_pos,
+          label = label
+        )
+      post_process_table(test_data1)
+      test_data2 <-
+        GenomicRanges::makeGRangesFromDataFrame(
+          test_data1,
+          keep.extra.columns = TRUE,
+          starts.in.df.are.0based = TRUE
+        )
+      
+      # Make windows
+      n <- as.integer(n / 50)
+      start_pos <- as.integer(cumsum(round(runif(n) * 200 * 50)))
+      end_pos <- as.integer(start_pos + rpois(n, lambda = 100 * 50))
+      test_window1 <-
+        data.table::data.table(
+          chrom = "21",
+          start = start_pos,
+          end = end_pos
+        )
+      post_process_table(test_window1)
+      test_window2 <-
+        GenomicRanges::makeGRangesFromDataFrame(
+          test_window1,
+          keep.extra.columns = TRUE,
+          starts.in.df.are.0based = TRUE
+        )
+      
+      rbenchmark::benchmark(
+        data.table = intersect_bed(test_data1, test_window1, mode = "unique"),
+        gr = intersect_bed_gr(test_data2, test_window2),
+        replications = 5,
+        columns = c('test', 'replications', 'elapsed')
+      ) %>% mutate(size = n)
+    })
+})
+
+data.table::fwrite(intersect_bed_bm, "scripts/intersect_bed_unique_bed.tsv", sep = "\t")
+```
+
+
+```{r, eval=TRUE, cache=TRUE, echo=TRUE}
+fread(here("scripts/intersect_bed_unique_bed.tsv"))[, .(test,
+                                            size = as.integer(size / 1e3L), 
+                                            elapsed = elapsed / replications)] %>%
+  ggpubr::ggline(x = "size", y = "elapsed", color = "test") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "intersect_bed (unique mode) performance")
+```
+
+
+### Mode: `default`
+
+```{r}
+rm(list = ls())
+
+intersect_bed_default_bm <- local({
+  expand_grid(size = as.integer(2**(0:13)*1e3L)) %>%
+    pmap_dfr(function(size) {
+      logging::loginfo(str_interp("${size}"))
+      
+      test_data <- generate_test_data(size, interval_width = 100)
+      # Make windows
+      test_window <- generate_test_data(as.integer(size / 50), interval_width = 100 * 50)
+
+      bench::mark(
+        check = FALSE,
+        iterations = 5,
+        exprs = list(
+          data.table = quote(intersect_bed_dt(test_data[[1]], test_window[[1]], mode = "default")),
+          gr = quote(intersect_bed(test_data[[2]], test_window[[2]], mode = "default"))
+        )
+      ) %>%
+        select(expression:total_time) %>%
+        mutate(size = size)
+    })
+})
+
+intersect_bed_default_bm %>% 
+  mutate(elapsed = as.numeric(median), expression = names(expression)) %>% 
+  select(c(expression:size, elapsed)) %>%
+  write_tsv("scripts/intersect_bed_default.tsv", col_names = TRUE)
+```
+
+
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/intersect_bed_default.tsv", col_types = cols()) %>%
+  mutate(size = as.integer(size / 1e3)) %>% 
+  ggpubr::ggline(x = "size", y = "elapsed", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "intersect_bed (default mode) performance")
+```
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/intersect_bed_default.tsv", col_types = cols()) %>%
+    mutate(size = as.integer(size / 1e3), mem_alloc = as.numeric(bench::as_bench_bytes(mem_alloc))/1024**2) %>%
+  ggpubr::ggline(x = "size", y = "mem_alloc", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "intersect_bed (default mode) performance")
+```
+
+## `map_bed`
+
+```{r}
+rm(list = ls() %>% setdiff("generate_test_data"))
+
+map_bed_bm <- local({
+  expand_grid(size = as.integer(2**(0:12)*1e3L)) %>%
+    pmap_dfr(function(size) {
+      logging::loginfo(str_interp("${size}"))
+      
+      test_data <- generate_test_data(size, interval_width = 100)
+      # Make windows
+      test_window <- generate_test_data(as.integer(size / 50), interval_width = 100 * 50)
+      
+      bench::mark(
+        check = FALSE,
+        iterations = 5,
+        exprs = list(
+          data.table = quote(map_bed_dt(test_data[[1]], test_window[[1]], operation = list(label = function(x) mean(x$label)))),
+          gr = quote(map_bed(test_data[[2]], test_window[[2]], operation = list(l = list(on = "label", func = mean))))
+        )
+      ) %>%
+        select(expression:total_time) %>%
+        mutate(size = size)
+    })
+})
+
+
+map_bed_bm %>% 
+  mutate(elapsed = as.numeric(median), expression = names(expression)) %>% 
+  select(c(expression:size, elapsed)) %>%
+  write_tsv("scripts/map_bed.tsv", col_names = TRUE)
+```
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/map_bed.tsv", col_types = cols()) %>%
+  mutate(size = as.integer(size / 1e3)) %>% 
+  ggpubr::ggline(x = "size", y = "elapsed", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "map_bed performance")
+```
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/map_bed.tsv", col_types = cols()) %>%
+    mutate(size = as.integer(size / 1e3), mem_alloc = as.numeric(bench::as_bench_bytes(mem_alloc))/1024**2) %>%
+  ggpubr::ggline(x = "size", y = "mem_alloc", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "map_bed performance")
+```
+
+
+## `exclude_bed`
+
+```{r}
+rm(list = ls() %>% setdiff("generate_test_data"))
+
+exclude_bed_bm <- local({
+  expand_grid(size = as.integer(2**(0:13)*1e3L)) %>%
+    pmap_dfr(function(size) {
+      logging::loginfo(str_interp("${size}"))
+      
+      test_data <- generate_test_data(size, interval_width = 100)
+      # Make windows
+      test_window <- generate_test_data(as.integer(size / 50), interval_width = 100 * 50)
+      
+      bench::mark(
+        check = FALSE,
+        iterations = 5,
+        exprs = list(
+          data.table = quote(exclude_bed(test_data[[1]], test_window[[1]])),
+          gr = quote(exclude_bed(test_data[[2]], test_window[[2]]))
+        )
+      ) %>%
+        select(expression:total_time) %>%
+        mutate(size = size)
+    })
+})
+
+
+exclude_bed_bm %>% 
+  mutate(elapsed = as.numeric(median), expression = names(expression)) %>% 
+  select(c(expression:size, elapsed)) %>%
+  write_tsv("scripts/exclude_bed.tsv", col_names = TRUE)
+```
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/exclude_bed.tsv", col_types = cols()) %>%
+  mutate(size = as.integer(size / 1e3)) %>% 
+  ggpubr::ggline(x = "size", y = "elapsed", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "exclude_bed performance")
+```
+
+```{r, eval=TRUE, cache=TRUE}
+read_tsv("scripts/exclude_bed.tsv", col_types = cols()) %>%
+    mutate(size = as.integer(size / 1e3), mem_alloc = as.numeric(bench::as_bench_bytes(mem_alloc))/1024**2) %>%
+  ggpubr::ggline(x = "size", y = "mem_alloc", color = "expression") +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "exclude_bed performance")
+```
+

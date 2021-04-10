@@ -7,14 +7,14 @@
 complement_bed(x, chrom_sizes = c("hg19", "hg38"))
 }
 \arguments{
-\item{x}{A \code{data.table}.}
+\item{x}{A \code{GRanges}.}
 
 \item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
 the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
 need to be the path of a user-provided file.}
 }
 \value{
-A \code{data.table} which is the complement of \code{x}.
+A \code{GRanges} which is the complement of \code{x}.
 }
 \description{
 This function returns all intervals in a genome that are not covered by at least one interval in the input.

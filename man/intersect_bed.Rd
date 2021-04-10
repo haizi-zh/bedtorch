@@ -8,15 +8,15 @@ intersect_bed(
   x,
   y,
   mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
-  max_gap = 0,
-  min_overlap = 1,
+  max_gap = -1L,
+  min_overlap = 0L,
   min_overlap_type = c("bp", "frac1", "frac2")
 )
 }
 \arguments{
-\item{x}{A \code{data.table} object.}
+\item{x}{A \code{GRanges} object.}
 
-\item{y}{A \code{data.table} object.}
+\item{y}{A \code{GRanges} object.}
 
 \item{mode}{Mode of the intersect operation. Can be one of the following:
 
@@ -55,7 +55,7 @@ Similarly, \code{frac2} means \code{min_overlap} is the minimum overlap required
 fraction of \code{y}. Similar to \verb{bedtools intersect}'s \code{-f} and \code{-F} arguments.}
 }
 \value{
-A \code{data.table} representing the intersection of \code{x} and \code{y}
+A \code{GRanges} representing the intersection of \code{x} and \code{y}
 }
 \description{
 Apply \code{intersect} operation between two tables

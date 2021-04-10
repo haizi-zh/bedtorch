@@ -31,7 +31,7 @@ seed is randomly chosen.}
 \item{sort}{Logical value. Should the random BED data be sorted?}
 }
 \value{
-A \code{data.table} of generated intervals.
+A \code{GRanges} of generated intervals.
 }
 \description{
 This function is aware of chromosome size differences and intervals are

@@ -2,7 +2,7 @@ Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
 Date: 2021-04-03
-Version: 0.1.8
+Version: 0.1.9
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
@@ -38,7 +38,9 @@ URL: https://github.com/haizi-zh/bedtorch
 BugRePORTS: https://github.com/haizi-zh/bedtorch/issues
 BiocType: Software
 Remotes: 
-    haizi-zh/Rhtslib12
+    haizi-zh/Rhtslib12,
+    bioc::GenomicRanges,
+    bioc::S4Vectors
 LinkingTo: 
     Rcpp,
     Rhtslib12

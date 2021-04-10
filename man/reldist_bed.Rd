@@ -7,9 +7,9 @@
 reldist_bed(x, y)
 }
 \arguments{
-\item{x}{A \code{data.table}.}
+\item{x}{A \code{GRanges}.}
 
-\item{y}{A \code{data.table}.}
+\item{y}{A \code{GRanges}.}
 }
 \value{
 The relative distance distribution.

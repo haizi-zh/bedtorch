@@ -13,7 +13,7 @@ slop_bed(
 )
 }
 \arguments{
-\item{x}{A \code{data.table} object.}
+\item{x}{A \code{GRanges} object.}
 
 \item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
 the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it

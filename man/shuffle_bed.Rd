@@ -13,13 +13,13 @@ shuffle_bed(
 )
 }
 \arguments{
-\item{x}{A \code{data.table}.}
+\item{x}{A \code{GRanges}.}
 
 \item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
 the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
 need to be the path of a user-provided file.}
 
-\item{excluded_region}{A \code{data.table} containing regions that you don't want
+\item{excluded_region}{A \code{GRanges} containing regions that you don't want
 to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 within such regions.}
 
@@ -31,7 +31,7 @@ don't need the output to be sorted, set \code{sort} to \code{FALSE}.}
 seed is randomly chosen.}
 }
 \value{
-A \code{data.table} containing shuffled features.
+A \code{GRanges} containing shuffled features.
 }
 \description{
 This function randomly permutes genomic locations among a genome defined in a

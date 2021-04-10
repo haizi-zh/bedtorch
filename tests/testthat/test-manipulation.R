@@ -147,6 +147,22 @@ test_that("Finding intersections between two tables with min_overlap settings wo
 #   expect_equal(result, target)
 # })
 
+test_that("Excluding regions works (GenomicRanges)", {
+  dt1 <- read_bed("example_merge.bed")
+  dt2 <- read_bed("example_intersect_y.bed")
+  
+  result <- exclude_bed(dt1, dt2)
+  expect_equal(result, read_bed("example_intersect_r2.bed"))
+  
+  dt1 <- read_bed("example2.bed")
+  dt2 <- read_bed("example2_window.bed")
+  
+  result <- exclude_bed(dt1, dt2)
+  target <- read_bed("example2_intersect_r2.bed")
+  names(mcols(target)) <- names(mcols(result))
+  expect_equal(result, target)
+})
+
 test_that("Excluding regions works", {
   dt1 <- read_bed(("example_merge.bed"), use_gr = FALSE)
   dt2 <- read_bed(("example_intersect_y.bed"), use_gr = FALSE)
@@ -278,4 +294,19 @@ test_that("Calculating Jaccard distance works", {
   expect_equal(result$union[1], 227080)
   expect_equal(result$n_intersections[1], 141)
   expect_true(abs(result$jaccard[1] - 0.111155) < 1e-5)
+})
+
+
+test_that("Making windows over genome works", {
+  window_size <- 500e3L
+  dt <- make_windows(window_size, "GRCh37", chrom = c("21", "22"))
+  
+  chrom_list <- as.character(unique(seqnames(dt)))
+  expect_true(all(chrom_list == c("21", "22")))
+  
+  # Check the interval widths
+  chrom_list %>% map_lgl(function(chrom) {
+    dt <- dt[seqnames(dt) == chrom]
+    all(head(width(dt), -1) == window_size)
+  }) %>% all() %>% expect_true()
 })

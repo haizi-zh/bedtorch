@@ -16,7 +16,7 @@
 #'   list(on = "score", func = max))` means for all intervals merged into one
 #'   group, take the sum of the `score` column, and save to `max_score`. Similar
 #'   to `bedtools merge`'s `-c` and `-o` arguments.
-#' @return A `data.table` object containing merged intervals.
+#' @return A `GRanges` object containing merged intervals.
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #' merged <- merge_bed(bedtbl)
@@ -134,8 +134,8 @@ min_overlap_filter <- function(x, y, overlap_table, min_overlap, min_overlap_typ
 
 #' Apply `intersect` operation between two tables
 #'
-#' @param x A `data.table` object.
-#' @param y A `data.table` object.
+#' @param x A `GRanges` object.
+#' @param y A `GRanges` object.
 #' @param mode Mode of the intersect operation. Can be one of the following:
 #' 
 #'   `default`: Similar to `bedtools intersect`'s default behavior.
@@ -168,7 +168,7 @@ min_overlap_filter <- function(x, y, overlap_table, min_overlap, min_overlap_typ
 #'   means `min_overlap` is the minimum overlap required as a fraction of `x`.
 #'   Similarly, `frac2` means `min_overlap` is the minimum overlap required as a
 #'   fraction of `y`. Similar to `bedtools intersect`'s `-f` and `-F` arguments.
-#' @return A `data.table` representing the intersection of `x` and `y`
+#' @return A `GRanges` representing the intersection of `x` and `y`
 #' @examples 
 #' # Load BED tables
 #' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
@@ -199,8 +199,8 @@ intersect_bed <-
   function(x,
            y,
            mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
-           max_gap = 0,
-           min_overlap = 1,
+           max_gap = -1L,
+           min_overlap = 0L,
            min_overlap_type = c("bp", "frac1", "frac2")) {
     UseMethod("intersect_bed")
   }
@@ -211,16 +211,27 @@ intersect_bed.data.table <-
   function(x,
            y,
            mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
-           max_gap = 0,
-           min_overlap = 1,
+           max_gap = -1L,
+           min_overlap = 0L,
            min_overlap_type = c("bp", "frac1", "frac2")) {
   mode <- match.arg(mode)
   min_overlap_type <- match.arg(min_overlap_type)
   
-  stopifnot(max_gap >= 0)
-  stopifnot(min_overlap > 0)
+  stopifnot(max_gap >= -1L)
+  stopifnot(min_overlap >= 0L)
   
-  if (max_gap > 0) stop("max_gap has not been implemented yet.")
+  if (max_gap != -1L) stop("max_gap has not been implemented yet.")
+  
+  # Here's a trick: for GenomicRanges::findOverlaps,
+  # when 'type' is "any", at least one of 'maxgap' and 'minoverlap' must be set
+  # to its default value
+  # By default, max_gap = -1 means STRICT inside the other, which implies positive
+  # overlap even if min_overlap = 0
+  # This works for GenomicRanges, but not data.table, since for data.table max_gap
+  # has not been implemented yet. Thus max_gap is simply ignored. As a result, we
+  # shouldn't allow min_overlap to be 0
+  if (min_overlap == 0)
+    min_overlap = 1L
   
   # Change it to 1-based convention
   x[, start := start + 1L]
@@ -232,13 +243,13 @@ intersect_bed.data.table <-
     y[, start := start - 1L]
   }, add = TRUE)
   
-  if (max_gap != 0) {
-    y[, `:=`(start = start - max_gap, end = end + max_gap)]
-    setkey(y, "chrom", "start", "end")
-    on.exit({
-      y[, `:=`(start = start + max_gap, end = end - max_gap)]
-    }, add = TRUE)
-  }
+  # if (max_gap != 0) {
+  #   y[, `:=`(start = start - max_gap, end = end + max_gap)]
+  #   setkey(y, "chrom", "start", "end")
+  #   on.exit({
+  #     y[, `:=`(start = start + max_gap, end = end - max_gap)]
+  #   }, add = TRUE)
+  # }
   
   on.exit({
     setkey(x, "chrom", "start", "end")
@@ -393,8 +404,8 @@ intersect_bed.GRanges <-
 #' Return original entries in `x` that do not overlap with any intervals in `y`.
 #' Essentially, this function is just a short-hand for
 #' [bedtorch::intersect_bed()] in `exclude` mode.
-#' @param x A `data.table` object.
-#' @param y A `data.table` object.
+#' @param x A `GRanges` object.
+#' @param y A `GRanges` object.
 #' @param max_gap The largest gap for two intervals to be considered as
 #'   overlapping. Default is 0 (no gap allowed).
 #' @param min_overlap The smallest overlapping region for two intervals to be
@@ -404,7 +415,7 @@ intersect_bed.GRanges <-
 #'   means `min_overlap` is the minimum overlap required as a fraction of `x`.
 #'   Similarly, `frac2` means `min_overlap` is the minimum overlap required as a
 #'   fraction of `y`. Similar to `bedtools intersect`'s `-f` and `-F` arguments.
-#' @return A `data.table`.
+#' @return A `GRanges`.
 #' @examples 
 #' # Load BED tables
 #' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
@@ -417,8 +428,38 @@ intersect_bed.GRanges <-
 #' @export
 exclude_bed <- function(x,
                         y,
-                        max_gap = 0,
-                        min_overlap = 1,
+                        max_gap = -1L,
+                        min_overlap = 0L,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
+  UseMethod("exclude_bed")
+}
+
+
+#' @export
+exclude_bed.GRanges <- function(x,
+                        y,
+                        max_gap = -1L,
+                        min_overlap = 0L,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
+  min_overlap_type <- match.arg(min_overlap_type)
+  if (min_overlap_type != "bp")
+    stop("Currently min_overlap_type other than bp is not supported")
+  
+  hits <- findOverlaps(x, y, maxgap = max_gap, minoverlap = min_overlap)
+  
+  # Non-hit intervals
+  all_ids <- seq.int(length(x))
+  hit_ids <- from(hits)
+  
+  x[sort(setdiff(all_ids, hit_ids))]
+}
+
+
+#' @export
+exclude_bed.data.table <- function(x,
+                        y,
+                        max_gap = -1L,
+                        min_overlap = 0L,
                         min_overlap_type = c("bp", "frac1", "frac2")) {
   intersect_bed(
     x,
@@ -456,7 +497,7 @@ load_chrom_sizes <- function(ref_genome) {
 #' Similar to `bedtools slop`, this function increases the size of each feature
 #' in a feature file by a user-defined number of bases. Will restrict the
 #' resizing to the size of the chromosome.
-#' @param x A `data.table` object.
+#' @param x A `GRanges` object.
 #' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
 #'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
 #'   need to be the path of a user-provided file. If `NULL`, the resizing will
@@ -620,14 +661,14 @@ map_bed.GRanges <- function(x, y, operation,
 #'
 #' Map overlapping features in `data` onto intervals in `scaffold` and apply
 #' statistics and/or summary operations on those features.
-#' @param data A `data.table` object.
-#' @param scaffold A `data.table` object containing intervals upon which you
+#' @param data A `GRanges` object.
+#' @param scaffold A `GRanges` object containing intervals upon which you
 #'   want to map `data`.
 #' @param operation List of functions for the statistics and summary operations.
 #'   This is similar to [bedtorch::merge_bed()]
 #' @param min_overlap See [bedtorch::intersect_bed()].
 #' @param min_overlap_type [bedtorch::intersect_bed()].
-#' @return A mapped `data.table` object.
+#' @return A mapped `GRanges` object.
 #' @examples
 #' # Load BED tables
 #' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
@@ -645,16 +686,23 @@ map_bed.GRanges <- function(x, y, operation,
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/map.html}
 #' @seealso [bedtorch::merge_bed()], [bedtorch::intersect_bed()]
 #' @export
-map_bed <- function(data, scaffold, operation, 
-                       min_overlap = 1,
-                       min_overlap_type = c("bp", "frac1", "frac2")) {
+map_bed <- function(data,
+                    scaffold,
+                    operation,
+                    max_gap = -1L,
+                    min_overlap = 0L,
+                    min_overlap_type = c("bp", "frac1", "frac2")) {
   UseMethod("map_bed")
 }
 
 #' @export
-map_bed.data.table <- function(data, scaffold, operation, 
-                    min_overlap = 1,
-                    min_overlap_type = c("bp", "frac1", "frac2")) {
+map_bed.data.table <- function(data,
+                               scaffold,
+                               operation,
+                               max_gap = -1L,
+                               min_overlap = 0L,
+                               min_overlap_type = c("bp", "frac1", "frac2")) {
+  
   stopifnot(!is.null(operation))
   
   result <-
@@ -662,6 +710,7 @@ map_bed.data.table <- function(data, scaffold, operation,
       data,
       scaffold[, 1:3],
       mode = "wo",
+      max_gap = max_gap,
       min_overlap = min_overlap,
       min_overlap_type = min_overlap_type
     )
@@ -692,11 +741,11 @@ map_bed.data.table <- function(data, scaffold, operation,
 #' 
 #' This function searches for intervals in `y` that overlaps with `x`, and
 #' remove the overlapping portion of `x`.
-#' @param x A `data.table` object.
-#' @param y A `data.table` object.
+#' @param x A `GRanges` object.
+#' @param y A `GRanges` object.
 #' @param min_overlap See [bedtorch::intersect_bed()].
 #' @param min_overlap_type [bedtorch::intersect_bed()].
-#' @return A `data.table` after subtracting `y` from `x`
+#' @return A `GRanges` after subtracting `y` from `x`
 #' @examples
 #' # Load BED tables
 #' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
@@ -781,11 +830,11 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
 #' Generate complement
 #' 
 #' This function returns all intervals in a genome that are not covered by at least one interval in the input.
-#' @param x A `data.table`.
+#' @param x A `GRanges`.
 #' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
 #'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
 #'   need to be the path of a user-provided file.
-#' @return A `data.table` which is the complement of `x`.
+#' @return A `GRanges` which is the complement of `x`.
 #' @examples
 #' # Load BED tables
 #' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
@@ -820,11 +869,11 @@ complement_bed <- function(x,
 #' This function randomly permutes genomic locations among a genome defined in a
 #' genome file. Note: the permutation stays in the same chromosome.
 #' Cross-chromosome shuffle is not supported at this point.
-#' @param x A `data.table`.
+#' @param x A `GRanges`.
 #' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
 #'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
 #'   need to be the path of a user-provided file.
-#' @param excluded_region A `data.table` containing regions that you don't want
+#' @param excluded_region A `GRanges` containing regions that you don't want
 #'   to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 #'   within such regions.
 #' @param sort Logical value indicating whether to sort the shuffled features.
@@ -832,7 +881,7 @@ complement_bed <- function(x,
 #'   don't need the output to be sorted, set `sort` to `FALSE`.
 #' @param seed An integer seed for the random number generator. If `NULL`, the
 #'   seed is randomly chosen.
-#' @return A `data.table` containing shuffled features.
+#' @return A `GRanges` containing shuffled features.
 #' @examples
 #' # Load BED tables
 #' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
@@ -941,11 +990,11 @@ shuffle_bed <-
 #' 
 #' This operation is similar to `bedtools cluster`. It reports each set of
 #' overlapping or “book-ended” features in an interval file.
-#' @param x A `data.table`
+#' @param x A `GRanges`
 #' @param max_dist Maximum distance between features allowed for features to be
 #'   merged. Default is 0. That is, overlapping and/or book-ended features are
 #'   merged.
-#' @return A `data.table`. Compared
+#' @return A `GRanges`. Compared
 #' @examples 
 #' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
@@ -992,46 +1041,50 @@ cluster_bed <- function(x, max_dist = 0) {
 #' Make windows along genome
 #' 
 #' Make windows with the size of `window_size` along genome. Must provide
-#' `chrom_sizes` so that intervals are restricted by chromosome sizes.
+#' `genome` so that intervals are restricted by chromosome sizes.
 #' @param window_size An integer value. Size of the windows in base pairs.
-#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
-#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-#'   need to be the path of a user-provided file.
+#' @param genome Provide the genome identifier, e.g. `GRCh37`. Refer to
+#'   [GenomeInfoDb::Seqinfo()].
 #' @param chrom A character vector. If provided, only generate windows for the
 #'   specified chromosome(s).
-#' @return A `data.table` of generated intervals.
+#' @return A `GRanges` object containing the generated windows.
 #' @examples 
-#' # Generate 500kbp intervals for chr20 and chr22, hg38
-#' result <- make_windows(window_size = 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
+#' # Generate 500kbp intervals for chr20 and chr22, GRCh38
+#' result <- make_windows(window_size = 500e3L, genome = "GRCh38", chrom = c("chr20", "chr22"))
 #' head(result)
 #' 
-#' # Generate 5Mbp intervals for all chromosomes of hg19 (default reference genome)
-#' result <- make_windows(window_size = 5e6L)
+#' # Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)
+#' result <- make_windows(window_size = 5e6L, genome = "GRCh37")
 #' head(result)
 #' @export
-make_windows <- function(window_size, chrom_sizes = c("hg19", "hg38"), chrom = NULL) {
-  # BED for chrom_sizes
-  stopifnot(!is.null(chrom_sizes))
-  chrom_sizes <-
-    tryCatch({
-      match.arg(chrom_sizes)
-    }, error = function(e) {
-      return(chrom_sizes)
-    }) %>% load_chrom_sizes()
-  
+make_windows <- function(window_size, genome, chrom = NULL) {
+  genome <- GenomeInfoDb::Seqinfo(genome = genome)
+  chrom_sizes <- genome %>% as.data.frame()
+  chrom_sizes$chrom <- row.names(chrom_sizes)
+  setDT(chrom_sizes)
+  chrom_sizes <- chrom_sizes[, .(chrom, size = seqlengths)]
+ 
   chrom_list <- chrom
   if (!is.null(chrom_list))
     chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
   
-  window_table <- chrom_sizes[, {
-    start <- seq(from = 0, to = size, by = window_size)
-    if (tail(start, n = 1) == size)
-      start <- head(start, n = -1)
-    end <- pmin(start + window_size, size)
-    list(start = as.integer(start), end = as.integer(end))
-  }, by = chrom]
-  setkey(window_table, "chrom", "start", "end")
-  window_table
+  if (nrow(chrom_sizes) == 0)
+    return(NULL)
+  
+  result <- lapply(seq.int(nrow(chrom_sizes)), function(row_idx) {
+    chrom <- chrom_sizes$chrom[row_idx]
+    size <- chrom_sizes$size[row_idx]
+    
+    start_pos <-
+      seq(1, size, by = window_size) %>% head(n = ceiling(size / window_size))
+    end_pos <- pmin(start_pos + window_size - 1, size)
+    GenomicRanges::GRanges(
+      seqnames = chrom,
+      ranges = IRanges::IRanges(start = start_pos, end = end_pos),
+      seqinfo = genome
+    )
+  })
+  do.call(c, result)
 }
 
 
@@ -1050,7 +1103,7 @@ make_windows <- function(window_size, chrom_sizes = c("hg19", "hg38"), chrom = N
 #' @param seed An integer seed for the random number generator. If `NULL`, the
 #'   seed is randomly chosen.
 #' @param sort Logical value. Should the random BED data be sorted?
-#' @return A `data.table` of generated intervals.
+#' @return A `GRanges` of generated intervals.
 #' @examples 
 #' # Generate 100 500kbp-intervals for chr20 and chr22, hg38
 #' result <- make_random_bed(100, 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
@@ -1110,8 +1163,8 @@ make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), 
 #' 
 #' Calculate Jaccard distance between two BED-like data sets
 #' 
-#' @param x A `data.table`.
-#' @param y A `data.table`.
+#' @param x A `GRanges`.
+#' @param y A `GRanges`.
 #' @param min_overlap The smallest overlapping region for two intervals to be
 #'   considered as overlapping. Default is 1.
 #' @param min_overlap_type A character value indicating how `min_overlap` is
@@ -1163,8 +1216,8 @@ jaccard_bed <- function(x,
 #' Relative distance distribution
 #' 
 #' Calculate the relative distance distribution between two BED data tables.
-#' @param x A `data.table`.
-#' @param y A `data.table`.
+#' @param x A `GRanges`.
+#' @param y A `GRanges`.
 #' @return The relative distance distribution.
 #' @examples 
 #' # Load BED tables

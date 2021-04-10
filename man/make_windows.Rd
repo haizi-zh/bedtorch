@@ -4,31 +4,30 @@
 \alias{make_windows}
 \title{Make windows along genome}
 \usage{
-make_windows(window_size, chrom_sizes = c("hg19", "hg38"), chrom = NULL)
+make_windows(window_size, genome, chrom = NULL)
 }
 \arguments{
 \item{window_size}{An integer value. Size of the windows in base pairs.}
 
-\item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
-the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file.}
+\item{genome}{Provide the genome identifier, e.g. \code{GRCh37}. Refer to
+\code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}.}
 
 \item{chrom}{A character vector. If provided, only generate windows for the
 specified chromosome(s).}
 }
 \value{
-A \code{data.table} of generated intervals.
+A \code{GRanges} object containing the generated windows.
 }
 \description{
 Make windows with the size of \code{window_size} along genome. Must provide
-\code{chrom_sizes} so that intervals are restricted by chromosome sizes.
+\code{genome} so that intervals are restricted by chromosome sizes.
 }
 \examples{
-# Generate 500kbp intervals for chr20 and chr22, hg38
-result <- make_windows(window_size = 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
+# Generate 500kbp intervals for chr20 and chr22, GRCh38
+result <- make_windows(window_size = 500e3L, genome = "GRCh38", chrom = c("chr20", "chr22"))
 head(result)
 
-# Generate 5Mbp intervals for all chromosomes of hg19 (default reference genome)
-result <- make_windows(window_size = 5e6L)
+# Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)
+result <- make_windows(window_size = 5e6L, genome = "GRCh37")
 head(result)
 }
