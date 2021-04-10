@@ -323,6 +323,25 @@ read_bed <-
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
 #' @export
 write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+  UseMethod("write_bed")
+}
+
+
+#' @export
+write_bed.data.table <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+  write_bed_core(x, file_path, tabix_index, batch_size, ...)
+}
+
+
+#' @export
+write_bed.GRanges <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+  dt <- data.table::as.data.table(x)
+  dt[, start := start - 1L]
+  write_bed_core(dt, file_path, tabix_index, batch_size, ...)
+}
+
+
+write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
   compressed <- is_gzip(file_path)
   
   if (is(x, "GRanges")) {

@@ -3,7 +3,10 @@
 # # Returns "chrom.1"
 # .available_colname(dt, "chrom")
 .available_colname <- function(dt, name) {
-  fields <- colnames(dt)
+  if (is(dt, "GRanges"))
+    fields <- colnames(mcols(dt))
+  else
+    fields <- colnames(dt)
   
   suffix <- 0
   candidate <- name

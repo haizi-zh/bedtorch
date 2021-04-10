@@ -2,14 +2,14 @@ test_that("Merging overlapping intervals works", {
   dt <- read_bed(("example_merge.bed"))
 
   merged <- merge_bed(dt, max_dist = 2)
-  expect_true(all(merged == read_bed(("example_merge_r2.bed"))))
+  expect_equal(merged, read_bed("example_merge_r2.bed"))
 
   merged <- merge_bed(dt)
   expect_true(all(merged == read_bed(("example_merge_r1.bed"))))
 
   merged <-
-    merge_bed(dt, max_dist = 0, operation = list(score = function(v) sum(v$score)))
-  expect_equal(merged, read_bed(("example_merge_r3.bed")))
+    merge_bed(dt, max_dist = 0, operation = list(score = list(on = "score", func = sum)))
+  expect_equal(merged, read_bed("example_merge_r3.bed"))
   
   dt <- read_bed(("example2.bed"))
   
@@ -23,16 +23,41 @@ test_that("Merging overlapping intervals works", {
     merge_bed(
       dt,
       max_dist = 5,
-      operation = list(
-        score1 = function(v)
-          as.numeric(sum(v$score1, na.rm = TRUE)),
-        score2 = function(v)
-          as.numeric(length(v$score2))
-      )
+      operation = list(score1 = list(on = "score1", func = function(x) sum(x, na.rm = TRUE)),
+                       score2 = list(on = "score2", func = length))
     )
   target <- read_bed(("example2_merge_r3.bed"))
-  setnames(target, new = colnames(merged))
+  names(mcols(target)) <- names(mcols(merged))
   expect_equal(merged, target)
+})
+
+
+test_that("Finding intervals overlapping with windows works", {
+  dt1 <- read_bed(("example2.bed"))
+  dt2 <- read_bed(("example2_window.bed"))
+  
+  result <- intersect_bed(dt1, dt2, mode = "unique")
+  target <- read_bed(("example2_intersect_r3.bed"))
+  names(mcols(target)) <- names(mcols(result))
+  expect_equal(result, target)
+})
+
+
+test_that("Finding intersections in default mode works", {
+  dt1 <- read_bed(("example2.bed"))
+  dt2 <- read_bed(("example2_window.bed"))
+  
+  result <- sort(intersect_bed(dt1, dt2))
+  target <- sort(read_bed("example2_intersect_r1.bed"))
+  names(mcols(target)) <- names(mcols(result))
+  expect_equal(result, target)
+  
+  # Set min_overlap
+  result <- sort(intersect_bed(dt1, dt2, min_overlap = 10, min_overlap_type = "bp"))
+  target <- read_bed("example2_intersect_r1.bed")
+  target <- sort(target[width(target) >= 10])
+  names(mcols(target)) <- names(mcols(result))
+  expect_equal(result, target)
 })
 
 
@@ -46,26 +71,26 @@ test_that("Finding intersections between two tables works", {
   # result <- intersect_bed(dt1, dt2, mode = "unique")
   # expect_equal(result, read_bed(("example_intersect_r3.bed"))
   
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- intersect_bed(dt1, dt2)
-  target <- read_bed(("example2_intersect_r1.bed"))
+  target <- read_bed(("example2_intersect_r1.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, mode = "unique")
-  target <- read_bed(("example2_intersect_r3.bed"))
+  target <- read_bed(("example2_intersect_r3.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, mode = "wa")
-  target <- read_bed(("example2_intersect_r4_wa.bed"))
+  target <- read_bed(("example2_intersect_r4_wa.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, mode = "wb")
-  target <- read_bed(("example2_intersect_r4_wb.bed"))
+  target <- read_bed(("example2_intersect_r4_wb.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   target[, chrom.1 := factor(chrom.1, levels = levels(result$chrom.1))]
   setkey(result, "chrom", "start", "end", "chrom.1", "start.1", "end.1")
@@ -73,7 +98,7 @@ test_that("Finding intersections between two tables works", {
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, mode = "wo")
-  target <- read_bed(("example2_intersect_r4_wo.bed"))
+  target <- read_bed(("example2_intersect_r4_wo.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   target[, chrom.1 := factor(chrom.1, levels = levels(result$chrom.1))]
   setkey(result, "chrom", "start", "end", "chrom.1", "start.1", "end.1")
@@ -82,21 +107,21 @@ test_that("Finding intersections between two tables works", {
 })
 
 test_that("Finding intersections between two tables with min_overlap settings works", {
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- intersect_bed(dt1, dt2, min_overlap = 10, min_overlap_type = "bp")
-  target <- read_bed(("example2_intersect_r1.bed"))[end - start >= 10]
+  target <- read_bed(("example2_intersect_r1.bed"), use_gr = FALSE)[end - start >= 10]
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, min_overlap = 0.5, min_overlap_type = "frac1")
-  target <- read_bed(("example2_intersect_r1_f0_5.bed"))
+  target <- read_bed(("example2_intersect_r1_f0_5.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- intersect_bed(dt1, dt2, min_overlap = 0.1, min_overlap_type = "frac2")
-  target <- read_bed(("example2_intersect_r1_F0_1.bed"))
+  target <- read_bed(("example2_intersect_r1_F0_1.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
@@ -123,42 +148,42 @@ test_that("Finding intersections between two tables with min_overlap settings wo
 # })
 
 test_that("Excluding regions works", {
-  dt1 <- read_bed(("example_merge.bed"))
-  dt2 <- read_bed(("example_intersect_y.bed"))
+  dt1 <- read_bed(("example_merge.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example_intersect_y.bed"), use_gr = FALSE)
   
   result <- intersect_bed(dt1, dt2, mode = "exclude")
-  expect_equal(result, read_bed(("example_intersect_r2.bed")))
+  expect_equal(result, read_bed(("example_intersect_r2.bed"), use_gr = FALSE))
   
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- intersect_bed(dt1, dt2, mode = "exclude")
-  target <- read_bed(("example2_intersect_r2.bed"))
+  target <- read_bed(("example2_intersect_r2.bed"), use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
 
 test_that("Slopping intervals works", {
-  dt <- read_bed("example_slop.bed")
+  dt <- read_bed("example_slop.bed", use_gr = FALSE)
   
   result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "both")
-  target <- read_bed("example_slop_r1.bed")
+  target <- read_bed("example_slop_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   
   result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "right")
-  target <- read_bed("example_slop_r2.bed")
+  target <- read_bed("example_slop_r2.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "left")
-  target <- read_bed("example_slop_r3.bed")
+  target <- read_bed("example_slop_r3.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- slop_bed(dt, slop = 1.2, slop_type = "frac", mode = "both")
-  target <- read_bed("example_slop_r4.bed")
+  target <- read_bed("example_slop_r4.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
@@ -168,52 +193,47 @@ test_that("Mapping intervals works", {
   dt1 <- read_bed(("example2.bed"))
   dt2 <- read_bed(("example2_window.bed"))
   
-  result <-
-    map_bed(dt1,
-            dt2,
-            operation = list(
-              score1 = function(x)
-                sum(x$score1),
-              score2 = function(x)
-                length(x$score2)
-            ))
-  result[is.na(score2), score2 := 0]
+  result <- map_bed(dt1, dt2, operation = list(score1 = list(on = "score1", func = sum),
+                                               score2 = list(on = "score2", func = length)))
+  
   target <- read_bed(("example2_map_r1.bed"))
-  setnames(target, new = colnames(result))
+  target <- target[!is.na(target$score)]
+  names(mcols(target)) <- names(mcols(result))
+  
   expect_equal(result, target)
 })
 
 
 test_that("Subtracting BED tables works", {
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- subtract_bed(dt1, dt2)
-  target <- read_bed("example2_subtract_r1.bed")
+  target <- read_bed("example2_subtract_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
 
 test_that("Generating complement BED works", {
-  dt1 <- read_bed(("example_merge.bed"))
+  dt1 <- read_bed(("example_merge.bed"), use_gr = FALSE)
   
   result <- complement_bed(dt1)
-  target <- read_bed("example_complement_r1.bed")
+  target <- read_bed("example_complement_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
-  dt1 <- read_bed(("example2.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
   
   result <- complement_bed(dt1)
-  target <- read_bed("example_complement_r2.bed")
+  target <- read_bed("example_complement_r2.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
 
 
 test_that("Shuffling BED works", {
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- shuffle_bed(dt1, excluded_region = dt2)
   # Cross-chrom check
@@ -235,23 +255,23 @@ test_that("Shuffling BED works", {
 })
 
 test_that("Clustering BED intervals works", {
-  dt1 <- read_bed(("example2.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
   
   result <- cluster_bed(dt1)
-  target <- read_bed("example2_cluster_r1.bed")
+  target <- read_bed("example2_cluster_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   result <- cluster_bed(dt1, max_dist = 10)
-  target <- read_bed("example2_cluster_r2.bed")
+  target <- read_bed("example2_cluster_r2.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
 })
 
 
 test_that("Calculating Jaccard distance works", {
-  dt1 <- read_bed(("example2.bed"))
-  dt2 <- read_bed(("example2_window.bed"))
+  dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
+  dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
   result <- jaccard_bed(dt1, dt2)
   expect_equal(result$intersection[1], 25241)

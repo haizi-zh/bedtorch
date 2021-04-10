@@ -10,6 +10,8 @@ read_bed(
   compression = c("detect", "bgzip", "text"),
   tabix_index = NULL,
   download_index = FALSE,
+  genome = NULL,
+  use_gr = TRUE,
   ...
 )
 }

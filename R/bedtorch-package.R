@@ -5,8 +5,8 @@
 #' @importFrom tidyr expand_grid
 #' @importFrom dplyr `%>%`
 #' @importFrom data.table setnames setkey fread fwrite shift setDT data.table rbindlist as.data.table
-#' @importFrom BiocGenerics start end
-#' @importFrom GenomicRanges mcols `mcols<-`
+#' @import GenomicRanges
+#' @importFrom S4Vectors from to
 NULL
 
 ## usethis namespace: start

@@ -19,8 +19,8 @@ Calculate the relative distance distribution between two BED data tables.
 }
 \examples{
 # Load BED tables
-x <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"))
-y <- read_bed(system.file("extdata", "example2_window.bed", package = "bedtorch"))
+x <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"), use_gr = FALSE)
+y <- read_bed(system.file("extdata", "example2_window.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usages
 reldist_bed(x, y) 

@@ -7,7 +7,7 @@
 merge_bed(x, max_dist = 0, operation = NULL)
 }
 \arguments{
-\item{x}{A \code{data.table} object.}
+\item{x}{A \code{GRanges} object.}
 
 \item{max_dist}{Maximum distance between features allowed for features to be
 merged. Default is 0. That is, overlapping and/or book-ended features are
@@ -16,12 +16,13 @@ merged.}
 \item{operation}{Specify what operations should be applied to merged
 intervals. Default is \code{NULL}, i.e. do not apply any operation and only
 return the first three columns (\code{chrom}, \code{start}, \code{end}). Must be a list in
-the following format: \code{list(col1 = func1, col2 = func2, ...)}, where \code{col1}
-and \code{col2} are column names, and \code{func1} and \code{func2} are univariate
-functions applied on the corresponding columns, with the subset data frame
-as input (\link[data.table:special-symbols]{data.table::.SD}). For example: \code{list(score = function(x) sum(x$score))} means for all intervals merged into one group, take the sum
-of the \code{score} column. Similar to \verb{bedtools merge}'s \code{-c} and \code{-o}
-arguments.}
+the following format:
+\code{list(col1_save = list(on = col1, func = func1), col2_save = list(on = col2, func = func2), ...)},
+where \code{col1} and \code{col2} are column names to apply merge functions,
+\code{col1_save} and \code{col2_save} are columns to save the results, and \code{func1}
+and \code{func2} are univariate merge functions. For example: \code{list(max_score = list(on = "score", func = max))} means for all intervals merged into one
+group, take the sum of the \code{score} column, and save to \code{max_score}. Similar
+to \verb{bedtools merge}'s \code{-c} and \code{-o} arguments.}
 }
 \value{
 A \code{data.table} object containing merged intervals.
@@ -35,8 +36,8 @@ merged <- merge_bed(bedtbl)
 head(merged)
 
 merged <- merge_bed(bedtbl, max_dist = 10, 
-          operation = list(score1 = function(x) mean(x$score), 
-                           score2 = function(x) sum(x$score)))
+          operation = list(score1 = list(on = "score", func = mean),
+                           score2 = list(on = "score", func = sum)))
 head(merged)
 }
 \references{

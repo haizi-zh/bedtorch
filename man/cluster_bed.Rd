@@ -21,7 +21,7 @@ This operation is similar to \verb{bedtools cluster}. It reports each set of
 overlapping or “book-ended” features in an interval file.
 }
 \examples{
-tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usage
 clustered <- cluster_bed(tbl)

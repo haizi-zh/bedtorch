@@ -39,7 +39,7 @@ resizing to the size of the chromosome.
 }
 \examples{
 # Load data
-tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Slop by 10 on both ends
 result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "both")

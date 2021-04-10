@@ -1,20 +1,21 @@
 #' Merge overlapping intervals
 #' 
 #' This operation is similar to `bedtools merge`.
-#' @param x A `data.table` object.
+#' @param x A `GRanges` object.
 #' @param max_dist Maximum distance between features allowed for features to be
 #'   merged. Default is 0. That is, overlapping and/or book-ended features are
 #'   merged.
 #' @param operation Specify what operations should be applied to merged
 #'   intervals. Default is `NULL`, i.e. do not apply any operation and only
 #'   return the first three columns (`chrom`, `start`, `end`). Must be a list in
-#'   the following format: `list(col1 = func1, col2 = func2, ...)`, where `col1`
-#'   and `col2` are column names, and `func1` and `func2` are univariate
-#'   functions applied on the corresponding columns, with the subset data frame
-#'   as input ([data.table::.SD]). For example: `list(score = function(x)
-#'   sum(x$score))` means for all intervals merged into one group, take the sum
-#'   of the `score` column. Similar to `bedtools merge`'s `-c` and `-o`
-#'   arguments.
+#'   the following format: 
+#'   `list(col1_save = list(on = col1, func = func1), col2_save = list(on = col2, func = func2), ...)`, 
+#'   where `col1` and `col2` are column names to apply merge functions,
+#'   `col1_save` and `col2_save` are columns to save the results, and `func1`
+#'   and `func2` are univariate merge functions. For example: `list(max_score =
+#'   list(on = "score", func = max))` means for all intervals merged into one
+#'   group, take the sum of the `score` column, and save to `max_score`. Similar
+#'   to `bedtools merge`'s `-c` and `-o` arguments.
 #' @return A `data.table` object containing merged intervals.
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
@@ -22,13 +23,20 @@
 #' head(merged)
 #' 
 #' merged <- merge_bed(bedtbl, max_dist = 10, 
-#'           operation = list(score1 = function(x) mean(x$score), 
-#'                            score2 = function(x) sum(x$score)))
+#'           operation = list(score1 = list(on = "score", func = mean),
+#'                            score2 = list(on = "score", func = sum)))
 #' head(merged)
 #' @references Manual page of `bedtools merge`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/merge.html}
 #' @export
 merge_bed <- function(x,
+                      max_dist = 0,
+                      operation = NULL) {
+  UseMethod("merge_bed")
+}
+
+#' @export
+merge_bed.data.table <- function(x,
                   max_dist = 0,
                   operation = NULL) {
   stopifnot(max_dist >= 0)
@@ -60,24 +68,30 @@ merge_bed <- function(x,
 }
 
 
-merge_bed_gr <- function(x, max_dist = 0, operation = NULL) {
+#' @export
+merge_bed.GRanges <- function(x, max_dist = 0, operation = NULL) {
   stopifnot(max_dist >= 0)
   
   merged <-
-    GenomicRanges::reduce(x,
-                          min.gapwidth = max_dist + 1L,
-                          with.revmap = !is.null(operation))
+    reduce(x,
+           min.gapwidth = max_dist + 1L,
+           with.revmap = !is.null(operation))
   
   if (!is.null(operation)) {
     aggregated <- names(operation) %>% map(function(op_name) {
-      func <- operation[[op_name]]
-      data <- mcols(x)[[op_name]]
-      func(IRanges::extractList(data, merged$revmap))
+      func <- operation[[op_name]]$func
+      col_name <- operation[[op_name]]$on
+      data <- mcols(x)[[col_name]]
+      # func(IRanges::extractList(data, merged$revmap))
+      sapply(IRanges::extractList(data, merged$revmap), func)
     })
     names(aggregated) <- names(operation)
     mcols(merged) <- c(mcols(merged), aggregated)
   }
   
+  if (!is.null(operation))
+    merged$revmap = NULL
+
   merged
 }
 
@@ -158,8 +172,8 @@ min_overlap_filter <- function(x, y, overlap_table, min_overlap, min_overlap_typ
 #' @return A `data.table` representing the intersection of `x` and `y`
 #' @examples 
 #' # Load BED tables
-#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Basic usages
 #' result <- intersect_bed(tbl_x, tbl_y)
@@ -183,6 +197,18 @@ min_overlap_filter <- function(x, y, overlap_table, min_overlap, min_overlap_typ
 #' @references Manual page of `bedtools intersect`: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}
 #' @export
 intersect_bed <-
+  function(x,
+           y,
+           mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
+           max_gap = 0,
+           min_overlap = 1,
+           min_overlap_type = c("bp", "frac1", "frac2")) {
+    UseMethod("intersect_bed")
+  }
+
+
+#' @export
+intersect_bed.data.table <-
   function(x,
            y,
            mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
@@ -322,9 +348,45 @@ intersect_bed <-
 }
 
 
-intersect_bed_gr <- function(x, y) {
-  IRanges::subsetByOverlaps(x, y)
+intersect_bed_unique <- function(x, y, max_gap = -1L, min_overlap = 0L) {
+  IRanges::subsetByOverlaps(x, y, maxgap = max_gap, minoverlap = min_overlap)
 }
+
+
+intersect_bed_default <- function(x, y, max_gap = -1L, min_overlap = 0L) {
+  stopifnot(max_gap == -1L)
+
+  hits <- findOverlaps(x, y, minoverlap = min_overlap)
+  
+  result <- x[from(hits)]
+  ranges(result) <- pintersect(ranges(x)[from(hits)], ranges(y)[to(hits)])
+  result
+}
+
+
+#' @export
+intersect_bed.GRanges <-
+  function(x,
+           y,
+           mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
+           max_gap = -1L,
+           min_overlap = 0L,
+           min_overlap_type = c("bp", "frac1", "frac2")) {
+    mode <- match.arg(mode)
+    min_overlap_type <- match.arg(min_overlap_type)
+    
+    if (min_overlap_type != "bp")
+      stop("Currently min_overlap_type other than bp is not supported")
+    
+    if (mode == "unique")
+      intersect_bed_unique(x, y, max_gap = max_gap, min_overlap = min_overlap)
+    else if (mode == "default") {
+      if (max_gap != -1L)
+        stop("In default mode, max_gap must be the default value (-1)")
+      intersect_bed_default(x, y, max_gap = max_gap, min_overlap = min_overlap)
+    } else
+      stop(str_interp("Unsupported mode ${mode}"))
+  }
 
 
 #' Exclude certain regions
@@ -346,8 +408,8 @@ intersect_bed_gr <- function(x, y) {
 #' @return A `data.table`.
 #' @examples 
 #' # Load BED tables
-#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Basic usages
 #' head(exclude_bed(tbl_x, tbl_y))
@@ -409,7 +471,7 @@ load_chrom_sizes <- function(ref_genome) {
 #' @return A slopped `data.tabe` object.
 #' @examples 
 #' # Load data
-#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Slop by 10 on both ends
 #' result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "both")
@@ -510,6 +572,50 @@ slop_bed <-
     x[]
   }
 
+#' @export
+map_bed.GRanges <- function(x, y, operation, 
+                    max_gap = -1L,
+                    min_overlap = 0L,
+                    min_overlap_type = c("bp", "frac1", "frac2")) {
+  min_overlap_type <- match.arg(min_overlap_type)
+  
+  stopifnot(all(operation %>% map_chr(~ .$on) %in% names(mcols(x))))
+  
+  if (min_overlap_type != "bp")
+    stop("Currently min_overlap_type other than bp is not supported")
+  
+  hits <- findOverlaps(x, y, maxgap = max_gap, minoverlap = min_overlap)
+  
+  # Use data.table as a helper
+  col_names <- operation %>% map_chr(~ .$on)
+  dt <- as.data.table(mcols(x[from(hits)])[col_names])[, hits_id := to(hits)]
+
+  aggregated <- names(operation) %>% map(function(op_name) {
+    func <- operation[[op_name]]$func
+    col_name <- operation[[op_name]]$on
+    dt[, func(.SD[[col_name]]), by = hits_id]$V1
+  })
+  names(aggregated) <- names(operation)
+
+  result <- y[unique(to(hits))]
+  mcols(result) <- aggregated
+  result
+  
+  # # Stick to GenomicRanges
+  # result <- y[unique(to(hits))]
+  # 
+  # aggregated <- names(operation) %>% map(function(op_name) {
+  #   func <- operation[[op_name]]$func
+  #   col_name <- operation[[op_name]]$on
+  #   v <- aggregate(mcols(x[from(hits)])[col_name], list(idx = to(hits)), func)
+  #   v[[col_name]]
+  # })
+  # names(aggregated) <- names(operation)
+  # 
+  # mcols(result) <- aggregated
+  # result
+}
+
 
 #' Map over scaffold intervals
 #'
@@ -529,11 +635,11 @@ slop_bed <-
 #' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
 #'
 #' # Basic usage
-#' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)))
+#' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = list(on = "score", func = mean)))
 #' head(result)
 #'
 #' # Perform the mapping, requiring the minimum overlapping of 5bp
-#' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = function(x) mean(x$score)), 
+#' result <- map_bed(tbl_x, tbl_y, operation = list(score_mean = list(on = "score", func = mean)), 
 #'                   min_overlap = 5, min_overlap_type = "bp")
 #' head(result)
 #' @references Manual page of `bedtools map`:
@@ -541,6 +647,13 @@ slop_bed <-
 #' @seealso [bedtorch::merge_bed()], [bedtorch::intersect_bed()]
 #' @export
 map_bed <- function(data, scaffold, operation, 
+                       min_overlap = 1,
+                       min_overlap_type = c("bp", "frac1", "frac2")) {
+  UseMethod("map_bed")
+}
+
+#' @export
+map_bed.data.table <- function(data, scaffold, operation, 
                     min_overlap = 1,
                     min_overlap_type = c("bp", "frac1", "frac2")) {
   stopifnot(!is.null(operation))
@@ -565,19 +678,14 @@ map_bed <- function(data, scaffold, operation,
   
   op_names <- names(operation)
   result[, {
-    # Apply functions
-    # dt2 <- names(operation) %>% map(function(op_name) {
-    #   func <- operation[[op_name]]
-    #   func(.SD)
-    # })
-    # names(dt2) <- names(operation)
-    # dt2
     dt2 <- lapply(op_names, function(op_name) {
-      operation[[op_name]](.SD)
+      func <- operation[[op_name]]$func
+      col_name <- operation[[op_name]]$on
+      func(.SD[[col_name]])
     })
     names(dt2) <- op_names
     dt2
-  }, by = c("chrom", "start", "end")][scaffold[, 1:3]]
+  }, by = c("chrom", "start", "end")][scaffold[, 1:3], nomatch = 0]
 }
 
 
@@ -592,8 +700,8 @@ map_bed <- function(data, scaffold, operation,
 #' @return A `data.table` after subtracting `y` from `x`
 #' @examples
 #' # Load BED tables
-#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+#' tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 #'
 #' # Basic usage
 #' result <- subtract_bed(tbl_x, tbl_y)
@@ -681,7 +789,7 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
 #' @return A `data.table` which is the complement of `x`.
 #' @examples
 #' # Load BED tables
-#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 #'
 #' # Basic usage
 #' result <- complement_bed(tbl, "hg19")
@@ -728,8 +836,8 @@ complement_bed <- function(x,
 #' @return A `data.table` containing shuffled features.
 #' @examples
 #' # Load BED tables
-#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+#' excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 #'
 #' # Basic usage
 #' result <- shuffle_bed(tbl)
@@ -840,7 +948,7 @@ shuffle_bed <-
 #'   merged.
 #' @return A `data.table`. Compared
 #' @examples 
-#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+#' tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Basic usage
 #' clustered <- cluster_bed(tbl)
@@ -1016,8 +1124,8 @@ make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), 
 #' @seealso [bedtorch::intersect_bed()] 
 #' @examples 
 #' # Load BED tables
-#' x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+#' x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+#' y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Basic usages
 #' result <- jaccard_bed(x, y) 
@@ -1061,8 +1169,8 @@ jaccard_bed <- function(x,
 #' @return The relative distance distribution.
 #' @examples 
 #' # Load BED tables
-#' x <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"))
-#' y <- read_bed(system.file("extdata", "example2_window.bed", package = "bedtorch"))
+#' x <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"), use_gr = FALSE)
+#' y <- read_bed(system.file("extdata", "example2_window.bed", package = "bedtorch"), use_gr = FALSE)
 #' 
 #' # Basic usages
 #' reldist_bed(x, y) 

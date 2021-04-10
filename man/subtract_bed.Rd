@@ -29,8 +29,8 @@ remove the overlapping portion of \code{x}.
 }
 \examples{
 # Load BED tables
-tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+tbl_x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+tbl_y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usage
 result <- subtract_bed(tbl_x, tbl_y)

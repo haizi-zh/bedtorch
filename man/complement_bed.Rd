@@ -21,7 +21,7 @@ This function returns all intervals in a genome that are not covered by at least
 }
 \examples{
 # Load BED tables
-tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
+tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usage
 result <- complement_bed(tbl, "hg19")

@@ -33,8 +33,8 @@ Calculate Jaccard distance between two BED-like data sets
 }
 \examples{
 # Load BED tables
-x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"))
+x <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+y <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usages
 result <- jaccard_bed(x, y) 
