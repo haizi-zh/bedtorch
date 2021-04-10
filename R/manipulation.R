@@ -72,10 +72,9 @@ merge_bed.data.table <- function(x,
 merge_bed.GRanges <- function(x, max_dist = 0, operation = NULL) {
   stopifnot(max_dist >= 0)
   
-  merged <-
-    reduce(x,
-           min.gapwidth = max_dist + 1L,
-           with.revmap = !is.null(operation))
+  merged <- GenomicRanges::reduce(x,
+                                  min.gapwidth = max_dist + 1L,
+                                  with.revmap = !is.null(operation))
   
   if (!is.null(operation)) {
     aggregated <- names(operation) %>% map(function(op_name) {
@@ -91,7 +90,7 @@ merge_bed.GRanges <- function(x, max_dist = 0, operation = NULL) {
   
   if (!is.null(operation))
     merged$revmap = NULL
-
+  
   merged
 }
 
