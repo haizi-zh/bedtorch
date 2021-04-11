@@ -1049,28 +1049,30 @@ cluster_bed <- function(x, max_dist = 0) {
 #'   specified chromosome(s).
 #' @return A `GRanges` object containing the generated windows.
 #' @examples 
-#' # Generate 500kbp intervals for chr20 and chr22, GRCh38
-#' result <- make_windows(window_size = 500e3L, genome = "GRCh38", chrom = c("chr20", "chr22"))
+#' # Generate 500kbp intervals for chr20 and chr22, hg38
+#' result <- make_windows(window_size = 500e3L, genome = "hg38", chrom = c("chr20", "chr22"))
 #' head(result)
 #' 
 #' # Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)
 #' result <- make_windows(window_size = 5e6L, genome = "GRCh37")
 #' head(result)
 #' @export
-make_windows <- function(window_size, genome, chrom = NULL) {
-  genome <- GenomeInfoDb::Seqinfo(genome = genome)
-  chrom_sizes <- genome %>% as.data.frame()
-  chrom_sizes$chrom <- row.names(chrom_sizes)
-  setDT(chrom_sizes)
-  chrom_sizes <- chrom_sizes[, .(chrom, size = seqlengths)]
- 
-  chrom_list <- chrom
-  if (!is.null(chrom_list))
-    chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
-  
-  if (nrow(chrom_sizes) == 0)
-    return(NULL)
-  
+make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL) {
+  if (!is.null(genome)) {
+    genome <- GenomeInfoDb::Seqinfo(genome = genome)
+    chrom_sizes <- genome %>% as.data.frame()
+    chrom_sizes$chrom <- row.names(chrom_sizes)
+    setDT(chrom_sizes)
+    chrom_sizes <- chrom_sizes[, .(chrom, size = seqlengths)]
+    
+    chrom_list <- chrom
+    if (!is.null(chrom_list))
+      chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
+    
+    stopifnot(nrow(chrom_sizes) > 0)
+  } else
+    stopifnot(!is.null(chrom_sizes))
+
   result <- lapply(seq.int(nrow(chrom_sizes)), function(row_idx) {
     chrom <- chrom_sizes$chrom[row_idx]
     size <- chrom_sizes$size[row_idx]

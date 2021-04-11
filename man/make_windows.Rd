@@ -4,7 +4,7 @@
 \alias{make_windows}
 \title{Make windows along genome}
 \usage{
-make_windows(window_size, genome, chrom = NULL)
+make_windows(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL)
 }
 \arguments{
 \item{window_size}{An integer value. Size of the windows in base pairs.}
@@ -23,8 +23,8 @@ Make windows with the size of \code{window_size} along genome. Must provide
 \code{genome} so that intervals are restricted by chromosome sizes.
 }
 \examples{
-# Generate 500kbp intervals for chr20 and chr22, GRCh38
-result <- make_windows(window_size = 500e3L, genome = "GRCh38", chrom = c("chr20", "chr22"))
+# Generate 500kbp intervals for chr20 and chr22, hg38
+result <- make_windows(window_size = 500e3L, genome = "hg38", chrom = c("chr20", "chr22"))
 head(result)
 
 # Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)
