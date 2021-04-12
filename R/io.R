@@ -211,14 +211,29 @@ get_seqinfo <- function(genome, genome_name = NULL) {
         genome,
         col.names = c("chrom", "size")
       )
+    
+    if (is.null(genome_name)) {
+      guess_genome_name <- function(genome) {
+        # Guess genome name from file name
+        genome_name <- basename(genome)
+        # ends with chrom.sizes, sizes, or chromosome.sizes
+        pattern <- "^(.+?)(\\.chrom(osome)?)?(\\.sizes)$"
+        m <- str_match(genome_name, pattern = pattern)[1, 2]
+        if (!is.na(m))
+          m
+        else
+          genome_name
+      }
+      genome_name <- guess_genome_name(genome)
+    }
+    
     GenomeInfoDb::Seqinfo(
       seqnames = chrom_sizes$chrom,
       seqlengths = chrom_sizes$size,
       isCircular = rep(FALSE, nrow(chrom_sizes)),
       genome = genome_name %||% basename(genome)
     )
-  }
-  else if (genome == "hs37-1kg") {
+  } else if (genome == "hs37-1kg") {
     chrom_sizes <-
       fread(
         system.file("extdata", "human_g1k_v37.chrom.sizes", package = "bedtorch"),
