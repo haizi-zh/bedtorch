@@ -4,7 +4,14 @@
 \alias{write_bed}
 \title{Write a \code{data.table} to file}
 \usage{
-write_bed(x, file_path, tabix_index = TRUE, batch_size = NULL, ...)
+write_bed(
+  x,
+  file_path,
+  tabix_index = TRUE,
+  batch_size = NULL,
+  comments = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{data.table} object to write.}

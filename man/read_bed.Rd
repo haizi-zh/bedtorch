@@ -31,6 +31,12 @@ from \code{file_path}.}
 \item{download_index}{Whether to download (cache) the tabix index at current
 directory.}
 
+\item{genome}{Specify the reference genome for the BED file. \code{genome} can be
+a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}, e.g. \code{GRCh37}, or
+\verb{hs37-1kg}, which is a genome shipped with this package, or any custom
+chromosome size files (local or remote). Here is a good resource for such
+files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.}
+
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
 }
 \description{
@@ -51,8 +57,21 @@ head(bedtbl)
 
 # Basic usage
 bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-                 range = "1:3001-4000")
+                  range = "1:3001-4000")
 head(bedtbl)
+
+# Specify the reference genome
+head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+              range = "1:3001-4000",
+              genome = "hs37-1kg"))
+
+head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+              range = "1:3001-4000",
+              genome = "GRCh37"))
+
+head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+              range = "1:3001-4000",
+              genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
 
 # Load remote BGZIP files with tabix index specified
 # Here we need to explicitly indicate `compression` as `bgzip` since we are

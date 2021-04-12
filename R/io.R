@@ -203,6 +203,38 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 }
 
 
+get_seqinfo <- function(genome, genome_name = NULL) {
+  if (file.exists(genome) || RCurl::url.exists(genome)) {
+    # genome is a chromosome size file (local or remote)
+    chrom_sizes <-
+      fread(
+        genome,
+        col.names = c("chrom", "size")
+      )
+    GenomeInfoDb::Seqinfo(
+      seqnames = chrom_sizes$chrom,
+      seqlengths = chrom_sizes$size,
+      isCircular = rep(FALSE, nrow(chrom_sizes)),
+      genome = genome_name %||% basename(genome)
+    )
+  }
+  else if (genome == "hs37-1kg") {
+    chrom_sizes <-
+      fread(
+        system.file("extdata", "human_g1k_v37.chrom.sizes", package = "bedtorch"),
+        col.names = c("chrom", "size")
+      )
+    GenomeInfoDb::Seqinfo(
+      seqnames = chrom_sizes$chrom,
+      seqlengths = chrom_sizes$size,
+      isCircular = rep(FALSE, nrow(chrom_sizes)),
+      genome = genome
+    )
+  } else
+    GenomeInfoDb::Seqinfo(genome = genome)
+}
+
+
 #' Load a BED-format file
 #'
 #' This function loads the input file as a `data.table` object. The file can be
@@ -225,6 +257,11 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 #'   from `file_path`.
 #' @param download_index Whether to download (cache) the tabix index at current
 #'   directory.
+#' @param genome Specify the reference genome for the BED file. `genome` can be
+#'   a valid genome name in [GenomeInfoDb::Seqinfo()], e.g. `GRCh37`, or
+#'   `hs37-1kg`, which is a genome shipped with this package, or any custom
+#'   chromosome size files (local or remote). Here is a good resource for such
+#'   files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.
 #' @param ... Other arguments to be passed to [data.table::fread()].
 #' @seealso [data.table::fread()]
 #' @examples 
@@ -233,8 +270,21 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 #' 
 #' # Basic usage
 #' bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#'                  range = "1:3001-4000")
+#'                   range = "1:3001-4000")
 #' head(bedtbl)
+#' 
+#' # Specify the reference genome
+#' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+#'               range = "1:3001-4000",
+#'               genome = "hs37-1kg"))
+#' 
+#' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+#'               range = "1:3001-4000",
+#'               genome = "GRCh37"))
+#' 
+#' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
+#'               range = "1:3001-4000",
+#'               genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
 #' 
 #' # Load remote BGZIP files with tabix index specified
 #' # Here we need to explicitly indicate `compression` as `bgzip` since we are
@@ -295,7 +345,7 @@ read_bed <-
         seqinfo = if (is.null(genome))
           NULL
         else
-          GenomeInfoDb::Seqinfo(genome = genome),
+          get_seqinfo(genome),
         starts.in.df.are.0based = TRUE
       )
     } else
