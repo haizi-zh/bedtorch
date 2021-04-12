@@ -9,11 +9,14 @@ make_windows(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL)
 \arguments{
 \item{window_size}{An integer value. Size of the windows in base pairs.}
 
-\item{genome}{Provide the genome identifier, e.g. \code{GRCh37}. Refer to
-\code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}.}
+\item{genome}{Provide the genome identifier, e.g. \code{GRCh37}, \verb{hs37-1kg}, or
+path/URL to the chromosome size file. Refer to \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}
+and \code{\link[=read_bed]{read_bed()}}.}
 
 \item{chrom}{A character vector. If provided, only generate windows for the
 specified chromosome(s).}
+
+\item{chrom_sizes}{Another way to provide chromosome size information.}
 }
 \value{
 A \code{GRanges} object containing the generated windows.

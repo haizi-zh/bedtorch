@@ -1043,8 +1043,10 @@ cluster_bed <- function(x, max_dist = 0) {
 #' Make windows with the size of `window_size` along genome. Must provide
 #' `genome` so that intervals are restricted by chromosome sizes.
 #' @param window_size An integer value. Size of the windows in base pairs.
-#' @param genome Provide the genome identifier, e.g. `GRCh37`. Refer to
-#'   [GenomeInfoDb::Seqinfo()].
+#' @param genome Provide the genome identifier, e.g. `GRCh37`, `hs37-1kg`, or
+#'   path/URL to the chromosome size file. Refer to [GenomeInfoDb::Seqinfo()]
+#'   and [bedtorch::read_bed()].
+#' @param chrom_sizes Another way to provide chromosome size information.
 #' @param chrom A character vector. If provided, only generate windows for the
 #'   specified chromosome(s).
 #' @return A `GRanges` object containing the generated windows.
@@ -1058,8 +1060,11 @@ cluster_bed <- function(x, max_dist = 0) {
 #' head(result)
 #' @export
 make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL) {
+  stopifnot(sum(c(is.null(genome), is.null(chrom_sizes))) == 1)
+  
   if (!is.null(genome)) {
-    genome <- GenomeInfoDb::Seqinfo(genome = genome)
+    # Get chrom_sizes from genome seqinfo
+    genome <- get_seqinfo(genome)
     chrom_sizes <- genome %>% as.data.frame()
     chrom_sizes$chrom <- row.names(chrom_sizes)
     setDT(chrom_sizes)
