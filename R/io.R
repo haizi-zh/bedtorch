@@ -322,26 +322,26 @@ read_bed <-
 #' # Write data to file and create tabix index
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
 #' @export
-write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   UseMethod("write_bed")
 }
 
 
 #' @export
-write_bed.data.table <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
-  write_bed_core(x, file_path, tabix_index, batch_size, ...)
+write_bed.data.table <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
+  write_bed_core(x, file_path, tabix_index, batch_size, comments = comments, ...)
 }
 
 
 #' @export
-write_bed.GRanges <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+write_bed.GRanges <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   dt <- data.table::as.data.table(x)
-  dt[, start := start - 1L]
-  write_bed_core(dt, file_path, tabix_index, batch_size, ...)
+  dt[, `:=`(start = as.integer(start - 1L), width = NULL, strand = NULL)]
+  write_bed_core(dt, file_path, tabix_index, batch_size, comments = comments, ...)
 }
 
 
-write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, ...) {
+write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   compressed <- is_gzip(file_path)
   
   if (is(x, "GRanges")) {
@@ -375,8 +375,18 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
           batch_data <- x[batch_plan[batch_idx]:batch_plan[batch_idx + 1]]
         }
         
+        # Process comment lines
+        if (!is.null(comments) && batch_idx == 1) {
+          conn <- file(temp_txt)
+          comments %>% 
+            map_chr(function(x) paste0("#", x)) %>%
+            writeLines(temp_txt)
+          close(conn)
+        }
+        
         data.table::fwrite(batch_data,
                            file = temp_txt,
+                           append = !is.null(comments) && batch_idx == 1,
                            quote = FALSE,
                            sep = "\t",
                            na = ".",
@@ -390,8 +400,19 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
       build_tabix_index(file_path)
     }
   } else {
+    # Process comment lines
+    if (!is.null(comments)) {
+      conn <- file(file_path)
+      comments %>% 
+        map_chr(function(x) paste0("#", x)) %>%
+        writeLines(conn)
+      close(conn)
+    }
+    
     data.table::fwrite(x,
                        file = file_path,
+                       col.names = TRUE,
+                       append = !is.null(comments),
                        quote = FALSE,
                        sep = "\t",
                        na = ".",
