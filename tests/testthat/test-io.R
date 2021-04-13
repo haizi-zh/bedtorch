@@ -64,6 +64,14 @@ test_that("Reading data works", {
 })
 
 
+test_that("Reading non-GenomicRanges data works", {
+  data <- read_bed("example2.bed", use_gr = FALSE)
+  expect_equal(colnames(data),
+               c("chrom", "start", "end", "score1", "score2"))
+  expect_equal(map_chr(data, class) %>% as.character(), c("factor", rep("integer", 4)))
+})
+
+
 test_that("Reading remote data works", {
   url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz"
   index_url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz.tbi"

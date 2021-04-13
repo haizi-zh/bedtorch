@@ -1075,8 +1075,11 @@ make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes =
       chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
     
     stopifnot(nrow(chrom_sizes) > 0)
-  } else
+  } else {
     stopifnot(!is.null(chrom_sizes))
+    genome <- GenomeInfoDb::Seqinfo(seqnames = chrom_sizes$chrom, seqlengths = chrom_sizes$size)
+  }
+    
 
   result <- lapply(seq.int(nrow(chrom_sizes)), function(row_idx) {
     chrom <- chrom_sizes$chrom[row_idx]

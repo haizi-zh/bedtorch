@@ -76,3 +76,34 @@ test_that("Rolling sum works", {
       expect_equal(result, target)
     })
 })
+
+
+
+test_that("Making windows works", {
+  # Genome: hs37-1kg
+  windows <-
+    make_windows(window_size = 500e3L,
+                 genome = "hs37-1kg",
+                 chrom = "22")
+  expect_equal(width(windows) %>% head(-1) %>% unique(), 500e3L)
+  expect_equal(
+    GenomicRanges::seqinfo(windows) %>% GenomeInfoDb::genome() %>% unique(),
+    "hs37-1kg"
+  )
+  
+  # Genome: GRCh37
+  windows <-
+    make_windows(window_size = 500e3L,
+                 genome = "GRCh37",
+                 chrom = c("1", "2"))
+  expect_equal(seqnames(windows) %>% as.character() %>% unique(), c("1", "2"))
+  expect_equal(GenomicRanges::seqinfo(windows) %>% GenomeInfoDb::genome() %>% unique(),
+               "GRCh37")
+  
+  # Genome: custom chrom.sizes
+  windows <- make_windows(window_size = 100,
+                          chrom_sizes = data.table::data.table(chrom = c("chr1", "chr2"), 
+                                                               size = c(640, 880)))
+  expect_equal(seqnames(windows) %>% as.character() %>% unique(), c("chr1", "chr2"))
+  expect_equal(length(windows), 16)
+})
