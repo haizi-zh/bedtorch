@@ -74,7 +74,7 @@ chromosomes will have more randomly generated intervals." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
       </span>
     </div>
 
@@ -124,7 +124,7 @@ chromosomes will have more randomly generated intervals.</p>
     <pre class="usage"><span class='fu'>make_random_bed</span><span class='op'>(</span>
   <span class='va'>n</span>,
   <span class='va'>interval_width</span>,
-  chrom_sizes <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"hg19"</span>, <span class='st'>"hg38"</span><span class='op'>)</span>,
+  <span class='va'>genome</span>,
   chrom <span class='op'>=</span> <span class='cn'>NULL</span>,
   seed <span class='op'>=</span> <span class='cn'>NULL</span>,
   sort <span class='op'>=</span> <span class='cn'>TRUE</span>
@@ -142,10 +142,12 @@ chromosomes will have more randomly generated intervals.</p>
       <td><p>An integer value of the width of the interval.</p></td>
     </tr>
     <tr>
-      <th>chrom_sizes</th>
-      <td><p>Provide the chromosome sizes data. If <code>hg19</code> or <code>hg38</code>,
-the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file.</p></td>
+      <th>genome</th>
+      <td><p>Specify the reference genome for the BED file. <code>genome</code> can be
+a valid genome name in <code><a href='https://rdrr.io/pkg/GenomeInfoDb/man/Seqinfo-class.html'>GenomeInfoDb::Seqinfo()</a></code>, e.g. <code>GRCh37</code>, or
+<code>hs37-1kg</code>, which is a genome shipped with this package, or any custom
+chromosome size files (local or remote). If <code>NULL</code>, will try to obtain such
+information from input data. Refer to <code><a href='read_bed.html'>read_bed()</a></code>.</p></td>
     </tr>
     <tr>
       <th>chrom</th>
@@ -165,25 +167,27 @@ seed is randomly chosen.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>data.table</code> of generated intervals.</p>
+    <p>A <code>GRanges</code> of generated intervals.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Manual page for <code>bedtools random</code>:
 <a href='https://bedtools.readthedocs.io/en/latest/content/tools/random.html'>https://bedtools.readthedocs.io/en/latest/content/tools/random.html</a></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Generate 100 500kbp-intervals for chr20 and chr22, hg38</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_random_bed</span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>500e3L</span>, chrom_sizes <span class='op'>=</span> <span class='st'>"hg38"</span>, chrom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"chr20"</span>, <span class='st'>"chr22"</span><span class='op'>)</span><span class='op'>)</span>
+    <pre class="examples"><div class='input'><span class='co'># Generate 100 500kbp-intervals for chr20 and chr22, GRCh38</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_random_bed</span><span class='op'>(</span><span class='fl'>100</span>, <span class='fl'>500e3L</span>, genome <span class='op'>=</span> <span class='st'>"GRCh38"</span>, chrom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"20"</span>, <span class='st'>"22"</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;    chrom    start      end
-#&gt; 1: chr20   250273   750273
-#&gt; 2: chr20  1851209  2351209
-#&gt; 3: chr20  2736167  3236167
-#&gt; 4: chr20  5175998  5675998
-#&gt; 5: chr20  9298753  9798753
-#&gt; 6: chr20 10628140 11128140</div><div class='input'>
-<span class='co'># Generate 100 500bp unsorted intervals for all chromosomes of hg19 (default reference genome)</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_random_bed</span><span class='op'>(</span><span class='fl'>100</span>, interval_width <span class='op'>=</span> <span class='fl'>500</span>, chrom_sizes <span class='op'>=</span> <span class='st'>"hg19"</span>, sort <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
+#&gt; 1:    20   250273   750273
+#&gt; 2:    20  1851209  2351209
+#&gt; 3:    20  2736167  3236167
+#&gt; 4:    20  5175998  5675998
+#&gt; 5:    20  9298753  9798753
+#&gt; 6:    20 10628140 11128140
+#&gt; -------
+#&gt; genome: unspecified.</div><div class='input'>
+<span class='co'># Generate 100 500bp unsorted intervals for all chromosomes of GRCh37 (default reference genome)</span>
+<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_random_bed</span><span class='op'>(</span><span class='fl'>100</span>, interval_width <span class='op'>=</span> <span class='fl'>500</span>, genome <span class='op'>=</span> <span class='st'>"GRCh37"</span>, sort <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
 </div><div class='output co'>#&gt;    chrom     start       end
 #&gt; 1:    11  45998718  45999218
@@ -191,7 +195,9 @@ seed is randomly chosen.</p></td>
 #&gt; 3:    11  68842273  68842773
 #&gt; 4:     5 146164531 146165031
 #&gt; 5:     5  69965452  69965952
-#&gt; 6:     5  35340911  35341411</div></pre>
+#&gt; 6:     5  35340911  35341411
+#&gt; -------
+#&gt; genome: unspecified.</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

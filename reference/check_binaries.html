@@ -6,7 +6,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Check if required binaries exist in PATH — check_binaries • bedtorch</title>
+<title>normalize_table &lt;- function(dt) 
+v_chrom &lt;- as.character(dt$chrom)
+chrom_list &lt;- str_sort(unique(v_chrom), numeric = TRUE)
+dt, chrom := factor(v_chrom, levels = chrom_list)
+dt, :=(start = as.integer(start), end = as.integer(end))
+data.table::setkey(dt, "chrom", "start", "end")
+dt
+
+Check if required binaries exist in PATH — check_binaries • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,7 +47,15 @@
 
 
 
-<meta property="og:title" content="Check if required binaries exist in PATH — check_binaries" />
+<meta property="og:title" content="normalize_table &lt;- function(dt) 
+v_chrom &lt;- as.character(dt$chrom)
+chrom_list &lt;- str_sort(unique(v_chrom), numeric = TRUE)
+dt, chrom := factor(v_chrom, levels = chrom_list)
+dt, :=(start = as.integer(start), end = as.integer(end))
+data.table::setkey(dt, "chrom", "start", "end")
+dt
+
+Check if required binaries exist in PATH — check_binaries" />
 <meta property="og:description" content="Some of cragr's functionalities require certain third-party binaries to exist
 in PATH. For example, selectively loading cfDNA fragments from a certain
 region under the hood invokes tabix to complete the task. This function checks
@@ -75,7 +91,7 @@ whether certain binaries exist." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
       </span>
     </div>
 
@@ -111,7 +127,15 @@ whether certain binaries exist." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Check if required binaries exist in PATH</h1>
+    <h1>normalize_table &lt;- function(dt) 
+v_chrom &lt;- as.character(dt$chrom)
+chrom_list &lt;- str_sort(unique(v_chrom), numeric = TRUE)
+dt, chrom := factor(v_chrom, levels = chrom_list)
+dt, <code>:=</code>(start = as.integer(start), end = as.integer(end))
+data.table::setkey(dt, "chrom", "start", "end")
+dt
+
+Check if required binaries exist in PATH</h1>
     <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/io.R'><code>R/io.R</code></a></small>
     <div class="hidden name"><code>check_binaries.Rd</code></div>
     </div>

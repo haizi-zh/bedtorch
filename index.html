@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
       </span>
     </div>
 
@@ -94,15 +94,16 @@
 <code>bedr</code> captures command line output as plain text. Therefore, when the data is transferred back to R, most of the information about data types, index (in the case of <code>data.table</code>), column names, etc., are lost. It’s the package user’s responsibility to make sure data types are correct, column names are restored, column indices have been rebuilt (in the case of <code>data.table</code>, which can be very time consuming). Often this job is tedious, error-prone and introduces very large overheads.</li>
 <li>It requires the command line tools to be present in <code>PATH</code>. This depends on the end user’s system environment and the R developer can do nothing about it. It puts additional burden to deployment, especially when the end user is not an IT professional.</li>
 </ul>
-<p>Another approach is using native R data types to represent BED-like data. R’s native <code>data.frame</code> seems to be a good model, but in many scenarios, it’s performance is poor. More importantly, it lacks many advanced features compared with <code>dplyr</code> and <code>data.table</code>.</p>
-<p>It would be desirable to have an R package, which store BED-like data as <code>data.table</code> objects, and provide native support for common BED manipulations, such as merge, intersect, filter, etc.</p>
+<p>Another approach is using native R data types to represent BED-like data. R’s native <code>data.frame</code> seems to be a good model, but in many scenarios, it’s performance is poor. More importantly, it lacks many advanced features compared with <code>GenomicRanges</code>, <code>dplyr</code> and <code>data.table</code>.</p>
+<p><code>GenomicRanges</code> is widely used in bioinformatics community. Although it provides essential building blocks for many tasks, such as <code>findOverlaps</code>, <code>reduce</code>, etc., it doesn’t provide high-level features as <code>bedtools</code> does. Using <code>findOverlaps</code>, <code>reduce</code>, and other functions provided by <code>GenomicRanges</code>, users may implement operations such as map, merge, unique intersect, but this still requires lots of coding.</p>
+<p>It would be desirable to have an R package, which represent BED-like data by <code>GenomicRanges</code> or <code>data.table</code> objects, and provide native support for common BED manipulations, such as merge, intersect, filter, etc.</p>
 </div>
 <div id="details" class="section level2">
 <h2 class="hasAnchor">
 <a href="#details" class="anchor"></a>Details</h2>
-<p><code>bedtorch</code> is an attempt for this. Under the hood, every BED dataset is represented as a <code>data.table</code> object. Users can apply various operations on it, such as intersect, merge, etc. Users can also perform any <code>data.table</code> operations as needed.</p>
+<p><code>bedtorch</code> is an attempt for this. Under the hood, every BED dataset is represented as a <code>GenomicRanges</code> object (it also can represent the dataset as <code>data.table</code>, if preferred. But this is not recommended). Users can apply various operations on it, such as intersect, merge, etc.</p>
 <p>In terms of the core computation, <code>bedtorch</code>’s performance is comparable to <code>bedtools</code>. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via <code>bedtorch</code>, many tasks can be done about one magnitude faster.</p>
-<p>Additionally, <code>bedtorch</code> can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as <code>tabix</code> or <code>bgzip</code>. In the case of working with remote files, being capable of loading only a portion of the file will be very convenient.</p>
+<p>Additionally, by linking to <a href="https://github.com/samtools/htslib">htslib</a>, <code>bedtorch</code> can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as <code>tabix</code> or <code>bgzip</code>. In the case of working with remote files, being capable of loading any arbitrary portion of the file will be very convenient.</p>
 <p><a href="http://www.htslib.org/doc/bgzip.html">BGZIP</a> is a variant of gzip and is widely used in bioinformatics. It’s compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all <code>.gz</code> files as gzip-compressed, thus doesn’t take advantage of BED index, and cannot output BGZIP files.</p>
 <p>For more details, refer to the <a href="https://haizi-zh.github.io/bedtorch/reference/index.html">package reference page</a>.</p>
 <div id="installation" class="section level3">
@@ -125,35 +126,51 @@
   <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example2.bed.gz"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
 
 <span class="va">bedtbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path</span>, range <span class="op">=</span> <span class="st">"1:3001-4000"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">bedtbl</span><span class="op">)</span>
-<span class="co">#&gt;    chrom start  end score1 score2</span>
-<span class="co">#&gt; 1:     1  2925 3011    106    181</span>
-<span class="co">#&gt; 2:     1  3003 3092     88    193</span>
-<span class="co">#&gt; 3:     1  3091 3193    118    212</span>
-<span class="co">#&gt; 4:     1  3164 3248     94    211</span>
-<span class="co">#&gt; 5:     1  3232 3345    107    205</span>
-<span class="co">#&gt; 6:     1  3300 3395     88    193</span></code></pre></div>
+<span class="va">bedtbl</span>
+<span class="co">#&gt; GRanges object with 14 ranges and 2 metadata columns:</span>
+<span class="co">#&gt;        seqnames    ranges strand |    score1    score2</span>
+<span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;integer&gt;</span>
+<span class="co">#&gt;    [1]        1 2926-3011      * |       106       181</span>
+<span class="co">#&gt;    [2]        1 3004-3092      * |        88       193</span>
+<span class="co">#&gt;    [3]        1 3092-3193      * |       118       212</span>
+<span class="co">#&gt;    [4]        1 3165-3248      * |        94       211</span>
+<span class="co">#&gt;    [5]        1 3233-3345      * |       107       205</span>
+<span class="co">#&gt;    ...      ...       ...    ... .       ...       ...</span>
+<span class="co">#&gt;   [10]        1 3619-3726      * |       108       172</span>
+<span class="co">#&gt;   [11]        1 3695-3803      * |       117       214</span>
+<span class="co">#&gt;   [12]        1 3777-3867      * |       109       195</span>
+<span class="co">#&gt;   [13]        1 3845-3939      * |        92       199</span>
+<span class="co">#&gt;   [14]        1 3925-4016      * |        93       197</span>
+<span class="co">#&gt;   -------</span>
+<span class="co">#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></code></pre></div>
 <p>Read a remote BGZIP BED file for a certain region:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load remote BGZIP files with tabix index specified</span>
 <span class="co"># Here we need to explicitly indicate `compression` as `bgzip` since we are</span>
 <span class="co"># using short URL for `tabix_index`, so that the function cannot guess</span>
 <span class="co"># compression type using the URL</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span>
-  <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span>
-    <span class="st">"https://git.io/JYATB"</span>,
-    range <span class="op">=</span> <span class="st">"22:20000001-30000001"</span>,
-    tabix_index <span class="op">=</span> <span class="st">"https://git.io/JYAkT"</span>,
-    compression <span class="op">=</span> <span class="st">"bgzip"</span>
-  <span class="op">)</span>
+<span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span>
+  <span class="st">"https://git.io/JYATB"</span>,
+  range <span class="op">=</span> <span class="st">"22:20000001-30000001"</span>,
+  tabix_index <span class="op">=</span> <span class="st">"https://git.io/JYAkT"</span>,
+  compression <span class="op">=</span> <span class="st">"bgzip"</span>
 <span class="op">)</span>
-<span class="co">#&gt;    chrom    start      end       score comp_method</span>
-<span class="co">#&gt; 1:    22 20000000 20500000 -0.06135351    cofrag/3</span>
-<span class="co">#&gt; 2:    22 20500000 21000000 -0.04227518    cofrag/3</span>
-<span class="co">#&gt; 3:    22 21000000 21500000  0.02681753    cofrag/3</span>
-<span class="co">#&gt; 4:    22 21500000 22000000  0.03863082    cofrag/3</span>
-<span class="co">#&gt; 5:    22 22000000 22500000  0.02651413    cofrag/3</span>
-<span class="co">#&gt; 6:    22 22500000 23000000 -0.04258119    cofrag/3</span></code></pre></div>
+<span class="co">#&gt; GRanges object with 21 ranges and 2 metadata columns:</span>
+<span class="co">#&gt;        seqnames            ranges strand |      score comp_method</span>
+<span class="co">#&gt;           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |  &lt;numeric&gt; &lt;character&gt;</span>
+<span class="co">#&gt;    [1]       22 20000001-20500000      * | -0.0613535    cofrag/3</span>
+<span class="co">#&gt;    [2]       22 20500001-21000000      * | -0.0422752    cofrag/3</span>
+<span class="co">#&gt;    [3]       22 21000001-21500000      * |  0.0268175    cofrag/3</span>
+<span class="co">#&gt;    [4]       22 21500001-22000000      * |  0.0386308    cofrag/3</span>
+<span class="co">#&gt;    [5]       22 22000001-22500000      * |  0.0265141    cofrag/3</span>
+<span class="co">#&gt;    ...      ...               ...    ... .        ...         ...</span>
+<span class="co">#&gt;   [17]       22 28000001-28500000      * | 0.08472735    cofrag/3</span>
+<span class="co">#&gt;   [18]       22 28500001-29000000      * | 0.15800267    cofrag/3</span>
+<span class="co">#&gt;   [19]       22 29000001-29500000      * | 0.14646452    cofrag/3</span>
+<span class="co">#&gt;   [20]       22 29500001-30000000      * | 0.07898761    cofrag/3</span>
+<span class="co">#&gt;   [21]       22 30000001-30500000      * | 0.00434186    cofrag/3</span>
+<span class="co">#&gt;   -------</span>
+<span class="co">#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></code></pre></div>
 <p>Write the previous data table to the temporary directory, and create the tabix index alongside:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="reference/write_bed.html">write_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>,
@@ -163,11 +180,15 @@
 <p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/merge-glyph.png" alt="Image by bedtools" width="64%"></a></p>
 <p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">operation</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>mean_score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">$</span><span class="va">score1</span><span class="op">)</span><span class="op">)</span>
+<code class="sourceCode R"><span class="va">operation</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>mean_score <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>on <span class="op">=</span> <span class="st">"score1"</span>, func <span class="op">=</span> <span class="va">mean</span><span class="op">)</span><span class="op">)</span>
 <span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_bed.html">merge_bed</a></span><span class="op">(</span><span class="va">bedtbl</span>, operation <span class="op">=</span> <span class="va">operation</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span>
-<span class="co">#&gt;    chrom start  end mean_score</span>
-<span class="co">#&gt; 1:     1  2925 4016   99.07143</span></code></pre></div>
+<span class="co">#&gt; GRanges object with 1 range and 1 metadata column:</span>
+<span class="co">#&gt;       seqnames    ranges strand | mean_score</span>
+<span class="co">#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; |  &lt;numeric&gt;</span>
+<span class="co">#&gt;   [1]        1 2926-4016      * |    99.0714</span>
+<span class="co">#&gt;   -------</span>
+<span class="co">#&gt;   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></code></pre></div>
 <p>Find intersections between two datasets:</p>
 <p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/intersect-glyph.png" alt="Image by bedtools" width="64%"></a></p>
 <p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
@@ -175,33 +196,51 @@
 <code class="sourceCode R"><span class="va">file_path1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_merge.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
 <span class="va">file_path2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"example_intersect_y.bed"</span>, package <span class="op">=</span> <span class="st">"bedtorch"</span><span class="op">)</span>
 
-<span class="va">tbl_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path1</span><span class="op">)</span>
-<span class="va">tbl_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path2</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/intersect_bed.html">intersect_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt;    chrom start end score</span>
-<span class="co">#&gt; 1:    21    22  25     7</span>
-<span class="co">#&gt; 2:    21    26  30     7</span>
-<span class="co">#&gt; 3:    21    29  35     9</span>
-<span class="co">#&gt; 4:    21    47  49     1</span>
-<span class="co">#&gt; 5:    21    47  50     2</span>
-<span class="co">#&gt; 6:    21    53  55     5</span></code></pre></div>
+<span class="va">tbl_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path1</span>, genome <span class="op">=</span> <span class="st">"hs37-1kg"</span><span class="op">)</span>
+<span class="va">tbl_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/read_bed.html">read_bed</a></span><span class="op">(</span><span class="va">file_path2</span>, genome <span class="op">=</span> <span class="st">"hs37-1kg"</span><span class="op">)</span>
+<span class="fu"><a href="reference/intersect_bed.html">intersect_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span>
+<span class="co">#&gt; GRanges object with 12 ranges and 1 metadata column:</span>
+<span class="co">#&gt;        seqnames    ranges strand |     score</span>
+<span class="co">#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;</span>
+<span class="co">#&gt;    [1]       21     23-25      * |         7</span>
+<span class="co">#&gt;    [2]       21     27-30      * |         7</span>
+<span class="co">#&gt;    [3]       21     30-35      * |         9</span>
+<span class="co">#&gt;    [4]       21     48-49      * |         1</span>
+<span class="co">#&gt;    [5]       21     48-50      * |         2</span>
+<span class="co">#&gt;    ...      ...       ...    ... .       ...</span>
+<span class="co">#&gt;    [8]       22     43-44      * |         9</span>
+<span class="co">#&gt;    [9]       22     47-50      * |         0</span>
+<span class="co">#&gt;   [10]       22     52-59      * |         9</span>
+<span class="co">#&gt;   [11]       22     54-57      * |         5</span>
+<span class="co">#&gt;   [12]       22     58-60      * |         9</span>
+<span class="co">#&gt;   -------</span>
+<span class="co">#&gt;   seqinfo: 84 sequences from hs37-1kg genome</span></code></pre></div>
 <p>Shuffle a BED data table across the genome:</p>
 <p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/shuffle-glyph.png" alt="Image by bedtools" width="64%"></a></p>
 <p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/shuffle_bed.html">shuffle_bed</a></span><span class="op">(</span><span class="va">tbl_x</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt;    chrom    start      end score</span>
-<span class="co">#&gt; 1:    21   691856   691859     5</span>
-<span class="co">#&gt; 2:    21  4971831  4971844     1</span>
-<span class="co">#&gt; 3:    21  6426671  6426675     7</span>
-<span class="co">#&gt; 4:    21  9306421  9306426     4</span>
-<span class="co">#&gt; 5:    21 18130222 18130228     9</span>
-<span class="co">#&gt; 6:    21 24372333 24372336     7</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="reference/shuffle_bed.html">shuffle_bed</a></span><span class="op">(</span><span class="va">tbl_x</span><span class="op">)</span>
+<span class="co">#&gt; GRanges object with 20 ranges and 1 metadata column:</span>
+<span class="co">#&gt;        seqnames            ranges strand |     score</span>
+<span class="co">#&gt;           &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;</span>
+<span class="co">#&gt;    [1]       21   1029979-1029981      * |         5</span>
+<span class="co">#&gt;    [2]       21   2060187-2060189      * |         8</span>
+<span class="co">#&gt;    [3]       21   2163003-2163008      * |         9</span>
+<span class="co">#&gt;    [4]       21   8821855-8821859      * |         4</span>
+<span class="co">#&gt;    [5]       21 11695156-11695158      * |         7</span>
+<span class="co">#&gt;    ...      ...               ...    ... .       ...</span>
+<span class="co">#&gt;   [16]       22 23326577-23326584      * |         9</span>
+<span class="co">#&gt;   [17]       22 24159793-24159800      * |         9</span>
+<span class="co">#&gt;   [18]       22 31133554-31133557      * |         5</span>
+<span class="co">#&gt;   [19]       22 41274070-41274077      * |         8</span>
+<span class="co">#&gt;   [20]       22 48027853-48027855      * |        10</span>
+<span class="co">#&gt;   -------</span>
+<span class="co">#&gt;   seqinfo: 84 sequences from hs37-1kg genome</span></code></pre></div>
 <p>Calculate Jaccard statistics between the two BED data tables:</p>
 <p><a href="https://bedtools.readthedocs.io/en/latest/"><img src="https://bedtools.readthedocs.io/en/latest/_images/jaccard-glyph.png" alt="Image by bedtools" width="64%"></a></p>
 <p><em>Image by <a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></em></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fu"><a href="reference/jaccard_bed.html">jaccard_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="reference/jaccard_bed.html">jaccard_bed</a></span><span class="op">(</span><span class="va">tbl_x</span>, <span class="va">tbl_y</span><span class="op">)</span>
 <span class="co">#&gt;    intersection union   jaccard n_intersections</span>
 <span class="co">#&gt; 1:           33    94 0.3510638               8</span></code></pre></div>
 </div>

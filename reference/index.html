@@ -71,7 +71,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
       </span>
     </div>
 
@@ -264,7 +264,15 @@
         <td>
           <p><code><a href="check_binaries.html">check_binaries()</a></code> </p>
         </td>
-        <td><p>Check if required binaries exist in PATH</p></td>
+        <td><p>normalize_table &lt;- function(dt) 
+v_chrom &lt;- as.character(dt$chrom)
+chrom_list &lt;- str_sort(unique(v_chrom), numeric = TRUE)
+dt, chrom := factor(v_chrom, levels = chrom_list)
+dt, <code>:=</code>(start = as.integer(start), end = as.integer(end))
+data.table::setkey(dt, "chrom", "start", "end")
+dt
+
+Check if required binaries exist in PATH</p></td>
       </tr><tr>
         
         <td>
@@ -277,6 +285,18 @@
           <p><code><a href="rollmean.html">rollmean()</a></code> </p>
         </td>
         <td><p>Calculate rolling means</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="as.GenomicRanges.html">as.GenomicRanges()</a></code> </p>
+        </td>
+        <td><p>Convert a <code>data.table</code> representation to <code>GenomicRanges</code> representation</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="as.bedtorch_table.html">as.bedtorch_table()</a></code> </p>
+        </td>
+        <td><p>Convert a <code>GenomicRanges</code> representation to <code>data.table</code> representation</p></td>
       </tr>
     </tbody>
     </table>
