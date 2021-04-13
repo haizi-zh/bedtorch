@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![devel](https://img.shields.io/badge/devel%20version-0.1.8-blue.svg)](https://github.com/haizi-zh/bedtorch)
+[![devel](https://img.shields.io/badge/devel%20version-0.1.10-blue.svg)](https://github.com/haizi-zh/bedtorch)
 [![License:
 MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
 [![R-CMD-check](https://github.com/haizi-zh/bedtorch/workflows/R-CMD-check/badge.svg)](https://github.com/haizi-zh/bedtorch/actions)
@@ -265,17 +265,17 @@ shuffle_bed(tbl_x)
 #> GRanges object with 20 ranges and 1 metadata column:
 #>        seqnames            ranges strand |     score
 #>           <Rle>         <IRanges>  <Rle> | <integer>
-#>    [1]       21   1029979-1029981      * |         5
-#>    [2]       21   2060187-2060189      * |         8
-#>    [3]       21   2163003-2163008      * |         9
-#>    [4]       21   8821855-8821859      * |         4
-#>    [5]       21 11695156-11695158      * |         7
+#>    [1]       21   3877712-3877716      * |         2
+#>    [2]       21   7477952-7477956      * |         4
+#>    [3]       21   9406652-9406657      * |         9
+#>    [4]       21 23964531-23964533      * |         5
+#>    [5]       21 29848980-29848983      * |         7
 #>    ...      ...               ...    ... .       ...
-#>   [16]       22 23326577-23326584      * |         9
-#>   [17]       22 24159793-24159800      * |         9
-#>   [18]       22 31133554-31133557      * |         5
-#>   [19]       22 41274070-41274077      * |         8
-#>   [20]       22 48027853-48027855      * |        10
+#>   [16]       22 34127043-34127050      * |         9
+#>   [17]       22 36130142-36130145      * |         5
+#>   [18]       22 40498371-40498373      * |        10
+#>   [19]       22 41486983-41486984      * |         9
+#>   [20]       22 43297328-43297336      * |         3
 #>   -------
 #>   seqinfo: 84 sequences from hs37-1kg genome
 ```
