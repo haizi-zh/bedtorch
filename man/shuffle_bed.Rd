@@ -4,20 +4,16 @@
 \alias{shuffle_bed}
 \title{Shuffle intervals}
 \usage{
-shuffle_bed(
-  x,
-  chrom_sizes = c("hg19", "hg38"),
-  excluded_region = NULL,
-  sort = TRUE,
-  seed = NULL
-)
+shuffle_bed(x, genome = NULL, excluded_region = NULL, sort = TRUE, seed = NULL)
 }
 \arguments{
 \item{x}{A \code{GRanges}.}
 
-\item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
-the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file.}
+\item{genome}{Specify the reference genome for the BED file. \code{genome} can be
+a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}, e.g. \code{GRCh37}, or
+\verb{hs37-1kg}, which is a genome shipped with this package, or any custom
+chromosome size files (local or remote). If \code{NULL}, will try to obtain such
+information from input data. Refer to \code{\link[=read_bed]{read_bed()}}.}
 
 \item{excluded_region}{A \code{GRanges} containing regions that you don't want
 to exclude from the shuffle. Shuffled intervals are guaranteed not to fall

@@ -7,7 +7,7 @@
 make_random_bed(
   n,
   interval_width,
-  chrom_sizes = c("hg19", "hg38"),
+  genome,
   chrom = NULL,
   seed = NULL,
   sort = TRUE
@@ -18,9 +18,11 @@ make_random_bed(
 
 \item{interval_width}{An integer value of the width of the interval.}
 
-\item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
-the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file.}
+\item{genome}{Specify the reference genome for the BED file. \code{genome} can be
+a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}, e.g. \code{GRCh37}, or
+\verb{hs37-1kg}, which is a genome shipped with this package, or any custom
+chromosome size files (local or remote). If \code{NULL}, will try to obtain such
+information from input data. Refer to \code{\link[=read_bed]{read_bed()}}.}
 
 \item{chrom}{A character vector. If provided, only generate random intervals
 for the specified chromosome(s).}

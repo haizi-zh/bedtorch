@@ -93,6 +93,17 @@ post_process_table <- function(dt) {
 }
 
 
+#' @export
+normalize_table <- function(dt) {
+  v_chrom <- as.character(dt$chrom)
+  chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
+  dt[, chrom := factor(v_chrom, levels = chrom_list)]
+  dt[, `:=`(start = as.integer(start), end = as.integer(end))]
+  data.table::setkey(dt, "chrom", "start", "end")
+  dt
+}
+
+
 #' Check if required binaries exist in PATH
 #'
 #' Some of cragr's functionalities require certain third-party binaries to exist
@@ -159,13 +170,12 @@ parse_range <- function(range) {
   setnames(range_bed, c("chrom", "start", "end"))
   range_bed[, `:=`(start = as.integer(start) - 1L, end = as.integer(end))]
   post_process_table(range_bed)
-  
-  merge_bed(range_bed)
+  new_bedtorch_table(range_bed) %>% merge_bed()
 }
 
 
 # Load a gzipped and indexed BED-like file
-read_tabix_bed <- function(file_path, range, index_path = NULL, download_index = FALSE) {
+read_tabix_bed <- function(file_path, range, index_path = NULL, download_index = FALSE, ...) {
   # Get UCSC-style range strings
   range %<>%
     parse_range %>%
@@ -201,11 +211,28 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
   )
   # user_gr should be FALSE, since here we need a data.table object, which later
   # will be converted to GenomicRanges, if instructed
-  read_bed(tempbed, use_gr = FALSE)
+  
+  # Load directly
+  na_strings <- c("NA", "na", "NaN", "nan", ".", "")
+  dt <-
+    fread(tempbed, sep = "\t", na.strings = na_strings, ...)
+  dt <- post_process_table(dt)
+  dt
 }
 
 
+#' Get a `GenomeInfoDb::Seqinfo` object
+#' 
+#' @param genome A canonical genome name, e.g. GRCh37, or a custom genome name
+#'   recognized by bedtorch, e.g. hs37-1kg, or a path/URL to a chromosome size
+#'   file. If `NULL`, return `NULL`.
+#' @param genome_name Optional character vector. Only works when `genome` is a
+#'   file path/URL, and specify the name of the genome. If `NULL`, the name is
+#'   guessed from the file name.
 get_seqinfo <- function(genome, genome_name = NULL) {
+  if (is.null(genome))
+    return(NULL)
+  
   if (file.exists(genome) || RCurl::url.exists(genome)) {
     # genome is a chromosome size file (local or remote)
     chrom_sizes <-
@@ -339,7 +366,7 @@ read_bed <-
         dt <- read_tabix_bed(file_path,
                              range,
                              index_path = tabix_index,
-                             download_index = download_index)
+                             download_index = download_index, ...)
       } else {
         if (is_remote(file_path))
           stop("range filtering is not available for remote uncompressed files")
@@ -355,17 +382,11 @@ read_bed <-
       }
     }
     
-    if (use_gr) {
-      GenomicRanges::makeGRangesFromDataFrame(
-        dt,
-        keep.extra.columns = TRUE,
-        seqinfo = if (is.null(genome))
-          NULL
-        else
-          get_seqinfo(genome),
-        starts.in.df.are.0based = TRUE
-      )
-    } else
+    dt <- new_bedtorch_table(dt, genome = genome)
+    
+    if (use_gr)
+      as.GenomicRanges(dt)
+    else
       dt
   }
 

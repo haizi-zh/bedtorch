@@ -79,6 +79,32 @@ test_that("Rolling sum works", {
 
 
 
+test_that("Obtaining Seqinfo works", {
+  expect_equal(get_seqinfo(NULL), NULL)
+  
+  seqinfo <- get_seqinfo("GRCh37")
+  expect_true(is(seqinfo, "Seqinfo"))
+  
+  seqinfo <- get_seqinfo("hs37-1kg")
+  expect_true(is(seqinfo, "Seqinfo"))
+  
+  seqinfo <-
+    get_seqinfo(
+      "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"
+    )
+  expect_true(is(seqinfo, "Seqinfo"))
+  expect_equal(GenomeInfoDb::genome(seqinfo) %>% unique, "1kg_v37")
+  
+  seqinfo <-
+    get_seqinfo(
+      "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes",
+      genome_name = "foo"
+    )
+  expect_true(is(seqinfo, "Seqinfo"))
+  expect_equal(GenomeInfoDb::genome(seqinfo) %>% unique, "foo")
+})
+
+
 test_that("Making windows works", {
   # Genome: hs37-1kg
   windows <-
@@ -101,9 +127,14 @@ test_that("Making windows works", {
                "GRCh37")
   
   # Genome: custom chrom.sizes
+  tempbed <- tempfile(fileext = ".tsv")
+  on.exit(unlink(tempbed), add = TRUE)
+  data.table::data.table(chrom = c("chr1", "chr2"), 
+                         size = c(640, 880)) %>% 
+    data.table::fwrite(file = tempbed, sep = "\t", col.names = FALSE)
+    
   windows <- make_windows(window_size = 100,
-                          chrom_sizes = data.table::data.table(chrom = c("chr1", "chr2"), 
-                                                               size = c(640, 880)))
+                          genome = tempbed)
   expect_equal(seqnames(windows) %>% as.character() %>% unique(), c("chr1", "chr2"))
   expect_equal(length(windows), 16)
 })

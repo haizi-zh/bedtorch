@@ -182,23 +182,23 @@ test_that("Excluding regions works", {
 test_that("Slopping intervals works", {
   dt <- read_bed("example_slop.bed", use_gr = FALSE)
   
-  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "both")
+  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "both", genome = "hs37-1kg")
   target <- read_bed("example_slop_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   
-  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "right")
+  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "right", genome = "hs37-1kg")
   target <- read_bed("example_slop_r2.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
-  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "left")
+  result <- slop_bed(dt, slop = 10L, slop_type = "bp", mode = "left", genome = "hs37-1kg")
   target <- read_bed("example_slop_r3.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
-  result <- slop_bed(dt, slop = 1.2, slop_type = "frac", mode = "both")
+  result <- slop_bed(dt, slop = 1.2, slop_type = "frac", mode = "both", genome = "hs37-1kg")
   target <- read_bed("example_slop_r4.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
@@ -233,14 +233,14 @@ test_that("Subtracting BED tables works", {
 test_that("Generating complement BED works", {
   dt1 <- read_bed(("example_merge.bed"), use_gr = FALSE)
   
-  result <- complement_bed(dt1)
+  result <- complement_bed(dt1, genome = "hs37-1kg")
   target <- read_bed("example_complement_r1.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
   
   dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
   
-  result <- complement_bed(dt1)
+  result <- complement_bed(dt1, genome = "hs37-1kg")
   target <- read_bed("example_complement_r2.bed", use_gr = FALSE)
   setnames(target, new = colnames(result))
   expect_equal(result, target)
@@ -251,7 +251,7 @@ test_that("Shuffling BED works", {
   dt1 <- read_bed(("example2.bed"), use_gr = FALSE)
   dt2 <- read_bed(("example2_window.bed"), use_gr = FALSE)
   
-  result <- shuffle_bed(dt1, excluded_region = dt2)
+  result <- shuffle_bed(dt1, excluded_region = dt2, genome = "hs37-1kg")
   # Cross-chrom check
   expect_equal(dt1[, .N, by = chrom][[2]], result[, .N, by = chrom][[2]])
   expect_equal(dt1[, sum(end - start), by = chrom][[2]], result[, sum(end - start), by = chrom][[2]])
@@ -259,15 +259,15 @@ test_that("Shuffling BED works", {
   expect_equal(nrow(intersect(result, dt2)), 0)
   
   # Without excluded_region
-  result <- shuffle_bed(dt1[1:100])
+  result <- shuffle_bed(dt1[1:100], genome = "hs37-1kg")
   # Cross-chrom check
   expect_equal(dt1[1:100, .N, by = chrom][[2]], result[, .N, by = chrom][[2]])
   expect_equal(dt1[1:100, sum(end - start), by = chrom][[2]], result[, sum(end - start), by = chrom][[2]])
   
   # Set RNG seed
   
-  expect_equal(shuffle_bed(dt1[1:100], seed = 1),
-               shuffle_bed(dt1[1:100], seed = 1))
+  expect_equal(shuffle_bed(dt1[1:100], seed = 1, genome = "hs37-1kg"),
+               shuffle_bed(dt1[1:100], seed = 1, genome = "hs37-1kg"))
 })
 
 test_that("Clustering BED intervals works", {

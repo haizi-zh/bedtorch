@@ -6,7 +6,7 @@
 \usage{
 slop_bed(
   x,
-  chrom_sizes = c("hg19", "hg38"),
+  genome = NULL,
   slop = 1L,
   slop_type = c("bp", "frac"),
   mode = c("both", "left", "right")
@@ -15,10 +15,11 @@ slop_bed(
 \arguments{
 \item{x}{A \code{GRanges} object.}
 
-\item{chrom_sizes}{Provide the chromosome sizes data. If \code{hg19} or \code{hg38},
-the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-need to be the path of a user-provided file. If \code{NULL}, the resizing will
-not be restricted to the size of the chromosome.}
+\item{genome}{Specify the reference genome for the BED file. \code{genome} can be
+a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}, e.g. \code{GRCh37}, or
+\verb{hs37-1kg}, which is a genome shipped with this package, or any custom
+chromosome size files (local or remote). If \code{NULL}, will try to obtain such
+information from input data. Refer to \code{\link[=read_bed]{read_bed()}}.}
 
 \item{slop}{The number of base pairs to slop, or the percentage of the
 interval's width (refer to \verb{bedtools slop}'s \code{-pct} argument).}

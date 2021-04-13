@@ -87,3 +87,84 @@ rollmean <- function(x, k, na_pad = FALSE, na.rm = FALSE, align = c("center", "l
                   right = 3L)
   c_rollmean(x, k, na_pad = na_pad, na_rm = na.rm, align = align)
 }
+
+
+#' Constructor of bedtorch_table
+#' 
+#' @param genome A character value specifying the genome name, or a
+#'   `GenomeInfoDb::Seqinfo` object.
+new_bedtorch_table <- function(dt, genome = NULL) {
+  stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
+  
+  # data.table requires modify-in-place
+  dt_classes <- class(dt)
+  # Strip leading "bedtorch_table" entries, in case there are not duplicates
+  non_matches <- which(dt_classes != "bedtorch_table")
+  # rare case, where dt_classes all repeative "bedtorch_table"
+  # DO NOT TOUCH
+  stopifnot(length(non_matches) > 0)
+  # In case dt is alread bedtorch_table
+  dt_classes <- c("bedtorch_table", dt_classes[min(non_matches):length(dt_classes)])
+  data.table::setattr(dt, "class", dt_classes)
+  if (!is.null(genome))
+    data.table::setattr(dt, "genome", genome)
+  else
+    data.table::setattr(dt, "genome", NULL)
+  dt
+}
+
+
+#' Convert a `data.table` representation to `GenomicRanges` representation
+#' 
+#' @param genome A character value specifying the genome name, or a
+#'   `GenomeInfoDb::Seqinfo` object.
+as.GenomicRanges <- function(dt) {
+  if (is(dt, "GRanges"))
+    return(dt)
+  
+  stopifnot(is(dt, "bedtorch_table"))
+  
+  genome <- attr(dt, "genome")
+  stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
+
+  GenomicRanges::makeGRangesFromDataFrame(
+    dt,
+    keep.extra.columns = TRUE,
+    seqinfo = get_seqinfo(genome),
+    starts.in.df.are.0based = TRUE
+  )
+}
+
+
+#' Convert a `GenomicRanges` representation to `data.table` representation
+as.bedtorch_table <- function(gr) {
+  if (is(gr, "bedtorch_table"))
+    return(gr)
+  
+  stopifnot(is(gr, "GenomicRanges"))
+  
+  dt <- data.table::as.data.table(gr)
+  data.table::setnames(dt, "seqnames", "chrom")
+  dt[, `:=`(start = as.integer(start - 1), width = NULL, strand = NULL)]
+  data.table::setkey(dt, "chrom", "start", "end")
+  
+  genome <- GenomeInfoDb::genome(gr) %>% unique()
+  stopifnot(length(genome) == 1)
+  if (is.na(genome))
+    genome <- NULL
+  
+  new_bedtorch_table(dt, genome = genome)
+}
+
+
+#' @export
+print.bedtorch_table <- function(dt) {
+  NextMethod()
+  
+  genome <- attr(dt, "genome")
+  cat("-------\n")
+  if (is.null(genome))
+    genome <- "unspecified"
+  cat(str_interp("genome: ${genome}.\n"))
+}
+

@@ -36,7 +36,7 @@ merge_bed <- function(x,
 }
 
 #' @export
-merge_bed.data.table <- function(x,
+merge_bed.bedtorch_table <- function(x,
                   max_dist = 0,
                   operation = NULL) {
   stopifnot(max_dist >= 0)
@@ -65,8 +65,9 @@ merge_bed.data.table <- function(x,
       results1
   }, by = c("chrom", (idx_colname))][, (idx_colname) := NULL]
   post_process_table(result)
+  
+  new_bedtorch_table(result, genome = attr(x, "genome"))
 }
-
 
 #' @export
 merge_bed.GRanges <- function(x, max_dist = 0, operation = NULL) {
@@ -207,18 +208,35 @@ intersect_bed <-
 
 
 #' @export
-intersect_bed.data.table <-
+intersect_bed.bedtorch_table <-
   function(x,
            y,
            mode = c("default", "exclude", "wa", "wb", "wo", "unique", "loj"),
            max_gap = -1L,
            min_overlap = 0L,
            min_overlap_type = c("bp", "frac1", "frac2")) {
+    stopifnot(is(x, "bedtorch_table"))
+    stopifnot(is(y, "bedtorch_table"))
   mode <- match.arg(mode)
   min_overlap_type <- match.arg(min_overlap_type)
   
   stopifnot(max_gap >= -1L)
   stopifnot(min_overlap >= 0L)
+  
+  # Determine the genome attribute of the reuslt
+  genome <- local({
+    genome_list <-
+      list(x, y) %>% map( ~ attr(., which = "genome")) %>% 
+      discard(is.null) %>% unique()
+    
+    if (length(genome_list) == 2)
+      # Dual genome, can't decide the genome of the result
+      NULL
+    else if (length(genome_list) == 0)
+      NULL
+    else
+      genome_list[[1]]
+  })
   
   if (max_gap != -1L) stop("max_gap has not been implemented yet.")
   
@@ -279,7 +297,7 @@ intersect_bed.data.table <-
     result[, `:=`(start = as.integer(start), end = as.integer(end))]
     setkey(result, "chrom", "start", "end")
     
-    return(result)
+    return(new_bedtorch_table(result, genome))
   }
   
   # Mode: default, wa, etc.
@@ -328,7 +346,7 @@ intersect_bed.data.table <-
     }
     
     setkey(result, "chrom", "start", "end")
-    return(result)
+    return(new_bedtorch_table(result, genome))
   }
   
   if (mode %in% c("unique", "wa", "wo")) {
@@ -351,7 +369,7 @@ intersect_bed.data.table <-
       result <- unique(result)
     }
     setkey(result, "chrom", "start", "end")
-    return(result)
+    return(new_bedtorch_table(result, genome))
   }
   
   stop(str_interp("${mode} not implemented yet"))
@@ -456,12 +474,14 @@ exclude_bed.GRanges <- function(x,
 
 
 #' @export
-exclude_bed.data.table <- function(x,
+exclude_bed.bedtorch_table <- function(x,
                         y,
                         max_gap = -1L,
                         min_overlap = 0L,
                         min_overlap_type = c("bp", "frac1", "frac2")) {
-  intersect_bed(
+  stopifnot(is(x, "bedtorch_table"))
+  stopifnot(is(y, "bedtorch_table"))
+  intersect_bed.bedtorch_table(
     x,
     y,
     mode = "exclude",
@@ -471,26 +491,19 @@ exclude_bed.data.table <- function(x,
   )
 }
 
-# Load chrom sizes from hg19 or hg38, or any user-provided data file
-load_chrom_sizes <- function(ref_genome) {
-  chrom_sizes_file <- switch(
-    ref_genome,
-    hg19 = system.file("extdata", "human_g1k_v37.chrom.sizes", package = "bedtorch"),
-    hg38 = system.file("extdata", "hg38.chrom.sizes", package = "bedtorch"),
-    ref_genome
-  )
-  result <- fread(
-    chrom_sizes_file,
-    sep = "\t",
-    header = FALSE,
-    col.names = c("chrom", "size"),
-    colClasses = c("character", "integer")
-  )
-  result[, chrom := factor(chrom, levels = str_sort(chrom, numeric = TRUE))]
-  setkey(result, "chrom")
-  result[]
-}
 
+# Load chrom sizes, or any user-provided data file
+load_chrom_sizes <- function(genome) {
+  seqinfo <- get_seqinfo(genome)
+  chrom_levels <- str_sort(unique(seqnames(seqinfo)), numeric = TRUE)
+  chrom_sizes <- data.table(
+    chrom = factor(seqnames(seqinfo), levels = chrom_levels),
+    size = seqlengths(seqinfo) %>% unname()
+  )
+  setkey(chrom_sizes, "chrom")
+  chrom_sizes
+}
+  
 
 #' Slop intervals
 #' 
@@ -498,10 +511,11 @@ load_chrom_sizes <- function(ref_genome) {
 #' in a feature file by a user-defined number of bases. Will restrict the
 #' resizing to the size of the chromosome.
 #' @param x A `GRanges` object.
-#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
-#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-#'   need to be the path of a user-provided file. If `NULL`, the resizing will
-#'   not be restricted to the size of the chromosome.
+#' @param genome Specify the reference genome for the BED file. `genome` can be
+#'   a valid genome name in [GenomeInfoDb::Seqinfo()], e.g. `GRCh37`, or
+#'   `hs37-1kg`, which is a genome shipped with this package, or any custom
+#'   chromosome size files (local or remote). If `NULL`, will try to obtain such
+#'   information from input data. Refer to [bedtorch::read_bed()].
 #' @param slop The number of base pairs to slop, or the percentage of the
 #'   interval's width (refer to `bedtools slop`'s `-pct` argument).
 #' @param slop_type If `bp`, `slop` is an integer indicating the number of base
@@ -527,20 +541,49 @@ load_chrom_sizes <- function(ref_genome) {
 #' @export
 slop_bed <-
   function(x,
-           chrom_sizes = c("hg19", "hg38"),
+           genome = NULL,
+           slop = 1L,
+           slop_type = c("bp", "frac"),
+           mode = c("both", "left", "right")) {
+    UseMethod("slop_bed")
+  }
+
+
+#' @export
+slop_bed.GRanges <-
+  function(x,
+           genome = NULL,
+           slop = 1L,
+           slop_type = c("bp", "frac"),
+           mode = c("both", "left", "right")) {
+    dt <- as.bedtorch_table(x)
+    slop_bed(
+      dt,
+      genome = genome,
+      slop = slop,
+      slop_type = slop_type,
+      mode = mode
+    ) %>%
+      as.GenomicRanges()
+  }
+
+
+#' @export
+slop_bed.bedtorch_table <-
+  function(x,
+           genome = NULL,
            slop = 1L,
            slop_type = c("bp", "frac"),
            mode = c("both", "left", "right")) {
     mode <- match.arg(mode)
     slop_type <- match.arg(slop_type)
-    chrom_sizes <- if (is.null(chrom_sizes))
-      NULL
-    else {
-      chrom_sizes <- tryCatch({
-        match.arg(chrom_sizes)
-      }, error = function(e) {return(chrom_sizes)})
-      load_chrom_sizes(chrom_sizes)
-    }
+    
+    if (is.null(genome))
+      genome <- attr(x, "genome")
+    if (is.null(genome))
+      stop("Must provide genome information")
+    
+    chrom_sizes <- load_chrom_sizes(genome)
       
     x <- data.table::copy(x)
     
@@ -696,17 +739,18 @@ map_bed <- function(data,
 }
 
 #' @export
-map_bed.data.table <- function(data,
+map_bed.bedtorch_table <- function(data,
                                scaffold,
                                operation,
                                max_gap = -1L,
                                min_overlap = 0L,
                                min_overlap_type = c("bp", "frac1", "frac2")) {
-  
+  stopifnot(is(data, "bedtorch_table"))
+  stopifnot(is(scaffold, "bedtorch_table"))
   stopifnot(!is.null(operation))
   
   result <-
-    intersect_bed(
+    intersect_bed.bedtorch_table(
       data,
       scaffold[, 1:3],
       mode = "wo",
@@ -724,8 +768,9 @@ map_bed.data.table <- function(data,
            new = c("chrom", "start", "end"))
   setkey(result, "chrom", "start", "end")
   
+  genome <- attr(result, "genome")
   op_names <- names(operation)
-  result[, {
+  result <- result[, {
     dt2 <- lapply(op_names, function(op_name) {
       func <- operation[[op_name]]$func
       col_name <- operation[[op_name]]$on
@@ -734,6 +779,7 @@ map_bed.data.table <- function(data,
     names(dt2) <- op_names
     dt2
   }, by = c("chrom", "start", "end")][scaffold[, 1:3], nomatch = 0]
+  new_bedtorch_table(result, genome)
 }
 
 
@@ -763,6 +809,20 @@ map_bed.data.table <- function(data,
 #' @seealso [bedtorch::intersect_bed()]
 #' @export
 subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac1", "frac2")) {
+  UseMethod("subtract_bed")
+}
+
+#' @export
+subtract_bed.GRanges <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac1", "frac2")) {
+  x <- as.bedtorch_table(x)
+  y <- as.bedtorch_table(y)
+  
+  subtract_bed.bedtorch_table(x, y, min_overlap, min_overlap_type) %>%
+    as.GenomicRanges()
+}
+
+#' @export
+subtract_bed.bedtorch_table <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac1", "frac2")) {
   y <- merge_bed(y)
   overlap_scaffold <-
     intersect_bed(
@@ -823,7 +883,22 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
   result <-
     result %>% dplyr::relocate(c("start", "end"), .after = "chrom")
   setkey(result, "chrom", "start", "end")
-  result[]
+  
+  # Determine the genome attribute of the reuslt
+  genome <- local({
+    genome_list <-
+      list(x, y) %>% map( ~ attr(., which = "genome")) %>% 
+      discard(is.null) %>% unique()
+    
+    if (length(genome_list) == 2)
+      # Dual genome, can't decide the genome of the result
+      NULL
+    else if (length(genome_list) == 0)
+      NULL
+    else
+      genome_list[[1]]
+  })
+  new_bedtorch_table(result, genome)
 }
 
 
@@ -831,9 +906,11 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
 #' 
 #' This function returns all intervals in a genome that are not covered by at least one interval in the input.
 #' @param x A `GRanges`.
-#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
-#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-#'   need to be the path of a user-provided file.
+#' @param genome Specify the reference genome for the BED file. `genome` can be
+#'   a valid genome name in [GenomeInfoDb::Seqinfo()], e.g. `GRCh37`, or
+#'   `hs37-1kg`, which is a genome shipped with this package, or any custom
+#'   chromosome size files (local or remote). If `NULL`, will try to obtain such
+#'   information from input data. Refer to [bedtorch::read_bed()].
 #' @return A `GRanges` which is the complement of `x`.
 #' @examples
 #' # Load BED tables
@@ -846,20 +923,31 @@ subtract_bed <- function(x, y, min_overlap = 1, min_overlap_type = c("bp", "frac
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/complement.html}
 #' @seealso [bedtorch::subtract_bed()]
 #' @export
-complement_bed <- function(x,
-                           chrom_sizes = c("hg19", "hg38")) {
-  stopifnot(!is.null(chrom_sizes))
-  chrom_sizes <- {
-    chrom_sizes <- tryCatch({
-      match.arg(chrom_sizes)
-    }, error = function(e) {
-      return(chrom_sizes)
-    })
-    load_chrom_sizes(chrom_sizes)
-  }
+complement_bed <- function(x, genome = NULL) {
+  UseMethod("complement_bed")
+}
+
+#' @export
+complement_bed.GRanges <- function(x, genome = NULL) {
+  x <- as.bedtorch_table(x)
+  complement_bed.bedtorch_table(x, chrom_sizes) %>%
+    as.GenomicRanges()
+}
+
+#' @export
+complement_bed.bedtorch_table <- function(x, genome = NULL) {
+  if (is.null(genome))
+    genome <- attr(x, "genome")
+  if (is.null(genome))
+    stop("Must provide genome information")
+  
+  chrom_sizes <- load_chrom_sizes(genome)
+  
   chrom_sizes <-
     chrom_sizes[, `:=`(start = 0L, end = as.integer(size))][, .(chrom, start, end)]
   setkey(chrom_sizes, "chrom", "start", "end")
+  chrom_sizes <- new_bedtorch_table(chrom_sizes, genome = attr(x, "genome"))
+  
   subtract_bed(chrom_sizes, x)
 }
 
@@ -870,9 +958,11 @@ complement_bed <- function(x,
 #' genome file. Note: the permutation stays in the same chromosome.
 #' Cross-chromosome shuffle is not supported at this point.
 #' @param x A `GRanges`.
-#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
-#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-#'   need to be the path of a user-provided file.
+#' @param genome Specify the reference genome for the BED file. `genome` can be
+#'   a valid genome name in [GenomeInfoDb::Seqinfo()], e.g. `GRCh37`, or
+#'   `hs37-1kg`, which is a genome shipped with this package, or any custom
+#'   chromosome size files (local or remote). If `NULL`, will try to obtain such
+#'   information from input data. Refer to [bedtorch::read_bed()].
 #' @param excluded_region A `GRanges` containing regions that you don't want
 #'   to exclude from the shuffle. Shuffled intervals are guaranteed not to fall
 #'   within such regions.
@@ -899,30 +989,54 @@ complement_bed <- function(x,
 #' @export
 shuffle_bed <-
   function(x,
-           chrom_sizes = c("hg19", "hg38"),
+           genome = NULL,
            excluded_region = NULL,
            sort = TRUE,
            seed = NULL) {
-    
-  if (length(unique(x$chrom)) > 1) {
-    return(rbindlist(unique(x$chrom) %>% map(function(chrom0) {
-      shuffle_bed(x[chrom == chrom0], chrom_sizes, excluded_region)
-    })))
+    UseMethod("shuffle_bed")
   }
+
+
+#' @export
+shuffle_bed.GRanges <-
+  function(x,
+           genome = NULL,
+           excluded_region = NULL,
+           sort = TRUE,
+           seed = NULL) {
+    x <- as.bedtorch_table(x)
+    shuffle_bed.bedtorch_table(x, chrom_sizes, excluded_region, sort, seed) %>%
+      as.GenomicRanges()
+  }
+
+
+#' @export
+shuffle_bed.bedtorch_table <-
+  function(x,
+           genome = NULL,
+           excluded_region = NULL,
+           sort = TRUE,
+           seed = NULL) {
+    if (length(unique(x$chrom)) > 1) {
+      result <- rbindlist(unique(x$chrom) %>% map(function(chrom0) {
+        shuffle_bed(x[chrom == chrom0], genome, excluded_region)
+      }))
+      new_bedtorch_table(result, genome = attr(x, "genome"))
+    }
 
   # Single chrom
   chrom0 <- x$chrom[1]
   
-  stopifnot(!is.null(chrom_sizes))
-  chrom_sizes <-
-    tryCatch({
-      match.arg(chrom_sizes)
-    }, error = function(e) {
-      return(chrom_sizes)
-    }) %>% load_chrom_sizes()
+  if (is.null(genome))
+    genome <- attr(x, "genome")
+  if (is.null(genome))
+    stop("Must provide genome information")
+  
+  chrom_sizes <- load_chrom_sizes(genome)
   chrom_sizes <-
     chrom_sizes[, `:=`(start = 0L, end = as.integer(size))][chrom == chrom0, .(chrom, start, end)]
   setkey(chrom_sizes, "chrom", "start", "end")
+  chrom_sizes <- new_bedtorch_table(chrom_sizes)
   chrom_sz <- chrom_sizes[, end - start]
   
   if (!is.null(excluded_region)) {
@@ -982,7 +1096,8 @@ shuffle_bed <-
   result <- cbind(x_scaffold, x[, -1:-3])
   if (sort)
     setkey(result, "chrom", "start", "end")
-  result
+  
+  new_bedtorch_table(result, genome = attr(x_scaffold, "genome"))
 }
 
 
@@ -1010,6 +1125,19 @@ shuffle_bed <-
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html}
 #' @export
 cluster_bed <- function(x, max_dist = 0) {
+  UseMethod("cluster_bed")
+}
+
+#' @export
+cluster_bed.GRanges <- function(x, max_dist = 0) {
+  x <- as.bedtorch_table(x)
+  cluster_bed.bedtorch_table(x, max_dist) %>%
+    as.GenomicRanges()
+}
+
+
+#' @export
+cluster_bed.bedtorch_table <- function(x, max_dist = 0) {
   stopifnot(max_dist >= 0)
   
   idx_colname <- .available_colname(x, "cluster")
@@ -1046,7 +1174,6 @@ cluster_bed <- function(x, max_dist = 0) {
 #' @param genome Provide the genome identifier, e.g. `GRCh37`, `hs37-1kg`, or
 #'   path/URL to the chromosome size file. Refer to [GenomeInfoDb::Seqinfo()]
 #'   and [bedtorch::read_bed()].
-#' @param chrom_sizes Another way to provide chromosome size information.
 #' @param chrom A character vector. If provided, only generate windows for the
 #'   specified chromosome(s).
 #' @return A `GRanges` object containing the generated windows.
@@ -1059,28 +1186,23 @@ cluster_bed <- function(x, max_dist = 0) {
 #' result <- make_windows(window_size = 5e6L, genome = "GRCh37")
 #' head(result)
 #' @export
-make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL) {
-  stopifnot(sum(c(is.null(genome), is.null(chrom_sizes))) == 1)
+make_windows <- function(window_size, genome, chrom = NULL) {
+  stopifnot(!is.null(genome))
   
-  if (!is.null(genome)) {
-    # Get chrom_sizes from genome seqinfo
-    genome <- get_seqinfo(genome)
-    chrom_sizes <- genome %>% as.data.frame()
-    chrom_sizes$chrom <- row.names(chrom_sizes)
-    setDT(chrom_sizes)
-    chrom_sizes <- chrom_sizes[, .(chrom, size = seqlengths)]
-    
-    chrom_list <- chrom
-    if (!is.null(chrom_list))
-      chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
-    
-    stopifnot(nrow(chrom_sizes) > 0)
-  } else {
-    stopifnot(!is.null(chrom_sizes))
-    genome <- GenomeInfoDb::Seqinfo(seqnames = chrom_sizes$chrom, seqlengths = chrom_sizes$size)
-  }
-    
-
+  # Get chrom_sizes from genome seqinfo
+  genome <- get_seqinfo(genome)
+  chrom_sizes <- genome %>% as.data.frame()
+  chrom_sizes$chrom <- row.names(chrom_sizes)
+  setDT(chrom_sizes)
+  chrom_sizes <- chrom_sizes[, .(chrom, size = seqlengths)]
+  
+  chrom_list <- chrom
+  if (!is.null(chrom_list))
+    chrom_sizes <- chrom_sizes[chrom %in% chrom_list]
+  
+  stopifnot(nrow(chrom_sizes) > 0)
+  
+  
   result <- lapply(seq.int(nrow(chrom_sizes)), function(row_idx) {
     chrom <- chrom_sizes$chrom[row_idx]
     size <- chrom_sizes$size[row_idx]
@@ -1105,9 +1227,11 @@ make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes =
 #' chromosomes will have more randomly generated intervals.
 #' @param n Number of intervals to generate.
 #' @param interval_width An integer value of the width of the interval.
-#' @param chrom_sizes Provide the chromosome sizes data. If `hg19` or `hg38`,
-#'   the embedded chromosome sizes for hg19 or hg38 will be used. Otherwise, it
-#'   need to be the path of a user-provided file.
+#' @param genome Specify the reference genome for the BED file. `genome` can be
+#'   a valid genome name in [GenomeInfoDb::Seqinfo()], e.g. `GRCh37`, or
+#'   `hs37-1kg`, which is a genome shipped with this package, or any custom
+#'   chromosome size files (local or remote). If `NULL`, will try to obtain such
+#'   information from input data. Refer to [bedtorch::read_bed()].
 #' @param chrom A character vector. If provided, only generate random intervals
 #'   for the specified chromosome(s).
 #' @param seed An integer seed for the random number generator. If `NULL`, the
@@ -1125,15 +1249,12 @@ make_windows <- function(window_size, genome = NULL, chrom = NULL, chrom_sizes =
 #' @references Manual page for `bedtools random`:
 #'   \url{https://bedtools.readthedocs.io/en/latest/content/tools/random.html}
 #' @export
-make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), chrom = NULL, seed = NULL, sort = TRUE) {
+make_random_bed <- function(n, interval_width, genome, chrom = NULL, seed = NULL, sort = TRUE) {
   # BED for chrom_sizes
-  stopifnot(!is.null(chrom_sizes))
-  chrom_sizes <-
-    tryCatch({
-      match.arg(chrom_sizes)
-    }, error = function(e) {
-      return(chrom_sizes)
-    }) %>% load_chrom_sizes()
+  if (is.null(genome))
+    stop("Must provide genome information")
+  
+  chrom_sizes <- load_chrom_sizes(genome)
   
   chrom_list <- chrom
   if (!is.null(chrom_list))
@@ -1165,7 +1286,7 @@ make_random_bed <- function(n, interval_width, chrom_sizes = c("hg19", "hg38"), 
   if (sort)
     setkey(result, "chrom", "start", "end")
   
-  result
+  new_bedtorch_table(result, genome = genome)
 }
 
 
@@ -1199,11 +1320,48 @@ jaccard_bed <- function(x,
                         y,
                         min_overlap = 1,
                         min_overlap_type = c("bp", "frac1", "frac2")) {
+  UseMethod("jaccard_bed")
+}
+
+
+#' @export
+jaccard_bed.GRanges <- function(x,
+                        y,
+                        min_overlap = 1,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
+  x <- as.bedtorch_table(x)
+  y <- as.bedtorch_table(y)
+  
+  jaccard_bed.bedtorch_table(x, y, min_overlap, min_overlap_type) %>%
+    as.GenomicRanges()
+}
+
+
+#' @export
+jaccard_bed.bedtorch_table <- function(x,
+                        y,
+                        min_overlap = 1,
+                        min_overlap_type = c("bp", "frac1", "frac2")) {
   x <- merge_bed(x)
   y <- merge_bed(y)
   
+  genome <- local({
+    genome_list <-
+      list(x, y) %>% map( ~ attr(., which = "genome")) %>% 
+      discard(is.null) %>% unique()
+    
+    if (length(genome_list) == 2)
+      # Dual genome, can't decide the genome of the result
+      NULL
+    else if (length(genome_list) == 0)
+      NULL
+    else
+      genome_list[[1]]
+  })
+  
   union_data <- rbindlist(list(x[, 1:3], y[, 1:3]))
   setkey(union_data, "chrom", "start", "end")
+  union_data <- new_bedtorch_table(union_data, genome)
   union_data <- merge_bed(union_data)
   
   intersect_data <-
@@ -1246,6 +1404,21 @@ jaccard_bed <- function(x,
 #' \href{https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002529}{doi:10.1371/journal.pcbi.1002529}
 #' @export
 reldist_bed <- function(x, y) {
+  UseMethod("reldist_bed")
+}
+
+#' @export
+reldist_bed.GRanges <- function(x, y) {
+  x <- as.bedtorch_table(x)
+  y <- as.bedtorch_table(y)
+  
+  reldist_bed.bedtorch_table(x, y) %>%
+    as.GenomicRanges()
+}
+
+
+#' @export
+reldist_bed.bedtorch_table <- function(x, y) {
   helper <- function(x, y) {
     if (min(nrow(x), nrow(y)) == 0)
       return(NULL)

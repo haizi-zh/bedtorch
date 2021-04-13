@@ -4,7 +4,7 @@
 \alias{make_windows}
 \title{Make windows along genome}
 \usage{
-make_windows(window_size, genome = NULL, chrom = NULL, chrom_sizes = NULL)
+make_windows(window_size, genome, chrom = NULL)
 }
 \arguments{
 \item{window_size}{An integer value. Size of the windows in base pairs.}
@@ -15,8 +15,6 @@ and \code{\link[=read_bed]{read_bed()}}.}
 
 \item{chrom}{A character vector. If provided, only generate windows for the
 specified chromosome(s).}
-
-\item{chrom_sizes}{Another way to provide chromosome size information.}
 }
 \value{
 A \code{GRanges} object containing the generated windows.
