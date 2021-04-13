@@ -262,20 +262,6 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="check_binaries.html">check_binaries()</a></code> </p>
-        </td>
-        <td><p>normalize_table &lt;- function(dt) 
-v_chrom &lt;- as.character(dt$chrom)
-chrom_list &lt;- str_sort(unique(v_chrom), numeric = TRUE)
-dt, chrom := factor(v_chrom, levels = chrom_list)
-dt, <code>:=</code>(start = as.integer(start), end = as.integer(end))
-data.table::setkey(dt, "chrom", "start", "end")
-dt
-
-Check if required binaries exist in PATH</p></td>
-      </tr><tr>
-        
-        <td>
           <p><code><a href="rollsum.html">rollsum()</a></code> </p>
         </td>
         <td><p>Calculate rolling sums</p></td>

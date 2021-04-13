@@ -10,9 +10,6 @@
     <loc>https://haizi-zh.github.io/bedtorch//reference/as.bedtorch_table.html</loc>
   </url>
   <url>
-    <loc>https://haizi-zh.github.io/bedtorch//reference/check_binaries.html</loc>
-  </url>
-  <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/cluster_bed.html</loc>
   </url>
   <url>
@@ -20,6 +17,9 @@
   </url>
   <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/exclude_bed.html</loc>
+  </url>
+  <url>
+    <loc>https://haizi-zh.github.io/bedtorch//reference/filter_by_region.html</loc>
   </url>
   <url>
     <loc>https://haizi-zh.github.io/bedtorch//reference/intersect_bed.html</loc>
