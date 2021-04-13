@@ -93,15 +93,14 @@ post_process_table <- function(dt) {
 }
 
 
-#' @export
-normalize_table <- function(dt) {
-  v_chrom <- as.character(dt$chrom)
-  chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
-  dt[, chrom := factor(v_chrom, levels = chrom_list)]
-  dt[, `:=`(start = as.integer(start), end = as.integer(end))]
-  data.table::setkey(dt, "chrom", "start", "end")
-  dt
-}
+#' normalize_table <- function(dt) {
+#'   v_chrom <- as.character(dt$chrom)
+#'   chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
+#'   dt[, chrom := factor(v_chrom, levels = chrom_list)]
+#'   dt[, `:=`(start = as.integer(start), end = as.integer(end))]
+#'   data.table::setkey(dt, "chrom", "start", "end")
+#'   dt
+#' }
 
 
 #' Check if required binaries exist in PATH
@@ -221,14 +220,14 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 }
 
 
-#' Get a `GenomeInfoDb::Seqinfo` object
-#' 
-#' @param genome A canonical genome name, e.g. GRCh37, or a custom genome name
-#'   recognized by bedtorch, e.g. hs37-1kg, or a path/URL to a chromosome size
-#'   file. If `NULL`, return `NULL`.
-#' @param genome_name Optional character vector. Only works when `genome` is a
-#'   file path/URL, and specify the name of the genome. If `NULL`, the name is
-#'   guessed from the file name.
+# Get a `GenomeInfoDb::Seqinfo` object
+# 
+# @param genome A canonical genome name, e.g. GRCh37, or a custom genome name
+#   recognized by bedtorch, e.g. hs37-1kg, or a path/URL to a chromosome size
+#   file. If `NULL`, return `NULL`.
+# @param genome_name Optional character vector. Only works when `genome` is a
+#   file path/URL, and specify the name of the genome. If `NULL`, the name is
+#   guessed from the file name.
 get_seqinfo <- function(genome, genome_name = NULL) {
   if (is.null(genome))
     return(NULL)
@@ -306,6 +305,9 @@ get_seqinfo <- function(genome, genome_name = NULL) {
 #'   `hs37-1kg`, which is a genome shipped with this package, or any custom
 #'   chromosome size files (local or remote). Here is a good resource for such
 #'   files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.
+#' @param use_gr If `TRUE`, will read the data as a `GenomicRanges` object,
+#'   otherwise a `data.table` object. Generally, we recommend using
+#'   `GenomicRanges`.
 #' @param ... Other arguments to be passed to [data.table::fread()].
 #' @seealso [data.table::fread()]
 #' @examples 
@@ -400,6 +402,10 @@ read_bed <-
 #'   `.bgz`, the output will be compressed in BGZIP format.
 #' @param tabix_index If `TRUE`, and `file_path` indicates a gzip file, will
 #'   create create the tabix index file.
+#' @param batch_size An positive integer. Write file in batches. During each
+#'   batch, only write up to `batch_size` lines.
+#' @param comments A character vector, which will be written to the top of the
+#'   file as header lines.
 #' @param ... Other arguments passed to methods. Compliant with `data.table::fwrite`.
 #' @examples 
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
@@ -409,6 +415,9 @@ read_bed <-
 #' 
 #' # Write data to file and create tabix index
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
+#' 
+#' # Write data to uncompressed file, with header lines
+#' write_bed(bedtbl,  tempfile(fileext = ".bed"), comments = c("Author: X", "Date: N/A"))
 #' @export
 write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   UseMethod("write_bed")

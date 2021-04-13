@@ -5,8 +5,8 @@
 \title{Map over scaffold intervals}
 \usage{
 map_bed(
-  data,
-  scaffold,
+  x,
+  y,
   operation,
   max_gap = -1L,
   min_overlap = 0L,
@@ -14,17 +14,20 @@ map_bed(
 )
 }
 \arguments{
-\item{data}{A \code{GRanges} object.}
-
-\item{scaffold}{A \code{GRanges} object containing intervals upon which you
-want to map \code{data}.}
-
 \item{operation}{List of functions for the statistics and summary operations.
 This is similar to \code{\link[=merge_bed]{merge_bed()}}}
+
+\item{max_gap}{The largest gap for two intervals to be considered as
+overlapping. Default is -1 (no gap allowed, adjacent intervals not allowd).}
 
 \item{min_overlap}{See \code{\link[=intersect_bed]{intersect_bed()}}.}
 
 \item{min_overlap_type}{\code{\link[=intersect_bed]{intersect_bed()}}.}
+
+\item{data}{A \code{GRanges} object.}
+
+\item{scaffold}{A \code{GRanges} object containing intervals upon which you
+want to map \code{data}.}
 }
 \value{
 A mapped \code{GRanges} object.
@@ -52,5 +55,5 @@ Manual page of \verb{bedtools map}:
 \url{https://bedtools.readthedocs.io/en/latest/content/tools/map.html}
 }
 \seealso{
-\code{\link[=merge_bed]{merge_bed()}}, \code{\link[=intersect_bed]{intersect_bed()}}
+\code{\link[=merge_bed]{merge_bed()}}, \code{\link[=intersect_bed]{intersect_bed()}} \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}
 }

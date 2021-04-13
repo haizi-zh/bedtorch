@@ -4,11 +4,13 @@
 \alias{as.GenomicRanges}
 \title{Convert a \code{data.table} representation to \code{GenomicRanges} representation}
 \usage{
-as.GenomicRanges(dt)
+as.GenomicRanges(x)
 }
 \arguments{
-\item{genome}{A character value specifying the genome name, or a
-\code{GenomeInfoDb::Seqinfo} object.}
+\item{x}{An input \code{data.table}.}
+}
+\value{
+\code{GenomicRanges} converted from \code{x}.
 }
 \description{
 Convert a \code{data.table} representation to \code{GenomicRanges} representation

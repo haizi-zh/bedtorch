@@ -36,7 +36,7 @@ Cross-chromosome shuffle is not supported at this point.
 }
 \examples{
 # Load BED tables
-tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE, genome = "hs37-1kg")
 excluded <- read_bed(system.file("extdata", "example_intersect_y.bed", package = "bedtorch"), use_gr = FALSE)
 
 # Basic usage
@@ -44,7 +44,7 @@ result <- shuffle_bed(tbl)
 head(result)
 
 # Shuffle the data, but exclude certain regions. Plus, set the RNG seed to 1
-result <- shuffle_bed(tbl, chrom_sizes = "hg19", excluded_region = excluded, seed = 1)
+result <- shuffle_bed(tbl, genome = "hs37-1kg", excluded_region = excluded, seed = 1)
 head(result)
 }
 \references{

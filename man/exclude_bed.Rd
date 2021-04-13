@@ -18,10 +18,10 @@ exclude_bed(
 \item{y}{A \code{GRanges} object.}
 
 \item{max_gap}{The largest gap for two intervals to be considered as
-overlapping. Default is 0 (no gap allowed).}
+overlapping. Default is -1 (no gap allowed, adjacent intervals not allowd).}
 
 \item{min_overlap}{The smallest overlapping region for two intervals to be
-considered as overlapping. Default is 1.}
+considered as overlapping. Default is 0.}
 
 \item{min_overlap_type}{A character value indicating how \code{min_overlap} is
 interpreted. \code{bp} means \code{min_overlap} is the number of base pairs. \code{frac1}
@@ -49,5 +49,5 @@ head(exclude_bed(tbl_x, tbl_y))
 Manual page of \verb{bedtools intersect}: \url{https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html}
 }
 \seealso{
-\code{\link[=intersect_bed]{intersect_bed()}}
+\code{\link[=intersect_bed]{intersect_bed()}} \code{\link[GenomicRanges:findOverlaps-methods]{GenomicRanges::findOverlaps()}}
 }

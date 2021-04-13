@@ -31,7 +31,7 @@ pairs. If \code{frac}, \code{slop} is a float point number indicating the percen
 Otherwise, the resizing is only for the \code{left} end or the \code{right} end.}
 }
 \value{
-A slopped \code{data.tabe} object.
+A slopped \code{GRanges} object.
 }
 \description{
 Similar to \verb{bedtools slop}, this function increases the size of each feature
@@ -40,7 +40,8 @@ resizing to the size of the chromosome.
 }
 \examples{
 # Load data
-tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), use_gr = FALSE)
+tbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), 
+                use_gr = FALSE, genome = "hs37-1kg")
 
 # Slop by 10 on both ends
 result <- slop_bed(tbl, slop = 10L, slop_type = "bp", mode = "both")

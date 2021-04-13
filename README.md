@@ -77,18 +77,27 @@ disadvantages.
 Another approach is using native R data types to represent BED-like
 data. R’s native `data.frame` seems to be a good model, but in many
 scenarios, it’s performance is poor. More importantly, it lacks many
-advanced features compared with `dplyr` and `data.table`.
+advanced features compared with `GenomicRanges`, `dplyr` and
+`data.table`.
 
-It would be desirable to have an R package, which store BED-like data as
-`data.table` objects, and provide native support for common BED
-manipulations, such as merge, intersect, filter, etc.
+`GenomicRanges` is widely used in bioinformatics community. Although it
+provides essential building blocks for many tasks, such as
+`findOverlaps`, `reduce`, etc., it doesn’t provide high-level features
+as `bedtools` does. Using `findOverlaps`, `reduce`, and other functions
+provided by `GenomicRanges`, users may implement operations such as map,
+merge, unique intersect, but this still requires lots of coding.
+
+It would be desirable to have an R package, which represent BED-like
+data by `GenomicRanges` or `data.table` objects, and provide native
+support for common BED manipulations, such as merge, intersect, filter,
+etc.
 
 ## Details
 
 `bedtorch` is an attempt for this. Under the hood, every BED dataset is
-represented as a `data.table` object. Users can apply various operations
-on it, such as intersect, merge, etc. Users can also perform any
-`data.table` operations as needed.
+represented as a `GenomicRanges` object (it also can represent the
+dataset as `data.table`, if preferred. But this is not recommended).
+Users can apply various operations on it, such as intersect, merge, etc.
 
 In terms of the core computation, `bedtorch`’s performance is comparable
 to `bedtools`. However, since no disk IO and data conversion is needed,
@@ -96,13 +105,14 @@ users can directly manipulate the dataset in memory, therefore in
 practice, via `bedtorch`, many tasks can be done about one magnitude
 faster.
 
-Additionally, `bedtorch` can write data frames directly to BGZIP-format
-files, and optionally create the tabix index. It can also directly load
-either local or remote BGZIP-format files at any particular genomic
-regions. This feature is done by htslib, therefore not requiring
-external command line tools such as `tabix` or `bgzip`. In the case of
-working with remote files, being capable of loading only a portion of
-the file will be very convenient.
+Additionally, by linking to
+[htslib](https://github.com/samtools/htslib), `bedtorch` can write data
+frames directly to BGZIP-format files, and optionally create the tabix
+index. It can also directly load either local or remote BGZIP-format
+files at any particular genomic regions. This feature is done by htslib,
+therefore not requiring external command line tools such as `tabix` or
+`bgzip`. In the case of working with remote files, being capable of
+loading any arbitrary portion of the file will be very convenient.
 
 [BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of gzip and
 is widely used in bioinformatics. It’s compatible with gzip, with an
@@ -136,14 +146,23 @@ file_path <-
   system.file("extdata", "example2.bed.gz", package = "bedtorch")
 
 bedtbl <- read_bed(file_path, range = "1:3001-4000")
-head(bedtbl)
-#>    chrom start  end score1 score2
-#> 1:     1  2925 3011    106    181
-#> 2:     1  3003 3092     88    193
-#> 3:     1  3091 3193    118    212
-#> 4:     1  3164 3248     94    211
-#> 5:     1  3232 3345    107    205
-#> 6:     1  3300 3395     88    193
+bedtbl
+#> GRanges object with 14 ranges and 2 metadata columns:
+#>        seqnames    ranges strand |    score1    score2
+#>           <Rle> <IRanges>  <Rle> | <integer> <integer>
+#>    [1]        1 2926-3011      * |       106       181
+#>    [2]        1 3004-3092      * |        88       193
+#>    [3]        1 3092-3193      * |       118       212
+#>    [4]        1 3165-3248      * |        94       211
+#>    [5]        1 3233-3345      * |       107       205
+#>    ...      ...       ...    ... .       ...       ...
+#>   [10]        1 3619-3726      * |       108       172
+#>   [11]        1 3695-3803      * |       117       214
+#>   [12]        1 3777-3867      * |       109       195
+#>   [13]        1 3845-3939      * |        92       199
+#>   [14]        1 3925-4016      * |        93       197
+#>   -------
+#>   seqinfo: 1 sequence from an unspecified genome; no seqlengths
 ```
 
 Read a remote BGZIP BED file for a certain region:
@@ -153,21 +172,28 @@ Read a remote BGZIP BED file for a certain region:
 # Here we need to explicitly indicate `compression` as `bgzip` since we are
 # using short URL for `tabix_index`, so that the function cannot guess
 # compression type using the URL
-head(
-  read_bed(
-    "https://git.io/JYATB",
-    range = "22:20000001-30000001",
-    tabix_index = "https://git.io/JYAkT",
-    compression = "bgzip"
-  )
+read_bed(
+  "https://git.io/JYATB",
+  range = "22:20000001-30000001",
+  tabix_index = "https://git.io/JYAkT",
+  compression = "bgzip"
 )
-#>    chrom    start      end       score comp_method
-#> 1:    22 20000000 20500000 -0.06135351    cofrag/3
-#> 2:    22 20500000 21000000 -0.04227518    cofrag/3
-#> 3:    22 21000000 21500000  0.02681753    cofrag/3
-#> 4:    22 21500000 22000000  0.03863082    cofrag/3
-#> 5:    22 22000000 22500000  0.02651413    cofrag/3
-#> 6:    22 22500000 23000000 -0.04258119    cofrag/3
+#> GRanges object with 21 ranges and 2 metadata columns:
+#>        seqnames            ranges strand |      score comp_method
+#>           <Rle>         <IRanges>  <Rle> |  <numeric> <character>
+#>    [1]       22 20000001-20500000      * | -0.0613535    cofrag/3
+#>    [2]       22 20500001-21000000      * | -0.0422752    cofrag/3
+#>    [3]       22 21000001-21500000      * |  0.0268175    cofrag/3
+#>    [4]       22 21500001-22000000      * |  0.0386308    cofrag/3
+#>    [5]       22 22000001-22500000      * |  0.0265141    cofrag/3
+#>    ...      ...               ...    ... .        ...         ...
+#>   [17]       22 28000001-28500000      * | 0.08472735    cofrag/3
+#>   [18]       22 28500001-29000000      * | 0.15800267    cofrag/3
+#>   [19]       22 29000001-29500000      * | 0.14646452    cofrag/3
+#>   [20]       22 29500001-30000000      * | 0.07898761    cofrag/3
+#>   [21]       22 30000001-30500000      * | 0.00434186    cofrag/3
+#>   -------
+#>   seqinfo: 1 sequence from an unspecified genome; no seqlengths
 ```
 
 Write the previous data table to the temporary directory, and create the
@@ -186,11 +212,15 @@ Merge intervals, and take the mean of score in each merged group:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ``` r
-operation = list(mean_score = function(x) mean(x$score1))
+operation = list(mean_score = list(on = "score1", func = mean))
 merged <- merge_bed(bedtbl, operation = operation)
 head(merged)
-#>    chrom start  end mean_score
-#> 1:     1  2925 4016   99.07143
+#> GRanges object with 1 range and 1 metadata column:
+#>       seqnames    ranges strand | mean_score
+#>          <Rle> <IRanges>  <Rle> |  <numeric>
+#>   [1]        1 2926-4016      * |    99.0714
+#>   -------
+#>   seqinfo: 1 sequence from an unspecified genome; no seqlengths
 ```
 
 Find intersections between two datasets:
@@ -203,16 +233,25 @@ Find intersections between two datasets:
 file_path1 <- system.file("extdata", "example_merge.bed", package = "bedtorch")
 file_path2 <- system.file("extdata", "example_intersect_y.bed", package = "bedtorch")
 
-tbl_x <- read_bed(file_path1)
-tbl_y <- read_bed(file_path2)
-head(intersect_bed(tbl_x, tbl_y))
-#>    chrom start end score
-#> 1:    21    22  25     7
-#> 2:    21    26  30     7
-#> 3:    21    29  35     9
-#> 4:    21    47  49     1
-#> 5:    21    47  50     2
-#> 6:    21    53  55     5
+tbl_x <- read_bed(file_path1, genome = "hs37-1kg")
+tbl_y <- read_bed(file_path2, genome = "hs37-1kg")
+intersect_bed(tbl_x, tbl_y)
+#> GRanges object with 12 ranges and 1 metadata column:
+#>        seqnames    ranges strand |     score
+#>           <Rle> <IRanges>  <Rle> | <integer>
+#>    [1]       21     23-25      * |         7
+#>    [2]       21     27-30      * |         7
+#>    [3]       21     30-35      * |         9
+#>    [4]       21     48-49      * |         1
+#>    [5]       21     48-50      * |         2
+#>    ...      ...       ...    ... .       ...
+#>    [8]       22     43-44      * |         9
+#>    [9]       22     47-50      * |         0
+#>   [10]       22     52-59      * |         9
+#>   [11]       22     54-57      * |         5
+#>   [12]       22     58-60      * |         9
+#>   -------
+#>   seqinfo: 84 sequences from hs37-1kg genome
 ```
 
 Shuffle a BED data table across the genome:
@@ -222,14 +261,23 @@ Shuffle a BED data table across the genome:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ``` r
-head(shuffle_bed(tbl_x))
-#>    chrom    start      end score
-#> 1:    21   691856   691859     5
-#> 2:    21  4971831  4971844     1
-#> 3:    21  6426671  6426675     7
-#> 4:    21  9306421  9306426     4
-#> 5:    21 18130222 18130228     9
-#> 6:    21 24372333 24372336     7
+shuffle_bed(tbl_x)
+#> GRanges object with 20 ranges and 1 metadata column:
+#>        seqnames            ranges strand |     score
+#>           <Rle>         <IRanges>  <Rle> | <integer>
+#>    [1]       21   1029979-1029981      * |         5
+#>    [2]       21   2060187-2060189      * |         8
+#>    [3]       21   2163003-2163008      * |         9
+#>    [4]       21   8821855-8821859      * |         4
+#>    [5]       21 11695156-11695158      * |         7
+#>    ...      ...               ...    ... .       ...
+#>   [16]       22 23326577-23326584      * |         9
+#>   [17]       22 24159793-24159800      * |         9
+#>   [18]       22 31133554-31133557      * |         5
+#>   [19]       22 41274070-41274077      * |         8
+#>   [20]       22 48027853-48027855      * |        10
+#>   -------
+#>   seqinfo: 84 sequences from hs37-1kg genome
 ```
 
 Calculate Jaccard statistics between the two BED data tables:
@@ -239,7 +287,7 @@ Calculate Jaccard statistics between the two BED data tables:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ``` r
-head(jaccard_bed(tbl_x, tbl_y))
+jaccard_bed(tbl_x, tbl_y)
 #>    intersection union   jaccard n_intersections
 #> 1:           33    94 0.3510638               8
 ```

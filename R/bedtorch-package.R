@@ -5,7 +5,8 @@
 #' @importFrom tidyr expand_grid
 #' @importFrom dplyr `%>%`
 #' @importFrom data.table setnames setkey fread fwrite shift setDT data.table rbindlist as.data.table
-#' @importFrom GenomicRanges makeGRangesFromDataFrame findOverlaps mcols `mcols<-` pintersect ranges `ranges<-` width seqnames
+#' @importFrom GenomicRanges makeGRangesFromDataFrame findOverlaps mcols `mcols<-` pintersect ranges `ranges<-` width 
+#' @importFrom GenomeInfoDb seqnames seqlengths
 #' @importFrom S4Vectors from to
 NULL
 

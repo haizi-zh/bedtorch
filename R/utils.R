@@ -89,10 +89,11 @@ rollmean <- function(x, k, na_pad = FALSE, na.rm = FALSE, align = c("center", "l
 }
 
 
-#' Constructor of bedtorch_table
-#' 
-#' @param genome A character value specifying the genome name, or a
-#'   `GenomeInfoDb::Seqinfo` object.
+# Constructor of bedtorch_table
+# 
+# @param dt A `data.table` input.
+# @param genome A character value specifying the genome name, or a
+#   `GenomeInfoDb::Seqinfo` object.
 new_bedtorch_table <- function(dt, genome = NULL) {
   stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
   
@@ -116,9 +117,10 @@ new_bedtorch_table <- function(dt, genome = NULL) {
 
 #' Convert a `data.table` representation to `GenomicRanges` representation
 #' 
-#' @param genome A character value specifying the genome name, or a
-#'   `GenomeInfoDb::Seqinfo` object.
-as.GenomicRanges <- function(dt) {
+#' @param x An input `data.table`.
+#' @return `GenomicRanges` converted from `x`.
+as.GenomicRanges <- function(x) {
+  dt <- x
   if (is(dt, "GRanges"))
     return(dt)
   
@@ -137,7 +139,11 @@ as.GenomicRanges <- function(dt) {
 
 
 #' Convert a `GenomicRanges` representation to `data.table` representation
-as.bedtorch_table <- function(gr) {
+#' 
+#' @param x An input `GenomicRanges`.
+#' @return `data.table` converted from `x`.
+as.bedtorch_table <- function(x) {
+  gr <- x
   if (is(gr, "bedtorch_table"))
     return(gr)
   
@@ -158,7 +164,7 @@ as.bedtorch_table <- function(gr) {
 
 
 #' @export
-print.bedtorch_table <- function(dt) {
+print.bedtorch_table <- function(x) {
   NextMethod()
   
   genome <- attr(dt, "genome")

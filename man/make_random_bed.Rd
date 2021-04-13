@@ -41,12 +41,12 @@ randomly generated in proportion to chromosome sizes. In another word, larger
 chromosomes will have more randomly generated intervals.
 }
 \examples{
-# Generate 100 500kbp-intervals for chr20 and chr22, hg38
-result <- make_random_bed(100, 500e3L, chrom_sizes = "hg38", chrom = c("chr20", "chr22"))
+# Generate 100 500kbp-intervals for chr20 and chr22, GRCh38
+result <- make_random_bed(100, 500e3L, genome = "GRCh38", chrom = c("20", "22"))
 head(result)
 
-# Generate 100 500bp unsorted intervals for all chromosomes of hg19 (default reference genome)
-result <- make_random_bed(100, interval_width = 500, chrom_sizes = "hg19", sort = FALSE)
+# Generate 100 500bp unsorted intervals for all chromosomes of GRCh37 (default reference genome)
+result <- make_random_bed(100, interval_width = 500, genome = "GRCh37", sort = FALSE)
 head(result)
 }
 \references{

@@ -37,3 +37,5 @@ reference:
       - check_binaries
       - rollsum
       - rollmean
+      - as.GenomicRanges
+      - as.bedtorch_table

@@ -4,7 +4,13 @@
 \alias{as.bedtorch_table}
 \title{Convert a \code{GenomicRanges} representation to \code{data.table} representation}
 \usage{
-as.bedtorch_table(gr)
+as.bedtorch_table(x)
+}
+\arguments{
+\item{x}{An input \code{GenomicRanges}.}
+}
+\value{
+\code{data.table} converted from \code{x}.
 }
 \description{
 Convert a \code{GenomicRanges} representation to \code{data.table} representation

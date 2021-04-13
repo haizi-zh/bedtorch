@@ -2,7 +2,15 @@
 % Please edit documentation in R/io.R
 \name{check_binaries}
 \alias{check_binaries}
-\title{Check if required binaries exist in PATH}
+\title{normalize_table <- function(dt) {
+v_chrom <- as.character(dt$chrom)
+chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
+dt\link{, chrom := factor(v_chrom, levels = chrom_list)}
+dt\link[=, `:=`(start = as.integer(start), end = as.integer(end))]{, \verb{:=}(start = as.integer(start), end = as.integer(end))}
+data.table::setkey(dt, "chrom", "start", "end")
+dt
+}
+Check if required binaries exist in PATH}
 \usage{
 check_binaries(binaries = "tabix", verbose = FALSE, stop_on_fail = FALSE)
 }

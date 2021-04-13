@@ -37,6 +37,10 @@ a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seq
 chromosome size files (local or remote). Here is a good resource for such
 files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.}
 
+\item{use_gr}{If \code{TRUE}, will read the data as a \code{GenomicRanges} object,
+otherwise a \code{data.table} object. Generally, we recommend using
+\code{GenomicRanges}.}
+
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
 }
 \description{

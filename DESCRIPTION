@@ -2,7 +2,7 @@ Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
 Date: 2021-04-03
-Version: 0.1.9.9009
+Version: 0.1.10
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
@@ -28,6 +28,7 @@ Imports:
     Rhtslib12 (>= 1.23.2),
     RCurl,
     GenomicRanges,
+    GenomeInfoDb,
     S4Vectors
 Suggests: 
     testthat (>= 3.0.0),
@@ -40,6 +41,7 @@ BiocType: Software
 Remotes: 
     haizi-zh/Rhtslib12,
     bioc::GenomicRanges,
+    bioc::GenomeInfoDb,
     bioc::S4Vectors
 LinkingTo: 
     Rcpp,

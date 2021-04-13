@@ -22,6 +22,12 @@ write_bed(
 \item{tabix_index}{If \code{TRUE}, and \code{file_path} indicates a gzip file, will
 create create the tabix index file.}
 
+\item{batch_size}{An positive integer. Write file in batches. During each
+batch, only write up to \code{batch_size} lines.}
+
+\item{comments}{A character vector, which will be written to the top of the
+file as header lines.}
+
 \item{...}{Other arguments passed to methods. Compliant with \code{data.table::fwrite}.}
 }
 \description{
@@ -35,4 +41,7 @@ write_bed(bedtbl,  tempfile(fileext = ".bed"))
 
 # Write data to file and create tabix index
 write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
+
+# Write data to uncompressed file, with header lines
+write_bed(bedtbl,  tempfile(fileext = ".bed"), comments = c("Author: X", "Date: N/A"))
 }

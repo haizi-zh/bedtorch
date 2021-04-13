@@ -45,17 +45,19 @@ Generally this approach is very helpful. However, it's worth noting some disadva
 -   `bedr` captures command line output as plain text. Therefore, when the data is transferred back to R, most of the information about data types, index (in the case of `data.table`), column names, etc., are lost. It's the package user's responsibility to make sure data types are correct, column names are restored, column indices have been rebuilt (in the case of `data.table`, which can be very time consuming). Often this job is tedious, error-prone and introduces very large overheads.
 -   It requires the command line tools to be present in `PATH`. This depends on the end user's system environment and the R developer can do nothing about it. It puts additional burden to deployment, especially when the end user is not an IT professional.
 
-Another approach is using native R data types to represent BED-like data. R's native `data.frame` seems to be a good model, but in many scenarios, it's performance is poor. More importantly, it lacks many advanced features compared with `dplyr` and `data.table`.
+Another approach is using native R data types to represent BED-like data. R's native `data.frame` seems to be a good model, but in many scenarios, it's performance is poor. More importantly, it lacks many advanced features compared with `GenomicRanges`, `dplyr` and `data.table`.
 
-It would be desirable to have an R package, which store BED-like data as `data.table` objects, and provide native support for common BED manipulations, such as merge, intersect, filter, etc.
+`GenomicRanges` is widely used in bioinformatics community. Although it provides essential building blocks for many tasks, such as `findOverlaps`, `reduce`, etc., it doesn't provide high-level features as `bedtools` does. Using `findOverlaps`, `reduce`, and other functions provided by `GenomicRanges`, users may implement operations such as map, merge, unique intersect, but this still requires lots of coding.
+
+It would be desirable to have an R package, which represent BED-like data by `GenomicRanges` or `data.table` objects, and provide native support for common BED manipulations, such as merge, intersect, filter, etc.
 
 ## Details
 
-`bedtorch` is an attempt for this. Under the hood, every BED dataset is represented as a `data.table` object. Users can apply various operations on it, such as intersect, merge, etc. Users can also perform any `data.table` operations as needed.
+`bedtorch` is an attempt for this. Under the hood, every BED dataset is represented as a `GenomicRanges` object (it also can represent the dataset as `data.table`, if preferred. But this is not recommended). Users can apply various operations on it, such as intersect, merge, etc.
 
 In terms of the core computation, `bedtorch`'s performance is comparable to `bedtools`. However, since no disk IO and data conversion is needed, users can directly manipulate the dataset in memory, therefore in practice, via `bedtorch`, many tasks can be done about one magnitude faster.
 
-Additionally, `bedtorch` can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as `tabix` or `bgzip`. In the case of working with remote files, being capable of loading only a portion of the file will be very convenient. 
+Additionally, by linking to [htslib](https://github.com/samtools/htslib), `bedtorch` can write data frames directly to BGZIP-format files, and optionally create the tabix index. It can also directly load either local or remote BGZIP-format files at any particular genomic regions. This feature is done by htslib, therefore not requiring external command line tools such as `tabix` or `bgzip`. In the case of working with remote files, being capable of loading any arbitrary portion of the file will be very convenient.
 
 [BGZIP](http://www.htslib.org/doc/bgzip.html) is a variant of gzip and is widely used in bioinformatics. It's compatible with gzip, with an important additional feature: allows a compressed file to be indexed for fast query. However, R is unaware of BGZIP. It considers all `.gz` files as gzip-compressed, thus doesn't take advantage of BED index, and cannot output BGZIP files.
 
@@ -82,7 +84,7 @@ file_path <-
   system.file("extdata", "example2.bed.gz", package = "bedtorch")
 
 bedtbl <- read_bed(file_path, range = "1:3001-4000")
-head(bedtbl)
+bedtbl
 ```
 
 Read a remote BGZIP BED file for a certain region:
@@ -92,13 +94,11 @@ Read a remote BGZIP BED file for a certain region:
 # Here we need to explicitly indicate `compression` as `bgzip` since we are
 # using short URL for `tabix_index`, so that the function cannot guess
 # compression type using the URL
-head(
-  read_bed(
-    "https://git.io/JYATB",
-    range = "22:20000001-30000001",
-    tabix_index = "https://git.io/JYAkT",
-    compression = "bgzip"
-  )
+read_bed(
+  "https://git.io/JYATB",
+  range = "22:20000001-30000001",
+  tabix_index = "https://git.io/JYAkT",
+  compression = "bgzip"
 )
 ```
 
@@ -117,7 +117,7 @@ Merge intervals, and take the mean of score in each merged group:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ```{r}
-operation = list(mean_score = function(x) mean(x$score1))
+operation = list(mean_score = list(on = "score1", func = mean))
 merged <- merge_bed(bedtbl, operation = operation)
 head(merged)
 ```
@@ -132,9 +132,9 @@ Find intersections between two datasets:
 file_path1 <- system.file("extdata", "example_merge.bed", package = "bedtorch")
 file_path2 <- system.file("extdata", "example_intersect_y.bed", package = "bedtorch")
 
-tbl_x <- read_bed(file_path1)
-tbl_y <- read_bed(file_path2)
-head(intersect_bed(tbl_x, tbl_y))
+tbl_x <- read_bed(file_path1, genome = "hs37-1kg")
+tbl_y <- read_bed(file_path2, genome = "hs37-1kg")
+intersect_bed(tbl_x, tbl_y)
 ```
 
 Shuffle a BED data table across the genome:
@@ -144,7 +144,7 @@ Shuffle a BED data table across the genome:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ```{r}
-head(shuffle_bed(tbl_x))
+shuffle_bed(tbl_x)
 ```
 
 Calculate Jaccard statistics between the two BED data tables:
@@ -154,7 +154,7 @@ Calculate Jaccard statistics between the two BED data tables:
 *Image by [bedtools](https://bedtools.readthedocs.io/en/latest/)*
 
 ```{r}
-head(jaccard_bed(tbl_x, tbl_y))
+jaccard_bed(tbl_x, tbl_y)
 ```
 
 ### Performance
