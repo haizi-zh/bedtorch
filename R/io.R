@@ -199,7 +199,9 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
     index_path = if (is.null(index_path)) "" else index_path,
     download_index = download_index
   )
-  read_bed(tempbed)
+  # user_gr should be FALSE, since here we need a data.table object, which later
+  # will be converted to GenomicRanges, if instructed
+  read_bed(tempbed, use_gr = FALSE)
 }
 
 
