@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Cluster intervals — cluster_bed • bedtorch</title>
+<title>Convert a data.frame to bedtorch data — df2bedtorch • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,8 @@
 
 
 
-<meta property="og:title" content="Cluster intervals — cluster_bed" />
-<meta property="og:description" content="This operation is similar to bedtools cluster. It reports each set of
-overlapping or “book-ended” features in an interval file." />
+<meta property="og:title" content="Convert a data.frame to bedtorch data — df2bedtorch" />
+<meta property="og:description" content="Convert a data.frame to bedtorch data" />
 
 
 
@@ -109,71 +108,50 @@ overlapping or “book-ended” features in an interval file." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Cluster intervals</h1>
-    <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/manipulation.R'><code>R/manipulation.R</code></a></small>
-    <div class="hidden name"><code>cluster_bed.Rd</code></div>
+    <h1>Convert a <code>data.frame</code> to bedtorch data</h1>
+    <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
+    <div class="hidden name"><code>df2bedtorch.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This operation is similar to <code>bedtools cluster</code>. It reports each set of
-overlapping or “book-ended” features in an interval file.</p>
+    <p>Convert a <code>data.frame</code> to bedtorch data</p>
     </div>
 
-    <pre class="usage"><span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>x</span>, max_dist <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>df2bedtorch</span><span class='op'>(</span><span class='va'>x</span>, genome <span class='op'>=</span> <span class='cn'>NULL</span>, zero_based <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>A <code>GRanges</code></p></td>
+      <td><p>A <code>data.frame</code>. The first three columns should be chrom, start and
+end. For column names, refer to <code><a href='https://rdrr.io/pkg/GenomicRanges/man/makeGRangesFromDataFrame.html'>GenomicRanges::makeGRangesFromDataFrame()</a></code>.</p></td>
     </tr>
     <tr>
-      <th>max_dist</th>
-      <td><p>Maximum distance between features allowed for features to be
-merged. Default is 0. That is, overlapping and/or book-ended features are
-merged.</p></td>
+      <th>genome</th>
+      <td><p>A character value specifying the genome name.</p></td>
+    </tr>
+    <tr>
+      <th>zero_based</th>
+      <td><p>If true, the start/end are zero-based, semi-inclusive, which is BED standard.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>GRanges</code>. Compared</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
-
-    <p>Manual page of <code>bedtools cluster</code>:
-<a href='https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html'>https://bedtools.readthedocs.io/en/latest/content/tools/cluster.html</a></p>
+    <p>A bedtorch data object.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='merge_bed.html'>merge_bed()</a></code></p></div>
+    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/GenomicRanges/man/makeGRangesFromDataFrame.html'>GenomicRanges::makeGRangesFromDataFrame()</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>tbl</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, use_gr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
-
-<span class='co'># Basic usage</span>
-<span class='va'>clustered</span> <span class='op'>&lt;-</span> <span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>tbl</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>clustered</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;    chrom start end score cluster
-#&gt; 1:    21     3   6     8       1
-#&gt; 2:    21    10  16     5       2
-#&gt; 3:    21    12  17     4       2
-#&gt; 4:    21    15  22     5       2
-#&gt; 5:    21    22  25     7       2
-#&gt; 6:    21    26  30     7       3
-#&gt; -------
-#&gt; genome: unspecified.</div><div class='input'>
-<span class='co'># Change the maximum distance allowed</span>
-<span class='va'>clustered</span> <span class='op'>&lt;-</span> <span class='fu'>cluster_bed</span><span class='op'>(</span><span class='va'>tbl</span>, max_dist <span class='op'>=</span> <span class='fl'>10</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>clustered</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;    chrom start end score cluster
-#&gt; 1:    21     3   6     8       1
-#&gt; 2:    21    10  16     5       1
-#&gt; 3:    21    12  17     4       1
-#&gt; 4:    21    15  22     5       1
-#&gt; 5:    21    22  25     7       1
-#&gt; 6:    21    26  30     7       1
-#&gt; -------
-#&gt; genome: unspecified.</div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>df2bedtorch</span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span>chrom <span class='op'>=</span> <span class='st'>"1"</span>, start <span class='op'>=</span> <span class='fl'>1</span>, end <span class='op'>=</span> <span class='fl'>10</span><span class='op'>)</span>, genome <span class='op'>=</span> <span class='st'>"hs37-1kg"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; GRanges object with 1 range and 0 metadata columns:
+#&gt;       seqnames    ranges strand
+#&gt;          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+#&gt;   [1]        1      2-10      *
+#&gt;   -------
+#&gt;   seqinfo: 84 sequences from hs37-1kg genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
