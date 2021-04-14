@@ -326,3 +326,74 @@ read_tsv("scripts/exclude_bed.tsv", col_types = cols()) %>%
   scale_x_log10() + scale_y_log10() + labs(title = "exclude_bed performance")
 ```
 
+## `rollsum`
+
+```{r}
+rollsum_bm2 <- local({
+  expand_grid(size = as.integer(2 ** (10:13) * 1e3L),
+              k = c(10, 50, 100, 500, 1000, 5000)) %>%
+    pmap_dfr(function(size, k) {
+      logging::loginfo(str_interp("${size}/${k}"))
+      
+      test_data <- runif(n = size)
+      bench::mark(check = FALSE,
+                  exprs = list(
+                    zoo = quote(zoo::rollsum(
+                      test_data, k = k, fill = NA
+                    )),
+                    bedtorch = quote(rollsum(
+                      test_data, k = k, na_pad = TRUE
+                    ))
+                  )) %>%
+        select(expression:total_time) %>%
+        mutate(size = size, k = k)
+    })
+})
+
+# 
+# exclude_bed_bm %>% 
+#   mutate(elapsed = as.numeric(median), expression = names(expression)) %>% 
+#   select(c(expression:size, elapsed)) %>%
+#   write_tsv("scripts/exclude_bed.tsv", col_names = TRUE)
+```
+
+```{r, eval=TRUE, cache=TRUE, fig.asp=1}
+rollsum_bm %>%
+  mutate(elapsed = as.numeric(median),
+         expression = names(expression)) %>%
+  mutate(
+    size = as.integer(size / 1e3),
+    k = as.integer(k),
+    mem_alloc = as.numeric(bench::as_bench_bytes(mem_alloc)) / 1024 ** 2
+  ) %>%
+  ggpubr::ggline(
+    x = "size",
+    y = "elapsed",
+    color = "expression",
+    facet.by = "k",
+    ncol = 2
+  ) +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "exclude_bed performance")
+```
+
+
+```{r, eval=TRUE, cache=TRUE, fig.asp=1}
+rollsum_bm %>%
+  mutate(elapsed = as.numeric(median),
+         expression = names(expression)) %>%
+  mutate(
+    size = as.integer(size / 1e3),
+    k = as.integer(k),
+    mem_alloc = as.numeric(bench::as_bench_bytes(mem_alloc)) / 1024 ** 2
+  ) %>%
+  ggpubr::ggline(
+    x = "size",
+    y = "mem_alloc",
+    color = "expression",
+    facet.by = "k",
+    ncol = 2
+  ) +
+  xlab("size (1,000 intervals)") +
+  scale_x_log10() + scale_y_log10() + labs(title = "exclude_bed performance")
+```

@@ -138,3 +138,18 @@ test_that("Making windows works", {
   expect_equal(seqnames(windows) %>% as.character() %>% unique(), c("chr1", "chr2"))
   expect_equal(length(windows), 16)
 })
+
+
+test_that("Converting between data.frame and GenomicRanges works", {
+  data0 <- read_bed("example2.bed", genome = "hs37-1kg")
+  data1 <- as.bedtorch_table(data0)
+  data2 <- df2bedtorch(data1)
+  
+  expect_equal(data0, data2)
+  
+  data0 <- read_bed("example2.bed")
+  data1 <- as.bedtorch_table(data0)
+  data2 <- df2bedtorch(data1)
+  
+  expect_equal(data0, data2)
+})

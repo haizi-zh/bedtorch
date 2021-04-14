@@ -115,33 +115,34 @@ new_bedtorch_table <- function(dt, genome = NULL) {
 }
 
 
-#' Convert a `data.table` representation to `GenomicRanges` representation
-#' 
-#' @param x An input `data.table`.
-#' @return `GenomicRanges` converted from `x`.
-as.GenomicRanges <- function(x) {
+# Convert a `data.frame` representation to `GenomicRanges` representation
+# 
+# @param x An input `data.frame`.
+# @return `GenomicRanges` converted from `x`.
+as.GenomicRanges <- function(x, genome = NULL, zero_based = TRUE) {
   dt <- x
   if (is(dt, "GRanges"))
     return(dt)
   
-  stopifnot(is(dt, "bedtorch_table"))
+  stopifnot(is(dt, "data.frame"))
   
-  genome <- attr(dt, "genome")
+  if (is.null(genome))
+    genome <- attr(dt, "genome")
   stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
 
   GenomicRanges::makeGRangesFromDataFrame(
     dt,
     keep.extra.columns = TRUE,
     seqinfo = get_seqinfo(genome),
-    starts.in.df.are.0based = TRUE
+    starts.in.df.are.0based = zero_based
   )
 }
 
 
-#' Convert a `GenomicRanges` representation to `data.table` representation
-#' 
-#' @param x An input `GenomicRanges`.
-#' @return `data.table` converted from `x`.
+# Convert a `GenomicRanges` representation to `data.table` representation
+# 
+# @param x An input `GenomicRanges`.
+# @return `data.table` converted from `x`.
 as.bedtorch_table <- function(x) {
   gr <- x
   if (is(gr, "bedtorch_table"))
@@ -160,6 +161,23 @@ as.bedtorch_table <- function(x) {
     genome <- NULL
   
   new_bedtorch_table(dt, genome = genome)
+}
+
+
+#' Convert a `data.frame` to bedtorch data
+#' 
+#' @param x A `data.frame`. The first three columns should be chrom, start and
+#'   end. For column names, refer to [GenomicRanges::makeGRangesFromDataFrame()].
+#' @param genome A character value specifying the genome name.
+#' @param zero_based If true, the start/end are zero-based, semi-inclusive, which is BED standard.
+#' @return A bedtorch data object.
+#' @seealso [GenomicRanges::makeGRangesFromDataFrame()]
+#' @examples
+#' df2bedtorch(data.frame(chrom = "1", start = 1, end = 10), genome = "hs37-1kg")
+#' @export
+df2bedtorch <- function(x, genome = NULL, zero_based = TRUE) {
+  stopifnot(is(x, "data.frame"))
+  as.GenomicRanges(x, genome = genome, zero_based = zero_based)
 }
 
 
