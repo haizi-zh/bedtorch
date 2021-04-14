@@ -88,6 +88,15 @@ test_that("Reading remote data works", {
   url <- "https://raw.githubusercontent.com/haizi-zh/bedtorch/main/inst/extdata/example_merge.bed"
   data <- read_bed(url, use_gr = TRUE, genome = "GRCh37")
   expect_equal(length(data), 20L)
+  
+  # Non-standard URL
+  url <- "https://git.io/JYATB"
+  index_url <- "https://git.io/JYAkT"
+  data <- read_bed(file_path =url)
+  expect_equal(length(data), 5308L)
+  
+  data <- read_bed(file_path = url, tabix_index = index_url, range = "22:20000001-30000001")
+  expect_equal(length(data), 21L)
 })
 
 

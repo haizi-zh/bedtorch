@@ -14,6 +14,11 @@ map_bed(
 )
 }
 \arguments{
+\item{x}{A \code{GRanges} object.}
+
+\item{y}{A \code{GRanges} object containing intervals upon which you
+want to map \code{data}.}
+
 \item{operation}{List of functions for the statistics and summary operations.
 This is similar to \code{\link[=merge_bed]{merge_bed()}}}
 
@@ -23,11 +28,6 @@ overlapping. Default is -1 (no gap allowed, adjacent intervals not allowd).}
 \item{min_overlap}{See \code{\link[=intersect_bed]{intersect_bed()}}.}
 
 \item{min_overlap_type}{\code{\link[=intersect_bed]{intersect_bed()}}.}
-
-\item{data}{A \code{GRanges} object.}
-
-\item{scaffold}{A \code{GRanges} object containing intervals upon which you
-want to map \code{data}.}
 }
 \value{
 A mapped \code{GRanges} object.

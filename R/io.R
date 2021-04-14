@@ -230,6 +230,120 @@ get_seqinfo <- function(genome, genome_name = NULL) {
 }
 
 
+# Detect file format from a URL
+detect_remote_file_type <- function(url) {
+  # Download the first 4kb
+  url_conn <- curl::curl(url)
+  open(url_conn, "rb", blocking = FALSE)
+  on.exit(close(url_conn), add = TRUE)
+  
+  total_bytes <- 0
+  block_size <- as.integer(4 * 1024)
+  total_buf <- list()
+  while (isIncomplete(url_conn)) {
+    buf <- readBin(url_conn, raw(), block_size)
+    total_bytes <- total_bytes + length(buf)
+    
+    if (length(buf) == 0)
+      next
+    
+    total_buf <- c(total_buf, list(buf))
+    if (total_bytes >= block_size)
+      break
+  }
+  total_buf <- unlist(total_buf)
+  
+  # Write to a temporary file and check the file type
+  file_header <- tempfile()
+  on.exit(unlink(file_header), add = TRUE)
+  
+  writeBin(total_buf, con = file_header)
+  conn <- file(file_header)
+  file_type <- summary(conn)$class
+  close(conn)
+  
+  file_type
+}
+
+
+# Detect format of a local file
+detect_local_file_type <- function(file_path) {
+  conn <- file(file_path)
+  file_type <- summary(conn)$class
+  close(conn)
+  
+  file_type
+}
+
+
+# Read a URL without range seeking
+read_bed_remote_full <- function(url, ...) {
+  # Some URLs don't look like a file name. In this case, it's hard to detect the
+  # file type solely from the URL Alternatively, we can download it to a
+  # temporary file and start from there
+  
+  # Try to extract the extension name
+  ext <- str_match(url, pattern = "\\.([^/\\.]+)$")[1, 2]
+  if (is.na(ext))
+    ext <- ""
+  
+  temp_downloaded <- tempfile(fileext = ext)
+  on.exit(unlink(temp_downloaded), add = TRUE)
+  
+  curl::curl_download(
+    url,
+    temp_downloaded,
+    mode = "wb",
+    quiet = !getOption("datatable.showProgress", interactive())
+  )
+  
+  na_strings <- c("NA", "na", "NaN", "nan", ".", "")
+  
+  # Guess file type
+  conn <- file(temp_downloaded)
+  file_type <- summary(conn)$class
+  close(conn)
+  if (file_type == "gzfile") {
+    if (!endsWith(temp_downloaded, suffix = ".gz")) {
+      # Make sure the file extension name is correct
+      temp_download_new <- paste0(temp_downloaded, ".gz")
+      file.rename(temp_downloaded, temp_download_new)
+      on.exit(unlink(temp_download_new), add = TRUE)
+      temp_downloaded <- temp_download_new
+    }
+    fread(file = temp_downloaded,
+          na.strings = na_strings,
+          sep = "\t",
+          ...)
+  } else if (file_type == "bzfile") {
+    if (!endsWith(temp_downloaded, suffix = ".bz2")) {
+      # Make sure the file extension name is correct
+      temp_download_new <- paste0(temp_downloaded, ".bz2")
+      file.rename(temp_downloaded, temp_download_new)
+      on.exit(unlink(temp_download_new), add = TRUE)
+      temp_downloaded <- temp_download_new
+    }
+    fread(file = temp_downloaded,
+          na.strings = na_strings,
+          sep = "\t",
+          ...)
+  } else if (file_type == "xzfile") {
+    # LZMA or XZ
+    fread(
+      cmd = paste0("xzcat < ", temp_downloaded),
+      na.strings = na_strings,
+      sep = "\t",
+      ...
+    )
+  } else {
+    fread(file = temp_downloaded,
+          na.strings = na_strings,
+          sep = "\t",
+          ...)
+  }
+}
+
+
 #' Load a BED-format file
 #'
 #' This function loads the input file as a `data.table` object. The file can be
@@ -285,15 +399,12 @@ get_seqinfo <- function(genome, genome_name = NULL) {
 #'               genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
 #' 
 #' # Load remote BGZIP files with tabix index specified
-#' # Here we need to explicitly indicate `compression` as `bgzip` since we are
-#' # using short URL for `tabix_index`, so that the function cannot guess
-#' # compression type using the URL
-#' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT", compression = "bgzip"))
+#' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
 read_bed <-
   function(file_path,
            range = NULL,
-           compression = c("detect", "bgzip", "text"),
+           compression = c("detect", "bgzip", "text", "other"),
            tabix_index = NULL,
            download_index = FALSE,
            genome = NULL,
@@ -301,17 +412,25 @@ read_bed <-
            ...) {
     compression <- match.arg(compression)
     if (compression == "detect") {
-      compression <- if (is_gzip(file_path))
-        "bgzip"
+      file_type <- if (is_remote(file_path)) 
+        detect_remote_file_type(file_path)
       else
-        "text"
+        detect_local_file_type(file_path)
+      
+      if (file_type == "gzfile")
+        compression <- "bgzip"
+      else
+        compression <- "other"
     }
     
     if (is.null(range)) {
       # Load directly
       na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-      dt <-
-        fread(file_path, sep = "\t", na.strings = na_strings, ...)
+      
+      if (is_remote(file_path))
+        dt <- read_bed_remote_full(file_path)
+      else
+        dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
       dt <- post_process_table(dt)
     } else {
       stopifnot(length(range) == 1)
@@ -323,7 +442,7 @@ read_bed <-
                              download_index = download_index, ...)
       } else {
         if (is_remote(file_path))
-          stop("range filtering is not available for remote uncompressed files")
+          stop("Remote range filtering is only available for BGZIP files")
         else {
           # Load directly
           na_strings <- c("NA", "na", "NaN", "nan", ".", "")

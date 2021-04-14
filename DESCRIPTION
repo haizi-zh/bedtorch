@@ -2,7 +2,7 @@ Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
 Date: 2021-04-03
-Version: 0.1.10
+Version: 0.1.11
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",
@@ -29,7 +29,8 @@ Imports:
     RCurl,
     GenomicRanges,
     GenomeInfoDb,
-    S4Vectors
+    S4Vectors,
+    curl
 Suggests: 
     testthat (>= 3.0.0),
     devtools (>= 2.3.0),

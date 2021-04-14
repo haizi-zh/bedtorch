@@ -164,7 +164,7 @@ as.bedtorch_table <- function(x) {
 
 
 #' @export
-print.bedtorch_table <- function(x) {
+print.bedtorch_table <- function(x, ...) {
   NextMethod()
   
   genome <- attr(dt, "genome")

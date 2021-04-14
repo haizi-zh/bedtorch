@@ -7,7 +7,7 @@
 read_bed(
   file_path,
   range = NULL,
-  compression = c("detect", "bgzip", "text"),
+  compression = c("detect", "bgzip", "text", "other"),
   tabix_index = NULL,
   download_index = FALSE,
   genome = NULL,
@@ -78,10 +78,7 @@ head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
               genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
 
 # Load remote BGZIP files with tabix index specified
-# Here we need to explicitly indicate `compression` as `bgzip` since we are
-# using short URL for `tabix_index`, so that the function cannot guess
-# compression type using the URL
-head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT", compression = "bgzip"))
+head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 }
 \seealso{
 \code{\link[data.table:fread]{data.table::fread()}}

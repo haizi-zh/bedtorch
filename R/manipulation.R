@@ -706,8 +706,8 @@ map_bed.GRanges <- function(x, y, operation,
 #'
 #' Map overlapping features in `data` onto intervals in `scaffold` and apply
 #' statistics and/or summary operations on those features.
-#' @param data A `GRanges` object.
-#' @param scaffold A `GRanges` object containing intervals upon which you
+#' @param x A `GRanges` object.
+#' @param y A `GRanges` object containing intervals upon which you
 #'   want to map `data`.
 #' @param operation List of functions for the statistics and summary operations.
 #'   This is similar to [bedtorch::merge_bed()]
