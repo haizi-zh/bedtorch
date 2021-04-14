@@ -435,7 +435,15 @@ read_bed <-
     } else {
       stopifnot(length(range) == 1)
       
-      if (compression == "bgzip") {
+      # Check whether the index exist
+      if (is.null(tabix_index))
+        tabix_index <- paste0(file_path, ".tbi")
+      if (is_remote(tabix_index))
+        index_exists <- RCurl::url.exists(tabix_index)
+      else
+        index_exists <- file.exists(tabix_index)
+      
+      if (compression == "bgzip" && index_exists) {
         dt <- read_tabix_bed(file_path,
                              range,
                              index_path = tabix_index,
@@ -444,6 +452,7 @@ read_bed <-
         if (is_remote(file_path))
           stop("Remote range filtering is only available for BGZIP files")
         else {
+          warning("Cannot locate the index file. Recourse to full scan, which may affect performance.")
           # Load directly
           na_strings <- c("NA", "na", "NaN", "nan", ".", "")
           dt <-
