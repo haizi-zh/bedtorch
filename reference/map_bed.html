@@ -73,7 +73,7 @@ statistics and/or summary operations on those features." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.10</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11</span>
       </span>
     </div>
 
@@ -132,6 +132,15 @@ statistics and/or summary operations on those features.</p>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
+      <th>x</th>
+      <td><p>A <code>GRanges</code> object.</p></td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td><p>A <code>GRanges</code> object containing intervals upon which you
+want to map <code>data</code>.</p></td>
+    </tr>
+    <tr>
       <th>operation</th>
       <td><p>List of functions for the statistics and summary operations.
 This is similar to <code><a href='merge_bed.html'>merge_bed()</a></code></p></td>
@@ -148,15 +157,6 @@ overlapping. Default is -1 (no gap allowed, adjacent intervals not allowd).</p><
     <tr>
       <th>min_overlap_type</th>
       <td><p><code><a href='intersect_bed.html'>intersect_bed()</a></code>.</p></td>
-    </tr>
-    <tr>
-      <th>data</th>
-      <td><p>A <code>GRanges</code> object.</p></td>
-    </tr>
-    <tr>
-      <th>scaffold</th>
-      <td><p>A <code>GRanges</code> object containing intervals upon which you
-want to map <code>data</code>.</p></td>
     </tr>
     </table>
 
