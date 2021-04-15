@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert a GenomicRanges representation to data.table representation — as.bedtorch_table • bedtorch</title>
+<title>Convert a GenomicRanges or a data.frame BED to standard data.table BED — as.bedtorch_table • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Convert a GenomicRanges representation to data.table representation — as.bedtorch_table" />
-<meta property="og:description" content="Convert a GenomicRanges representation to data.table representation" />
+<meta property="og:title" content="Convert a GenomicRanges or a data.frame BED to standard data.table BED — as.bedtorch_table" />
+<meta property="og:description" content="Convert a GenomicRanges or a data.frame BED to standard data.table BED" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11.9002</span>
       </span>
     </div>
 
@@ -108,13 +108,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert a <code>GenomicRanges</code> representation to <code>data.table</code> representation</h1>
+    <h1>Convert a <code>GenomicRanges</code> or a <code>data.frame</code> BED to standard <code>data.table</code> BED</h1>
     <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
     <div class="hidden name"><code>as.bedtorch_table.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Convert a <code>GenomicRanges</code> representation to <code>data.table</code> representation</p>
+    <p>Convert a <code>GenomicRanges</code> or a <code>data.frame</code> BED to standard <code>data.table</code> BED</p>
     </div>
 
     <pre class="usage"><span class='fu'>as.bedtorch_table</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
@@ -124,7 +124,9 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>An input <code>GenomicRanges</code>.</p></td>
+      <td><p>An input. Must be either <code>GenomicRanges</code> or <code>data.frame</code>. If a
+<code>data.frame</code>, the first three columns should be chrom, start and end. For
+column names, refer to <code><a href='https://rdrr.io/pkg/GenomicRanges/man/makeGRangesFromDataFrame.html'>GenomicRanges::makeGRangesFromDataFrame()</a></code>.</p></td>
     </tr>
     </table>
 
@@ -132,6 +134,33 @@
 
     <p><code>data.table</code> converted from <code>x</code>.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='va'>gr</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, 
+               use_gr <span class='op'>=</span> <span class='cn'>TRUE</span>, genome <span class='op'>=</span> <span class='st'>"hs37-1kg"</span><span class='op'>)</span>
+<span class='fu'>as.bedtorch_table</span><span class='op'>(</span><span class='va'>gr</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;     chrom start end score
+#&gt;  1:    21     3   6     8
+#&gt;  2:    21    10  16     5
+#&gt;  3:    21    12  17     4
+#&gt;  4:    21    15  22     5
+#&gt;  5:    21    22  25     7
+#&gt;  6:    21    26  30     7
+#&gt;  7:    21    29  35     9
+#&gt;  8:    21    36  49     1
+#&gt;  9:    21    45  50     2
+#&gt; 10:    21    53  56     5
+#&gt; 11:    22    27  36     3
+#&gt; 12:    22    30  33    10
+#&gt; 13:    22    36  41     8
+#&gt; 14:    22    42  44     9
+#&gt; 15:    22    46  50     0
+#&gt; 16:    22    51  59     9
+#&gt; 17:    22    53  57     5
+#&gt; 18:    22    57  65     9
+#&gt; 19:    22    62  70     8
+#&gt; 20:    22    65  72     2
+#&gt; -------
+#&gt; genome: unspecified.</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

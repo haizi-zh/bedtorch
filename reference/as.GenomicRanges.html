@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Convert a data.table representation to GenomicRanges representation — as.GenomicRanges • bedtorch</title>
+<title>Convert a data.frame representation to GenomicRanges representation — as.GenomicRanges • bedtorch</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Convert a data.table representation to GenomicRanges representation — as.GenomicRanges" />
-<meta property="og:description" content="Convert a data.table representation to GenomicRanges representation" />
+<meta property="og:title" content="Convert a data.frame representation to GenomicRanges representation — as.GenomicRanges" />
+<meta property="og:description" content="Convert a data.frame representation to GenomicRanges representation" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.11.9002</span>
       </span>
     </div>
 
@@ -108,13 +108,13 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Convert a <code>data.table</code> representation to <code>GenomicRanges</code> representation</h1>
+    <h1>Convert a <code>data.frame</code> representation to <code>GenomicRanges</code> representation</h1>
     <small class="dont-index">Source: <a href='https://github.com/haizi-zh/bedtorch/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
     <div class="hidden name"><code>as.GenomicRanges.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Convert a <code>data.table</code> representation to <code>GenomicRanges</code> representation</p>
+    <p>Convert a <code>data.frame</code> representation to <code>GenomicRanges</code> representation</p>
     </div>
 
     <pre class="usage"><span class='fu'>as.GenomicRanges</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
@@ -124,7 +124,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>An input <code>data.table</code>.</p></td>
+      <td><p>An input <code>data.frame</code>.</p></td>
     </tr>
     </table>
 
@@ -132,6 +132,26 @@
 
     <p><code>GenomicRanges</code> converted from <code>x</code>.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, 
+               use_gr <span class='op'>=</span> <span class='cn'>FALSE</span>, genome <span class='op'>=</span> <span class='st'>"hs37-1kg"</span><span class='op'>)</span>
+<span class='fu'>as.GenomicRanges</span><span class='op'>(</span><span class='va'>dt</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; GRanges object with 20 ranges and 1 metadata column:
+#&gt;        seqnames    ranges strand |     score
+#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;
+#&gt;    [1]       21       4-6      * |         8
+#&gt;    [2]       21     11-16      * |         5
+#&gt;    [3]       21     13-17      * |         4
+#&gt;    [4]       21     16-22      * |         5
+#&gt;    [5]       21     23-25      * |         7
+#&gt;    ...      ...       ...    ... .       ...
+#&gt;   [16]       22     52-59      * |         9
+#&gt;   [17]       22     54-57      * |         5
+#&gt;   [18]       22     58-65      * |         9
+#&gt;   [19]       22     63-70      * |         8
+#&gt;   [20]       22     66-72      * |         2
+#&gt;   -------
+#&gt;   seqinfo: 84 sequences from hs37-1kg genome</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
