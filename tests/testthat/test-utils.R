@@ -143,13 +143,20 @@ test_that("Making windows works", {
 test_that("Converting between data.frame and GenomicRanges works", {
   data0 <- read_bed("example2.bed", genome = "hs37-1kg")
   data1 <- as.bedtorch_table(data0)
-  data2 <- df2bedtorch(data1)
-  
+  data2 <- as.GenomicRanges(data1)
   expect_equal(data0, data2)
   
   data0 <- read_bed("example2.bed")
   data1 <- as.bedtorch_table(data0)
-  data2 <- df2bedtorch(data1)
-  
+  data2 <- as.GenomicRanges(data1)
   expect_equal(data0, data2)
+  
+  dt <- read_bed("example2.bed", use_gr = FALSE, genome = "hs37-1kg")
+  dt_df <- as.data.frame(dt)
+  expect_equal(dt, as.bedtorch_table(dt))
+  expect_equal(dt, as.bedtorch_table(dt_df))
+
+  gr <- read_bed("example2.bed", genome = "hs37-1kg")
+  expect_equal(gr, as.GenomicRanges(dt))
+  expect_equal(gr, as.GenomicRanges(dt_df))
 })

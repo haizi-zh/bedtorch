@@ -37,4 +37,5 @@ reference:
       - check_binaries
       - rollsum
       - rollmean
-      - df2bedtorch
+      - as.GRanges
+      - as.bedtorch_table

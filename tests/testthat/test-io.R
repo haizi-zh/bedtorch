@@ -49,13 +49,13 @@ test_that("Reading data works", {
   expect_equal(names(mcols(data)), c("score1", "score2"))
   expect_false(is.null(GenomeInfoDb::seqinfo(data)))
   
-  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
+  expect_warning(data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300"))
   expect_equal(length(data), 3L)
-  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1300")
+  expect_warning(data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1300"))
   expect_equal(length(data), 4L)
-  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1212")
+  expect_warning(data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1212"))
   expect_equal(length(data), 4L)
-  data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1211")
+  expect_warning(data <- read_bed("example2.bed", use_gr = TRUE, genome = "GRCh37", range = "1:1100-1211"))
   expect_equal(length(data), 3L)
   
   data <- read_bed("example2.bed.gz", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
