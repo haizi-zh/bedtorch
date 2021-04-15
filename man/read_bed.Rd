@@ -12,6 +12,7 @@ read_bed(
   download_index = FALSE,
   genome = NULL,
   use_gr = TRUE,
+  sep = "\\t",
   ...
 )
 }
@@ -40,6 +41,12 @@ files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.}
 \item{use_gr}{If \code{TRUE}, will read the data as a \code{GenomicRanges} object,
 otherwise a \code{data.table} object. Generally, we recommend using
 \code{GenomicRanges}.}
+
+\item{sep}{The separator between columns. By default, BED files are
+tab-delimited, and \code{sep} should be \verb{\\t}. However, sometimes you will
+encounter non-standard table files. In such cases, you need to specify the
+separator. If \code{auto}, \code{read_bed} will try to guess the separator. For more
+details, refer to \code{\link[data.table:fread]{data.table::fread()}}.}
 
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
 }

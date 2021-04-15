@@ -126,7 +126,7 @@ parse_range <- function(range) {
 
 
 # Load a gzipped and indexed BED-like file
-read_tabix_bed <- function(file_path, range, index_path = NULL, download_index = FALSE, ...) {
+read_tabix_bed <- function(file_path, range, index_path = NULL, download_index = FALSE, sep = "\t", ...) {
   # Get UCSC-style range strings
   range %<>%
     parse_range %>%
@@ -166,7 +166,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
   # Load directly
   na_strings <- c("NA", "na", "NaN", "nan", ".", "")
   dt <-
-    fread(tempbed, sep = "\t", na.strings = na_strings, ...)
+    fread(tempbed, sep = sep, na.strings = na_strings, ...)
   dt <- post_process_table(dt)
   dt
 }
@@ -277,7 +277,7 @@ detect_local_file_type <- function(file_path) {
 
 
 # Read a URL without range seeking
-read_bed_remote_full <- function(url, ...) {
+read_bed_remote_full <- function(url, sep = "\t", ...) {
   # Some URLs don't look like a file name. In this case, it's hard to detect the
   # file type solely from the URL Alternatively, we can download it to a
   # temporary file and start from there
@@ -313,7 +313,7 @@ read_bed_remote_full <- function(url, ...) {
     }
     fread(file = temp_downloaded,
           na.strings = na_strings,
-          sep = "\t",
+          sep = sep,
           ...)
   } else if (file_type == "bzfile") {
     if (!endsWith(temp_downloaded, suffix = ".bz2")) {
@@ -325,20 +325,20 @@ read_bed_remote_full <- function(url, ...) {
     }
     fread(file = temp_downloaded,
           na.strings = na_strings,
-          sep = "\t",
+          sep = sep,
           ...)
   } else if (file_type == "xzfile") {
     # LZMA or XZ
     fread(
       cmd = paste0("xzcat < ", temp_downloaded),
       na.strings = na_strings,
-      sep = "\t",
+      sep = sep,
       ...
     )
   } else {
     fread(file = temp_downloaded,
           na.strings = na_strings,
-          sep = "\t",
+          sep = sep,
           ...)
   }
 }
@@ -374,6 +374,11 @@ read_bed_remote_full <- function(url, ...) {
 #' @param use_gr If `TRUE`, will read the data as a `GenomicRanges` object,
 #'   otherwise a `data.table` object. Generally, we recommend using
 #'   `GenomicRanges`.
+#' @param sep The separator between columns. By default, BED files are
+#'   tab-delimited, and `sep` should be `\t`. However, sometimes you will
+#'   encounter non-standard table files. In such cases, you need to specify the
+#'   separator. If `auto`, `read_bed` will try to guess the separator. For more
+#'   details, refer to [data.table::fread()].
 #' @param ... Other arguments to be passed to [data.table::fread()].
 #' @seealso [data.table::fread()]
 #' @examples 
@@ -409,6 +414,7 @@ read_bed <-
            download_index = FALSE,
            genome = NULL,
            use_gr = TRUE,
+           sep = "\t",
            ...) {
     compression <- match.arg(compression)
     if (compression == "detect") {
@@ -428,9 +434,9 @@ read_bed <-
       na_strings <- c("NA", "na", "NaN", "nan", ".", "")
       
       if (is_remote(file_path))
-        dt <- read_bed_remote_full(file_path)
+        dt <- read_bed_remote_full(file_path, sep = sep, ...)
       else
-        dt <- fread(file_path, sep = "\t", na.strings = na_strings, ...)
+        dt <- fread(file_path, sep = sep, na.strings = na_strings, ...)
       dt <- post_process_table(dt)
     } else {
       stopifnot(length(range) == 1)
@@ -447,7 +453,8 @@ read_bed <-
         dt <- read_tabix_bed(file_path,
                              range,
                              index_path = tabix_index,
-                             download_index = download_index, ...)
+                             download_index = download_index,
+                             sep = sep, ...)
       } else {
         if (is_remote(file_path))
           stop("Remote range filtering is only available for BGZIP files")
@@ -456,7 +463,7 @@ read_bed <-
           # Load directly
           na_strings <- c("NA", "na", "NaN", "nan", ".", "")
           dt <-
-            fread(file_path, sep = "\t", na.strings = na_strings, ...)
+            fread(file_path, sep = sep, na.strings = na_strings, ...)
           post_process_table(dt)
           
           dt <- filter_by_region(dt, range)

@@ -72,6 +72,19 @@ test_that("Reading non-GenomicRanges data works", {
 })
 
 
+test_that("Reading non-standard data works", {
+  # Non-standard separator
+  data <-
+    read_bed(
+      "https://raw.githubusercontent.com/Jfortin1/HiC_AB_Compartments/master/data/hic_compartments_100kb_ebv_2014.txt",
+      sep = "auto",
+      use_gr = FALSE
+    )
+  expect_equal(nrow(data), 26421)
+  expect_equal(ncol(data), 5)
+})
+
+
 test_that("Reading remote data works", {
   url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz"
   index_url <- "https://github.com/haizi-zh/bedtorch/raw/4027bce5/inst/extdata/example2.bed.gz.tbi"
