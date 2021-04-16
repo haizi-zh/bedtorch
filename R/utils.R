@@ -167,27 +167,32 @@ as.GenomicRanges.data.frame <- function(x) {
 #' gr <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), 
 #'                use_gr = TRUE, genome = "hs37-1kg")
 #' as.bedtorch_table(gr)
-as.bedtorch_table <- function(x) {
+as.bedtorch_table <- function(x, genome = NULL) {
   UseMethod("as.bedtorch_table")
 }
 
 
 #' @export
-as.bedtorch_table.bedtorch_table <- function(x) {
-  return(x)
+as.bedtorch_table.bedtorch_table <- function(x, genome = NULL) {
+  if (is.null(genome))
+    return(x)
+  else {
+    data.table::setattr(x, "genome", genome)
+    return(x)
+  }
 }
 
 
 #' @export
-as.bedtorch_table.data.table <- function(x) {
-  new_bedtorch_table(x, genome = attr(x, "genome"))
+as.bedtorch_table.data.table <- function(x, genome = NULL) {
+  new_bedtorch_table(x, genome = genome %||% attr(x, "genome"))
 }
 
 
 #' @export
-as.bedtorch_table.data.frame <- function(x) {
+as.bedtorch_table.data.frame <- function(x, genome = NULL) {
   data.table::setDT(x)
-  new_bedtorch_table(x, genome = attr(x, "genome"))
+  new_bedtorch_table(x, genome = genome %||% attr(x, "genome"))
 }
 
 
@@ -212,7 +217,7 @@ as.bedtorch_table.GRanges <- function(x) {
 print.bedtorch_table <- function(x, ...) {
   NextMethod()
   
-  genome <- attr(dt, "genome")
+  genome <- attr(x, "genome")
   cat("-------\n")
   if (is.null(genome))
     genome <- "unspecified"

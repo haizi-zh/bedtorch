@@ -180,6 +180,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 # @param genome_name Optional character vector. Only works when `genome` is a
 #   file path/URL, and specify the name of the genome. If `NULL`, the name is
 #   guessed from the file name.
+#' @export
 get_seqinfo <- function(genome, genome_name = NULL) {
   if (is.null(genome))
     return(NULL)
