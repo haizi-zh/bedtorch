@@ -153,6 +153,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
  
   tempbed <- tempfile(fileext = ".bed")
   on.exit(unlink(tempbed), add = TRUE)
+  logging::logdebug("Obtaining tabix data")
   c_read_tabix_table(
     file_path,
     range,
@@ -160,6 +161,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
     index_path = if (is.null(index_path)) "" else index_path,
     download_index = download_index
   )
+  logging::logdebug("Done obtaining tabix data")
   # user_gr should be FALSE, since here we need a data.table object, which later
   # will be converted to GenomicRanges, if instructed
   
@@ -418,6 +420,8 @@ read_bed <-
            sep = "\t",
            ...) {
     compression <- match.arg(compression)
+    na_strings <- "."
+      
     if (compression == "detect") {
       file_type <- if (is_remote(file_path)) 
         detect_remote_file_type(file_path)
@@ -432,8 +436,6 @@ read_bed <-
     
     if (is.null(range)) {
       # Load directly
-      na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-      
       if (is_remote(file_path))
         dt <- read_bed_remote_full(file_path, sep = sep, ...)
       else
@@ -462,7 +464,6 @@ read_bed <-
         else {
           warning("Cannot locate the index file. Recourse to full scan, which may affect performance.")
           # Load directly
-          na_strings <- c("NA", "na", "NaN", "nan", ".", "")
           dt <-
             fread(file_path, sep = sep, na.strings = na_strings, ...)
           post_process_table(dt)
