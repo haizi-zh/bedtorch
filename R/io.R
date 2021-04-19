@@ -153,7 +153,6 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
  
   tempbed <- tempfile(fileext = ".bed")
   on.exit(unlink(tempbed), add = TRUE)
-  logging::logdebug("Obtaining tabix data")
   c_read_tabix_table(
     file_path,
     range,
@@ -161,7 +160,6 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
     index_path = if (is.null(index_path)) "" else index_path,
     download_index = download_index
   )
-  logging::logdebug("Done obtaining tabix data")
   # user_gr should be FALSE, since here we need a data.table object, which later
   # will be converted to GenomicRanges, if instructed
   
