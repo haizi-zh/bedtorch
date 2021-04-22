@@ -425,6 +425,11 @@ read_bed <-
            ...) {
     compression <- match.arg(compression)
     na_strings <- "."
+    
+    if (!is_remote(file_path))
+      file_path <- normalizePath(file_path, mustWork = TRUE)
+    else
+      stopifnot(RCurl::url.exists(file_path))
       
     if (compression == "detect") {
       file_type <- if (is_remote(file_path)) 
