@@ -84,6 +84,12 @@ post_process_table <- function(dt) {
       data.table::setnames(dt, 4, "feature")
   }
   
+  # 6th column may be strand
+  if (default_colnames && ncol(dt) >= 6) {
+    if (is.character(dt[[6]]) && all(unique(dt[[6]]) %in% c("-", "+")))
+      data.table::setnames(dt, 6, "strand")
+  }
+  
   v_chrom <- as.character(dt$chrom)
   chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
   dt[, chrom := factor(v_chrom, levels = chrom_list)]
