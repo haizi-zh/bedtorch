@@ -7,9 +7,6 @@
 read_bed(
   file_path,
   range = NULL,
-  compression = c("detect", "bgzip", "text", "other"),
-  tabix_index = NULL,
-  download_index = FALSE,
   genome = NULL,
   use_gr = TRUE,
   sep = "\\t",
@@ -21,16 +18,6 @@ read_bed(
 
 \item{range}{A genomic range character vector. Must follow standard genomic
 range notation format, e.g. chr1:1001-2000}
-
-\item{compression}{Indicate the compression type. If \code{detect}, this function
-will try to guess from \code{file_path}.}
-
-\item{tabix_index}{A character value indicating the location of the tabix
-index file. Can be either local or remote. If \code{NULL}, it will be derived
-from \code{file_path}.}
-
-\item{download_index}{Whether to download (cache) the tabix index at current
-directory.}
 
 \item{genome}{Specify the reference genome for the BED file. \code{genome} can be
 a valid genome name in \code{\link[GenomeInfoDb:Seqinfo-class]{GenomeInfoDb::Seqinfo()}}, e.g. \code{GRCh37}, or
@@ -49,6 +36,16 @@ separator. If \code{auto}, \code{read_bed} will try to guess the separator. For 
 details, refer to \code{\link[data.table:fread]{data.table::fread()}}.}
 
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
+
+\item{compression}{Indicate the compression type. If \code{detect}, this function
+will try to guess from \code{file_path}.}
+
+\item{tabix_index}{A character value indicating the location of the tabix
+index file. Can be either local or remote. If \code{NULL}, it will be derived
+from \code{file_path}.}
+
+\item{download_index}{Whether to download (cache) the tabix index at current
+directory.}
 }
 \description{
 This function loads the input file as a \code{data.table} object. The file can be

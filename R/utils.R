@@ -146,13 +146,18 @@ as.GenomicRanges.data.frame <- function(x) {
 
   genome <- attr(dt, "genome")
   stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
-
-  GenomicRanges::makeGRangesFromDataFrame(
-    dt,
-    keep.extra.columns = TRUE,
-    seqinfo = get_seqinfo(genome),
-    starts.in.df.are.0based = TRUE
-  )
+  
+  if (is.null(x))
+    NULL
+  else if (nrow(x) == 0)
+    GenomicRanges::GRanges()
+  else
+    GenomicRanges::makeGRangesFromDataFrame(
+      dt,
+      keep.extra.columns = TRUE,
+      seqinfo = get_seqinfo(genome),
+      starts.in.df.are.0based = TRUE
+    )
 }
 
 

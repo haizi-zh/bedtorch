@@ -351,6 +351,100 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 }
 
 
+# Read plain BED files. 
+
+# The file can have multiple comment lines at the beginning. The last line that
+# is separated by the delimiter and can be 1-to-1 matched to columns will be
+# considered as column header line
+read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
+  # Read from the beginning, each time with at most `batch_size` lines
+  batch_size <- 100L
+  
+  # Read all header lines
+  header_lines <- list()
+  skip_lines <- 0
+  is_empty <- FALSE
+  while (TRUE) {
+    lines <-
+      read_lines(
+        file = file_path,
+        skip = skip_lines,
+        skip_empty_rows = FALSE,
+        n_max = batch_size
+      ) %>% map(str_trim)
+    
+    is_data <- !str_detect(lines, pattern = "^#") & lines != ""
+    if (any(is_data)) {
+      first_data_idx <- min(which(is_data))
+      if (first_data_idx > 1)
+        header_lines <-
+          c(header_lines, lines[1:(first_data_idx - 1)])
+      
+      skip_lines <- skip_lines + first_data_idx - 1
+      break
+    }
+    
+    header_lines <- c(header_lines, lines)
+    skip_lines <- skip_lines + length(lines)
+    
+    if (length(lines) < batch_size) {
+      # This file contains no data lines
+      is_empty <- TRUE
+      break
+    }
+  }
+  
+  
+  # Is the last comment line column headers?
+  last_comment_line <- tail(header_lines, 1)
+  if (length(last_comment_line) > 0) {
+    # Try to infer column names
+    bed_col_names <- last_comment_line[[1]] %>%
+      str_remove(pattern = "^#") %>%
+      str_trim() %>%
+      str_split(pattern = "\t") %>%
+      .[[1]]
+    
+    if (is_empty) {
+      # Empty data file with header
+      dt <- bed_col_names %>%
+        map( ~ character()) %>%
+        purrr::set_names(bed_col_names) %>%
+        data.table::as.data.table()
+    } else{
+      dt <-
+        data.table::fread(
+          file = file_path,
+          sep = sep,
+          skip = skip_lines,
+          na.strings = na_strings
+        )
+      
+      if (length(bed_col_names) == ncol(dt)) {
+        # Data file with header
+        dt <- data.table::setnames(dt, bed_col_names)
+      }
+    }
+  } else {
+    if (is_empty)
+      dt <-
+        data.table::data.table(chrom = character(),
+                               start = integer(),
+                               end = integer())
+    else
+      dt <-
+        data.table::fread(
+          file = file_path,
+          sep = sep,
+          skip = skip_lines,
+          na.strings = na_strings
+        )
+  }
+  
+  dt
+}
+
+
 #' Load a BED-format file
 #'
 #' This function loads the input file as a `data.table` object. The file can be
@@ -414,6 +508,57 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 #' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
 read_bed <-
+  function(file_path,
+           range = NULL,
+           # compression = c("detect", "bgzip", "text", "other"),
+           # tabix_index = NULL,
+           # download_index = FALSE,
+           genome = NULL,
+           use_gr = TRUE,
+           sep = "\t",
+           ...) {
+    na_strings <- "."
+
+    if (is.null(range)) {
+      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
+    } else {
+      assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0, 
+                              msg = "tabix is required")
+      # if (system("which tabix", ignore.stdout = TRUE) != 0) {
+      #   # No tabix, recourse to read_bed2
+      #   warning("Cannot find tabix in system")
+      #   return(read_bed2(
+      #     file_path,
+      #     range = range,
+      #     genome = genome,
+      #     use_gr = use_gr,
+      #     sep = sep,
+      #     ...
+      #   ))
+      # }
+      temp_bed <- tempfile(fileext = ".bed")
+      on.exit(unlink(temp_bed), add = TRUE)
+      
+      range_argument <- paste(range, collapse = " ")
+      cmd <-
+        str_interp("tabix -D -h ${file_path} ${range_argument} > ${temp_bed}")
+      system(cmd)
+      dt <-
+        read_bed_plain(temp_bed, sep = sep, na_strings = na_strings)
+    }
+    
+    dt %<>%
+      post_process_table() %>%
+      new_bedtorch_table(genome = genome)
+    
+    if (use_gr)
+      as.GenomicRanges(dt)
+    else
+      dt
+  }
+
+
+read_bed2 <-
   function(file_path,
            range = NULL,
            compression = c("detect", "bgzip", "text", "other"),
