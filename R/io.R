@@ -1,5 +1,5 @@
 # Check if a file name is a gzip file
-# 
+#
 # is_gzip("foo.gz")
 # is_gzip("http://foo.bar/example.bed.gz")
 # is_gzip(c("foo.gz", "bar.gz"))
@@ -51,13 +51,13 @@ isTabixRange <- function(range) {
 # Make sure all ranges are valid
 normalize_tabix_range <- function(range) {
   stopifnot(all(isTabixRange(range)))
-  
+
   # If some of the ranges are in the form chr1 (while chromosome), change it to
   # chr1:1-2000000000, because the underlying tabix library does not allow
   # single-chromosome range notation
   range_splits <- str_split(range, pattern = ":")
   single_chrom <- range_splits %>% map_lgl(~ length(.) == 1)
-  
+
   # R's integer type is 32-bit, so the largest range is approx. 2 billion
   range[single_chrom] <-
     range_splits[single_chrom] %>%
@@ -72,10 +72,10 @@ normalize_tabix_range <- function(range) {
 # Modifies `dt` in-place.
 post_process_table <- function(dt) {
   default_colnames <- all(str_detect(colnames(dt), pattern = "V[0-9]+"))
-  
+
   # First 3 columns
   data.table::setnames(dt, old = 1:3, new = c("chrom", "start", "end"))
-  
+
   # Fourth columns: score if it is numeric, feature otherwise
   if (default_colnames && ncol(dt) >= 4) {
     if (is.numeric(dt[[4]]))
@@ -83,13 +83,13 @@ post_process_table <- function(dt) {
     else
       data.table::setnames(dt, 4, "feature")
   }
-  
+
   # 6th column may be strand
   if (default_colnames && ncol(dt) >= 6) {
     if (is.character(dt[[6]]) && all(unique(dt[[6]]) %in% c("-", "+")))
       data.table::setnames(dt, 6, "strand")
   }
-  
+
   v_chrom <- as.character(dt$chrom)
   chrom_list <- str_sort(unique(v_chrom), numeric = TRUE)
   dt[, chrom := factor(v_chrom, levels = chrom_list)]
@@ -101,10 +101,10 @@ post_process_table <- function(dt) {
 
 filter_by_region <- function(dt, range) {
   stopifnot(length(range) == 1)
-  
+
   if (str_detect(range, pattern = "^[^:]+$"))
     return(dt[chrom == range])
-  
+
   m <- str_match(range, pattern = "([^:]+):([0-9]+)-([0-9]+)")
   if (is.na(m[1, 1]))
     stop(str_interp("Invalid range: ${range}"))
@@ -120,8 +120,8 @@ filter_by_region <- function(dt, range) {
 parse_range <- function(range) {
   # Make sure the genomic ranges are valid
   range <- normalize_tabix_range(range)
-  
-  range <- str_match(range, 
+
+  range <- str_match(range,
                      pattern = "^([^:]+):([0-9]+)-([0-9]+)")
   range_bed <- as.data.table(range)[, 2:4]
   setnames(range_bed, c("chrom", "start", "end"))
@@ -138,14 +138,14 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
     parse_range %>%
     pmap_chr(function(chrom, start, end)
       str_interp("${chrom}:${start + 1L}-${end}"))
-  
+
   # Check index existence
   if (!is.null(index_path)) {
     if (is_remote(index_path))
       index_exists <- RCurl::url.exists(index_path)
     else
       index_exists <- file.exists(index_path)
-    
+
     if (!index_exists) {
       warning(str_interp("Cannot find tabix index ${index_path}"))
       index_path <- NULL
@@ -156,7 +156,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
     if (!index_exists)
       stop(str_interp("Cannot find remote tabix index ${index_path}"))
   }
- 
+
   tempbed <- tempfile(fileext = ".bed")
   on.exit(unlink(tempbed), add = TRUE)
   c_read_tabix_table(
@@ -168,7 +168,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
   )
   # user_gr should be FALSE, since here we need a data.table object, which later
   # will be converted to GenomicRanges, if instructed
-  
+
   # Load directly
   na_strings <- c("NA", "na", "NaN", "nan", ".", "")
   dt <-
@@ -179,7 +179,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 
 
 # Get a `GenomeInfoDb::Seqinfo` object
-# 
+#
 # @param genome A canonical genome name, e.g. GRCh37, or a custom genome name
 #   recognized by bedtorch, e.g. hs37-1kg, or a path/URL to a chromosome size
 #   file. If `NULL`, return `NULL`.
@@ -190,7 +190,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 get_seqinfo <- function(genome, genome_name = NULL) {
   if (is.null(genome))
     return(NULL)
-  
+
   if (file.exists(genome) || RCurl::url.exists(genome)) {
     # genome is a chromosome size file (local or remote)
     chrom_sizes <-
@@ -198,7 +198,7 @@ get_seqinfo <- function(genome, genome_name = NULL) {
         genome,
         col.names = c("chrom", "size")
       )
-    
+
     if (is.null(genome_name)) {
       guess_genome_name <- function(genome) {
         # Guess genome name from file name
@@ -213,7 +213,7 @@ get_seqinfo <- function(genome, genome_name = NULL) {
       }
       genome_name <- guess_genome_name(genome)
     }
-    
+
     GenomeInfoDb::Seqinfo(
       seqnames = chrom_sizes$chrom,
       seqlengths = chrom_sizes$size,
@@ -243,32 +243,32 @@ detect_remote_file_type <- function(url) {
   url_conn <- curl::curl(url)
   open(url_conn, "rb", blocking = FALSE)
   on.exit(close(url_conn), add = TRUE)
-  
+
   total_bytes <- 0
   block_size <- as.integer(4 * 1024)
   total_buf <- list()
   while (isIncomplete(url_conn)) {
     buf <- readBin(url_conn, raw(), block_size)
     total_bytes <- total_bytes + length(buf)
-    
+
     if (length(buf) == 0)
       next
-    
+
     total_buf <- c(total_buf, list(buf))
     if (total_bytes >= block_size)
       break
   }
   total_buf <- unlist(total_buf)
-  
+
   # Write to a temporary file and check the file type
   file_header <- tempfile()
   on.exit(unlink(file_header), add = TRUE)
-  
+
   writeBin(total_buf, con = file_header)
   conn <- file(file_header)
   file_type <- summary(conn)$class
   close(conn)
-  
+
   file_type
 }
 
@@ -278,7 +278,7 @@ detect_local_file_type <- function(file_path) {
   conn <- file(file_path)
   file_type <- summary(conn)$class
   close(conn)
-  
+
   file_type
 }
 
@@ -288,24 +288,24 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
   # Some URLs don't look like a file name. In this case, it's hard to detect the
   # file type solely from the URL Alternatively, we can download it to a
   # temporary file and start from there
-  
+
   # Try to extract the extension name
   ext <- str_match(url, pattern = "\\.([^/\\.]+)$")[1, 2]
   if (is.na(ext))
     ext <- ""
-  
+
   temp_downloaded <- tempfile(fileext = ext)
   on.exit(unlink(temp_downloaded), add = TRUE)
-  
+
   curl::curl_download(
     url,
     temp_downloaded,
     mode = "wb",
     quiet = !getOption("datatable.showProgress", interactive())
   )
-  
+
   na_strings <- c("NA", "na", "NaN", "nan", ".", "")
-  
+
   # Guess file type
   conn <- file(temp_downloaded)
   file_type <- summary(conn)$class
@@ -351,7 +351,7 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 }
 
 
-# Read plain BED files. 
+# Read plain BED files.
 
 # The file can have multiple comment lines at the beginning. The last line that
 # is separated by the delimiter and can be 1-to-1 matched to columns will be
@@ -359,7 +359,7 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
   # Read from the beginning, each time with at most `batch_size` lines
   batch_size <- 100L
-  
+
   # Read all header lines
   header_lines <- list()
   skip_lines <- 0
@@ -372,29 +372,29 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
         skip_empty_rows = FALSE,
         n_max = batch_size
       ) %>% map(str_trim)
-    
+
     is_data <- !str_detect(lines, pattern = "^#") & lines != ""
     if (any(is_data)) {
       first_data_idx <- min(which(is_data))
       if (first_data_idx > 1)
         header_lines <-
           c(header_lines, lines[1:(first_data_idx - 1)])
-      
+
       skip_lines <- skip_lines + first_data_idx - 1
       break
     }
-    
+
     header_lines <- c(header_lines, lines)
     skip_lines <- skip_lines + length(lines)
-    
+
     if (length(lines) < batch_size) {
       # This file contains no data lines
       is_empty <- TRUE
       break
     }
   }
-  
-  
+
+
   # Is the last comment line column headers?
   last_comment_line <- tail(header_lines, 1)
   if (length(last_comment_line) > 0) {
@@ -404,7 +404,7 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
       str_trim() %>%
       str_split(pattern = "\t") %>%
       .[[1]]
-    
+
     if (is_empty) {
       # Empty data file with header
       dt <- bed_col_names %>%
@@ -419,7 +419,7 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
           skip = skip_lines,
           na.strings = na_strings
         )
-      
+
       if (length(bed_col_names) == ncol(dt)) {
         # Data file with header
         dt <- data.table::setnames(dt, bed_col_names)
@@ -440,7 +440,7 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
           na.strings = na_strings
         )
   }
-  
+
   dt
 }
 
@@ -451,12 +451,12 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
 #' either local or remote, and can be either plain text or gzip-compressed.
 #' Furthermore, this function supports range-loading by providing a genomic
 #' range in the following syntax: "chr1:1-100".
-#' 
+#'
 #' Note: for loading remote data files, currently this function depends on
 #' tabix.c 0.2.5, which doesn't not support HTTPS protocol. In the next step, I
 #' plan to turn to htslib, and the this function can load remote data files
 #' through HTTPS.
-#' 
+#'
 #' @param file_path Path to the data file. It can be either a local file, or a remote URL.
 #' @param range A genomic range character vector. Must follow standard genomic
 #'   range notation format, e.g. chr1:1001-2000
@@ -482,28 +482,28 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
 #'   details, refer to [data.table::fread()].
 #' @param ... Other arguments to be passed to [data.table::fread()].
 #' @seealso [data.table::fread()]
-#' @examples 
+#' @examples
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #' head(bedtbl)
-#' 
+#'
 #' # Basic usage
 #' bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
 #'                   range = "1:3001-4000")
 #' head(bedtbl)
-#' 
+#'
 #' # Specify the reference genome
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
 #'               range = "1:3001-4000",
 #'               genome = "hs37-1kg"))
-#' 
+#'
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
 #'               range = "1:3001-4000",
 #'               genome = "GRCh37"))
-#' 
+#'
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
 #'               range = "1:3001-4000",
 #'               genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
-#' 
+#'
 #' # Load remote BGZIP files with tabix index specified
 #' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
@@ -517,12 +517,31 @@ read_bed <-
            use_gr = TRUE,
            sep = "\t",
            ...) {
+    assertthat::assert_that(!is.null(file_path) && is.character(file_path))
+    if (length(file_path) > 1) {
+      bed_list <- file_path %>%
+        map(~ read_bed(
+          .,
+          range = range,
+          genome = genome,
+          use_gr = use_gr,
+          sep = sep,
+          ...
+        ))
+
+      if (use_gr)
+        return(do.call(c, args = bed_list))
+      else
+        return(data.table::rbindlist(bed_list) %>%
+                 new_bedtorch_table(genome = genome))
+    }
+
     na_strings <- "."
 
     if (is.null(range)) {
       dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
     } else {
-      assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0, 
+      assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
                               msg = "tabix is required")
       # if (system("which tabix", ignore.stdout = TRUE) != 0) {
       #   # No tabix, recourse to read_bed2
@@ -538,7 +557,7 @@ read_bed <-
       # }
       temp_bed <- tempfile(fileext = ".bed")
       on.exit(unlink(temp_bed), add = TRUE)
-      
+
       range_argument <- paste(range, collapse = " ")
       cmd <-
         str_interp("tabix -D -h ${file_path} ${range_argument} > ${temp_bed}")
@@ -546,11 +565,11 @@ read_bed <-
       dt <-
         read_bed_plain(temp_bed, sep = sep, na_strings = na_strings)
     }
-    
+
     dt %<>%
       post_process_table() %>%
       new_bedtorch_table(genome = genome)
-    
+
     if (use_gr)
       as.GenomicRanges(dt)
     else
@@ -570,24 +589,24 @@ read_bed2 <-
            ...) {
     compression <- match.arg(compression)
     na_strings <- "."
-    
+
     if (!is_remote(file_path))
       file_path <- normalizePath(file_path, mustWork = TRUE)
     else
       stopifnot(RCurl::url.exists(file_path))
-      
+
     if (compression == "detect") {
-      file_type <- if (is_remote(file_path)) 
+      file_type <- if (is_remote(file_path))
         detect_remote_file_type(file_path)
       else
         detect_local_file_type(file_path)
-      
+
       if (file_type == "gzfile")
         compression <- "bgzip"
       else
         compression <- "other"
     }
-    
+
     if (is.null(range)) {
       # Load directly
       if (is_remote(file_path))
@@ -597,7 +616,7 @@ read_bed2 <-
       dt <- post_process_table(dt)
     } else {
       stopifnot(length(range) == 1)
-      
+
       # Check whether the index exist
       if (is.null(tabix_index))
         tabix_index <- paste0(file_path, ".tbi")
@@ -605,7 +624,7 @@ read_bed2 <-
         index_exists <- RCurl::url.exists(tabix_index)
       else
         index_exists <- file.exists(tabix_index)
-      
+
       if (compression == "bgzip" && index_exists) {
         dt <- read_tabix_bed(file_path,
                              range,
@@ -621,14 +640,14 @@ read_bed2 <-
           dt <-
             fread(file_path, sep = sep, na.strings = na_strings, ...)
           post_process_table(dt)
-          
+
           dt <- filter_by_region(dt, range)
         }
       }
     }
-    
+
     dt <- new_bedtorch_table(dt, genome = genome)
-    
+
     if (use_gr)
       as.GenomicRanges(dt)
     else
@@ -637,9 +656,9 @@ read_bed2 <-
 
 
 #' Write a `data.table` to file
-#' 
+#'
 #' Can be a plain text file or a BGZIP file.
-#' 
+#'
 #' @param x A `data.table` object to write.
 #' @param file_path Path of the output file. If the extension name is `.gz` or
 #'   `.bgz`, the output will be compressed in BGZIP format.
@@ -650,15 +669,15 @@ read_bed2 <-
 #' @param comments A character vector, which will be written to the top of the
 #'   file as header lines.
 #' @param ... Other arguments passed to methods. Compliant with `data.table::fwrite`.
-#' @examples 
+#' @examples
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
-#' 
+#'
 #' # Write data to uncompressed file
 #' write_bed(bedtbl,  tempfile(fileext = ".bed"))
-#' 
+#'
 #' # Write data to file and create tabix index
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
-#' 
+#'
 #' # Write data to uncompressed file, with header lines
 #' write_bed(bedtbl,  tempfile(fileext = ".bed"), comments = c("Author: X", "Date: N/A"))
 #' @export
@@ -683,15 +702,15 @@ write_bed.GRanges <- function(x, file_path, tabix_index = TRUE, batch_size = NUL
 
 write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   compressed <- is_gzip(file_path)
-  
+
   if (is(x, "GRanges")) {
     x <- data.table::as.data.table(x)
     x[, start := as.integer(start - 1L)]
   }
-  
+
   setnames(x, 1, "#chrom")
   on.exit(setnames(x, "#chrom", "chrom"), add = TRUE)
-  
+
   if (compressed) {
     # Since we need to write the data table to disk as a temporary file, it's
     # important to operate by batches, i.e. in each batch, process rows no more
@@ -701,29 +720,29 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     batch_plan <- seq(from = 1, to = nrow(x), by = batch_size)
     if (tail(batch_plan, n = 1) != nrow(x))
       batch_plan <- c(batch_plan, nrow(x))
-    
+
     1:(length(batch_plan) - 1) %>%
       walk(function(batch_idx) {
         temp_txt <- tempfile(fileext = ".tsv")
         # temp_gz <- tempfile(fileext = ".gz")
         on.exit(unlink(temp_txt), add = TRUE)
-        
+
         if (batch_idx < length(batch_plan) - 1) {
           # Not the last batch
           batch_data <- x[batch_plan[batch_idx]:(batch_plan[batch_idx + 1] - 1)]
         } else {
           batch_data <- x[batch_plan[batch_idx]:batch_plan[batch_idx + 1]]
         }
-        
+
         # Process comment lines
         if (!is.null(comments) && batch_idx == 1) {
           conn <- file(temp_txt)
-          comments %>% 
+          comments %>%
             map_chr(function(x) paste0("#", x)) %>%
             writeLines(temp_txt)
           close(conn)
         }
-        
+
         data.table::fwrite(batch_data,
                            file = temp_txt,
                            append = !is.null(comments) && batch_idx == 1,
@@ -735,7 +754,7 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
                            ...)
         bgzip(temp_txt, output_file_path = file_path, append = (batch_idx > 1))
       })
-    
+
     if (tabix_index) {
       build_tabix_index(file_path)
     }
@@ -743,12 +762,12 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     # Process comment lines
     if (!is.null(comments)) {
       conn <- file(file_path)
-      comments %>% 
+      comments %>%
         map_chr(function(x) paste0("#", x)) %>%
         writeLines(conn)
       close(conn)
     }
-    
+
     data.table::fwrite(x,
                        file = file_path,
                        col.names = TRUE,
