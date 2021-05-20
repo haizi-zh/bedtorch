@@ -540,6 +540,10 @@ read_bed <-
 
     if (is.null(range)) {
       dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
+    } else if (!is_gzip(file_path = file_path)) {
+      # Uncompressed file, directly perform the filtering by chromosomes
+      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
+      dt <- dt[dt[[1]] %in% range]
     } else {
       assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
                               msg = "tabix is required")
