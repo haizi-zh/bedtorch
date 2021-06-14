@@ -71,6 +71,21 @@ normalize_tabix_range <- function(range) {
 # Set `dt`'s column names, types, and set the index
 # Modifies `dt` in-place.
 post_process_table <- function(dt) {
+  if (is.null(dt))
+    return(dt)
+  
+  if (nrow(dt) == 0) {
+    if (ncol(dt) >= 3)
+      data.table::setnames(dt,
+                           old = 1:3,
+                           new = c("chrom", "start", "end"))
+    
+    if (ncol(dt) >= 4)
+      data.table::setnames(dt, old = 4, new = "feature")
+    
+    return(dt)
+  }
+  
   default_colnames <- all(str_detect(colnames(dt), pattern = "V[0-9]+"))
 
   # First 3 columns
@@ -356,6 +371,9 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 # The file can have multiple comment lines at the beginning. The last line that
 # is separated by the delimiter and can be 1-to-1 matched to columns will be
 # considered as column header line
+#
+# If the file is empty (not containing any data), this function always returns a
+# null data.table
 read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
   # Read from the beginning, each time with at most `batch_size` lines
   batch_size <- 100L
@@ -393,6 +411,10 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
       break
     }
   }
+  
+  
+  if (is_empty)
+    return(data.table::data.table())
 
 
   # Is the last comment line column headers?
@@ -404,41 +426,27 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
       str_trim() %>%
       str_split(pattern = "\t") %>%
       .[[1]]
-
-    if (is_empty) {
-      # Empty data file with header
-      dt <- bed_col_names %>%
-        map( ~ character()) %>%
-        purrr::set_names(bed_col_names) %>%
-        data.table::as.data.table()
-    } else{
-      dt <-
-        data.table::fread(
-          file = file_path,
-          sep = sep,
-          skip = skip_lines,
-          na.strings = na_strings
-        )
-
-      if (length(bed_col_names) == ncol(dt)) {
-        # Data file with header
-        dt <- data.table::setnames(dt, bed_col_names)
-      }
+    
+    dt <-
+      data.table::fread(
+        file = file_path,
+        sep = sep,
+        skip = skip_lines,
+        na.strings = na_strings
+      )
+    
+    if (length(bed_col_names) == ncol(dt)) {
+      # Data file with header
+      dt <- data.table::setnames(dt, bed_col_names)
     }
   } else {
-    if (is_empty)
-      dt <-
-        data.table::data.table(chrom = character(),
-                               start = integer(),
-                               end = integer())
-    else
-      dt <-
-        data.table::fread(
-          file = file_path,
-          sep = sep,
-          skip = skip_lines,
-          na.strings = na_strings
-        )
+    dt <-
+      data.table::fread(
+        file = file_path,
+        sep = sep,
+        skip = skip_lines,
+        na.strings = na_strings
+      )
   }
 
   dt

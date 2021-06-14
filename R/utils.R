@@ -94,6 +94,9 @@ rollmean <- function(x, k, na_pad = FALSE, na.rm = FALSE, align = c("center", "l
 # @param dt A `data.table` or `data.frame` input.
 # @param genome A character value specifying the genome name.
 new_bedtorch_table <- function(dt, genome = NULL) {
+  if (is.null(dt))
+    return(dt)
+
   if (is(dt, "bedtorch_table"))
     return(dt)
   
@@ -112,6 +115,15 @@ new_bedtorch_table <- function(dt, genome = NULL) {
   # In case dt is alread bedtorch_table
   dt_classes <- c("bedtorch_table", dt_classes[min(non_matches):length(dt_classes)])
   data.table::setattr(dt, "class", dt_classes)
+  
+  # Check first three columns
+  cols <- colnames(dt)
+  if (length(cols) == 0)
+    return(dt)
+  
+  stopifnot(length(cols) >= 3)
+  data.table::setnames(dt, 1:3, c("chrom", "start", "end"))
+  
   data.table::setkey(dt, "chrom", "start", "end")
   if (!is.null(genome))
     data.table::setattr(dt, "genome", genome)

@@ -64,6 +64,23 @@ test_that("Reading data works", {
 })
 
 
+test_that("Reading empty data files works", {
+  bed_path <- tempfile(fileext = ".bed")
+  system(paste0("touch ", bed_path))
+  on.exit(file.remove(bed_path), add = TRUE)
+  
+  dt_null <- data.table::data.table() %>% bedtorch::as.bedtorch_table()
+  gr_null <- bedtorch::as.GenomicRanges(dt_null)
+  
+  expect_equal(bedtorch::read_bed(file_path = bed_path, use_gr = FALSE), dt_null)
+  expect_equal(bedtorch::read_bed(file_path = bed_path, use_gr = TRUE), gr_null)
+  
+  readr::write_lines("#chrom\tstart\tend\n", file = bed_path)
+  expect_equal(bedtorch::read_bed(file_path = bed_path, use_gr = FALSE), dt_null)
+  expect_equal(bedtorch::read_bed(file_path = bed_path, use_gr = TRUE), gr_null)
+})
+
+
 test_that("Reading non-GenomicRanges data works", {
   data <- read_bed("example2.bed", use_gr = FALSE)
   expect_equal(colnames(data),
