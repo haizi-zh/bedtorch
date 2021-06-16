@@ -2,7 +2,7 @@ pandoc: 2.7.3
 pkgdown: 1.6.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2021-06-15T16:19Z
+last_built: 2021-06-16T18:08Z
 urls:
   reference: https://haizi-zh.github.io/bedtorch//reference
   article: https://haizi-zh.github.io/bedtorch//articles
