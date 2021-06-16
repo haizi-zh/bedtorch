@@ -745,48 +745,83 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
         } else {
           batch_data <- x[batch_plan[batch_idx]:batch_plan[batch_idx + 1]]
         }
-
+        
+        # ... in write_bed will be passed to data.table::fwrite
+        args <- list(x = batch_data, file = temp_txt)
+        args <- c(args, list(...))
+        
+        # User-specified append flag
+        should_append <- isTRUE(args$append)
+        
         # Process comment lines
-        if (!is.null(comments) && batch_idx == 1) {
+        should_comment <-
+          (batch_idx == 1 && !is.null(comments) && !isTRUE(args$append))
+
+        if (should_comment) {
           conn <- file(temp_txt)
           comments %>%
             map_chr(function(x) paste0("#", x)) %>%
             writeLines(temp_txt)
           close(conn)
         }
-
-        data.table::fwrite(batch_data,
-                           file = temp_txt,
-                           append = !is.null(comments) && batch_idx == 1,
-                           quote = FALSE,
-                           sep = "\t",
-                           na = ".",
-                           # Output column names only for batch #1
-                           col.names = (batch_idx == 1),
-                           ...)
-        bgzip(temp_txt, output_file_path = file_path, append = (batch_idx > 1))
+        
+        if (batch_idx > 1 || isTRUE(args$append))
+          args$col.names <- FALSE
+        else if (!"col.names" %in% names(args))
+          args$col.names <- TRUE
+        
+        if (!isTRUE(args$append))
+          args$append <- should_comment
+        
+        if (!"quote" %in% names(args))
+          args$quote <- FALSE
+        if (!"sep" %in% names(args))
+          args$sep <- "\t"
+        if (!"na" %in% names(args))
+          args$na <- "."
+        
+        rlang::exec(data.table::fwrite, !!!args)
+        bgzip(
+          temp_txt,
+          output_file_path = file_path,
+          append = (should_append || batch_idx > 1)
+        )
       })
 
     if (tabix_index) {
       build_tabix_index(file_path)
     }
   } else {
+    # ... in write_bed will be passed to data.table::fwrite
+    args <- list(x = x, file = file_path)
+    args <- c(args, list(...))
+    
     # Process comment lines
-    if (!is.null(comments)) {
+    should_comment <- !is.null(comments) && !isTRUE(args$append)
+
+    if (should_comment) {
       conn <- file(file_path)
       comments %>%
         map_chr(function(x) paste0("#", x)) %>%
         writeLines(conn)
       close(conn)
     }
-
-    data.table::fwrite(x,
-                       file = file_path,
-                       col.names = TRUE,
-                       append = !is.null(comments),
-                       quote = FALSE,
-                       sep = "\t",
-                       na = ".",
-                       ...)
+    
+    if (isTRUE(args$append))
+      args$col.names <- FALSE
+    else if (!"col.names" %in% names(args))
+      args$col.names <- TRUE
+  
+    if (!isTRUE(args$append))
+      args$append <- should_comment
+    
+    if (!"quote" %in% names(args))
+      args$quote <- FALSE
+    if (!"sep" %in% names(args))
+      args$sep <- "\t"
+    if (!"na" %in% names(args))
+      args$na <- "."
+    
+    rlang::exec(data.table::fwrite, !!!args)
   }
 }
