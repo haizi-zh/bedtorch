@@ -9,6 +9,8 @@
 #' @importFrom GenomicRanges makeGRangesFromDataFrame findOverlaps mcols `mcols<-` pintersect ranges `ranges<-` width 
 #' @importFrom GenomeInfoDb seqnames seqlengths
 #' @importFrom S4Vectors from to
+#' @importFrom rlang is_null is_character is_integer
+#' @importFrom assertthat assert_that are_equal
 NULL
 
 ## usethis namespace: start

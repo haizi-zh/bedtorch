@@ -2,7 +2,7 @@ Package: bedtorch
 Type: Package
 Title: R package for fast BED-file manipulation
 Date: 2021-04-03
-Version: 0.1.11.9011
+Version: 0.1.11.9012
 Authors@R: 
     person(given = "Haizi",
            family = "Zheng",

@@ -94,42 +94,54 @@ rollmean <- function(x, k, na_pad = FALSE, na.rm = FALSE, align = c("center", "l
 # @param dt A `data.table` or `data.frame` input.
 # @param genome A character value specifying the genome name.
 new_bedtorch_table <- function(dt, genome = NULL) {
-  if (is.null(dt))
-    return(dt)
-
-  if (is(dt, "bedtorch_table"))
-    return(dt)
+  assert_that(!is_null(dt))
+  assert_that(is(dt, "data.frame"))
+  dt <- data.table::copy(dt)
+  data.table::setDT(dt)
   
-  stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
+  # # data.table requires modify-in-place
+  # dt_classes <- class(dt)
+  # # Strip leading "bedtorch_table" entries, in case there are not duplicates
+  # non_matches <- which(dt_classes != "bedtorch_table")
+  # # rare case, where dt_classes all repeative "bedtorch_table"
+  # # DO NOT TOUCH
+  # stopifnot(length(non_matches) > 0)
+  # # In case dt is alread bedtorch_table
+  # dt_classes <- c("bedtorch_table", dt_classes[min(non_matches):length(dt_classes)])
   
-  if (is(dt, "data.frame") && !is(dt, "data.table"))
-    data.table::setDT(dt)
-  
-  # data.table requires modify-in-place
-  dt_classes <- class(dt)
-  # Strip leading "bedtorch_table" entries, in case there are not duplicates
-  non_matches <- which(dt_classes != "bedtorch_table")
-  # rare case, where dt_classes all repeative "bedtorch_table"
-  # DO NOT TOUCH
-  stopifnot(length(non_matches) > 0)
-  # In case dt is alread bedtorch_table
-  dt_classes <- c("bedtorch_table", dt_classes[min(non_matches):length(dt_classes)])
+  dt_classes <- c("bedtorch_table", class(dt))
   data.table::setattr(dt, "class", dt_classes)
   
   # Check first three columns
   cols <- colnames(dt)
-  if (length(cols) == 0)
-    return(dt)
-  
-  stopifnot(length(cols) >= 3)
+  assert_that(length(cols) >= 3)
   data.table::setnames(dt, 1:3, c("chrom", "start", "end"))
+  data.table::setattr(dt, "genome", genome)
   
-  data.table::setkey(dt, "chrom", "start", "end")
-  if (!is.null(genome))
-    data.table::setattr(dt, "genome", genome)
-  else
-    data.table::setattr(dt, "genome", NULL)
-  dt
+  if (!is.factor(dt$chrom))
+    dt[, chrom := factor(chrom, levels = unique(chrom))]
+  
+  validate_bedtorch_table(dt)
+}
+
+
+validate_bedtorch_table <- function(x) {
+  genome <- attr(x, "genome")
+  assert_that(is_null(genome) || (is_character(genome) && length(genome) == 1))
+  
+  assert_that(are_equal(colnames(x)[1:3], c("chrom", "start", "end")))
+  assert_that(is.factor(x$chrom))
+  assert_that(is_integer(x$start) && all(x$start >= 0))
+  assert_that(is_integer(x$end) && all(x$end >= 0))
+  assert_that(all(x$start <= x$end))
+  x
+}
+
+
+#' @export
+bedtorch_table <- function(x, genome = NULL) {
+  dt <- new_bedtorch_table(x, genome)
+  validate_bedtorch_table(dt)
 }
 
 
@@ -154,18 +166,10 @@ as.GenomicRanges.GRanges <- function(x) {
 
 #' @export
 as.GenomicRanges.data.frame <- function(x) {
-  dt <- x
-
-  genome <- attr(dt, "genome")
-  stopifnot(is.null(genome) || (is.character(genome) && length(genome) == 1))
-  
-  if (is.null(x))
-    NULL
-  else if (nrow(x) == 0)
-    GenomicRanges::GRanges()
-  else
+  genome <- attr(x, "genome")
+  dt <- new_bedtorch_table(x, genome = genome)
+  validate_bedtorch_table(dt) %>%
     GenomicRanges::makeGRangesFromDataFrame(
-      dt,
       keep.extra.columns = TRUE,
       seqinfo = get_seqinfo(genome),
       starts.in.df.are.0based = TRUE
@@ -184,32 +188,22 @@ as.GenomicRanges.data.frame <- function(x) {
 #' gr <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), 
 #'                use_gr = TRUE, genome = "hs37-1kg")
 #' as.bedtorch_table(gr)
-as.bedtorch_table <- function(x, genome = NULL) {
+as.bedtorch_table <- function(x) {
   UseMethod("as.bedtorch_table")
 }
 
 
 #' @export
-as.bedtorch_table.bedtorch_table <- function(x, genome = NULL) {
-  if (is.null(genome))
-    return(x)
-  else {
-    data.table::setattr(x, "genome", genome)
-    return(x)
-  }
+as.bedtorch_table.bedtorch_table <- function(x) {
+  return(x)
 }
 
 
 #' @export
-as.bedtorch_table.data.table <- function(x, genome = NULL) {
-  new_bedtorch_table(x, genome = genome %||% attr(x, "genome"))
-}
-
-
-#' @export
-as.bedtorch_table.data.frame <- function(x, genome = NULL) {
-  data.table::setDT(x)
-  new_bedtorch_table(x, genome = genome %||% attr(x, "genome"))
+as.bedtorch_table.data.frame <- function(x) {
+  genome <- attr(x, "genome")
+  dt <- new_bedtorch_table(x, genome = genome)
+  validate_bedtorch_table(dt)
 }
 
 
@@ -219,14 +213,14 @@ as.bedtorch_table.GRanges <- function(x) {
   dt <- data.table::as.data.table(gr)
   data.table::setnames(dt, "seqnames", "chrom")
   dt[, `:=`(start = as.integer(start - 1), width = NULL, strand = NULL)]
-  data.table::setkey(dt, "chrom", "start", "end")
+  # data.table::setkey(dt, "chrom", "start", "end")
   
   genome <- GenomeInfoDb::genome(gr) %>% unique()
-  stopifnot(length(genome) == 1)
   if (is.na(genome))
     genome <- NULL
   
-  new_bedtorch_table(dt, genome = genome)
+  dt <- new_bedtorch_table(dt, genome = genome)
+  validate_bedtorch_table(dt)
 }
 
 
