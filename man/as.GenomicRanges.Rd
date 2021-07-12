@@ -4,7 +4,7 @@
 \alias{as.GenomicRanges}
 \title{Convert a \code{data.frame} representation to \code{GenomicRanges} representation}
 \usage{
-as.GenomicRanges(x)
+as.GenomicRanges(x, genome = NULL)
 }
 \arguments{
 \item{x}{An input \code{data.frame}.}

@@ -154,26 +154,56 @@ bedtorch_table <- function(x, genome = NULL) {
 #'                use_gr = FALSE, genome = "hs37-1kg")
 #' as.GenomicRanges(dt)
 #' @export
-as.GenomicRanges <- function(x) {
+as.GenomicRanges <- function(x, genome = NULL) {
   UseMethod("as.GenomicRanges")
 }
 
 #' @export
-as.GenomicRanges.GRanges <- function(x) {
+as.GenomicRanges.GRanges <- function(x, genome = NULL) {
+  assert_that(is_null(genome) || is_scalar_character(genome) || is(genome, "Seqinfo"))
+  
+  if (is_null(genome))
+    return(x)
+  else if (is_scalar_character(genome)) {
+    new_seqinfo <- get_seqinfo(genome)
+    seqlevels(x) <- seqlevels(new_seqinfo)
+    seqinfo(x) <- new_seqinfo
+  }
+  else if (is(genome, "Seqinfo")) {
+    new_seqinfo <- genome
+    seqlevels(x) <- seqlevels(new_seqinfo)
+    seqinfo(x) <- new_seqinfo
+  }
+  else
+    assert_that(is_null(genome) || is_scalar_character(genome) || is(genome, "Seqinfo"))
+
   return(x)
 }
 
 
 #' @export
-as.GenomicRanges.data.frame <- function(x) {
-  genome <- attr(x, "genome")
-  dt <- new_bedtorch_table(x, genome = genome)
-  validate_bedtorch_table(dt) %>%
+as.GenomicRanges.data.frame <- function(x, genome = NULL) {
+  assert_that(is_null(genome) ||
+                is_scalar_character(genome) || is(genome, "Seqinfo"))
+  
+  genome <- genome %||% attr(x, "genome")
+  dt <- new_bedtorch_table(x)
+  if (is(genome, "Seqinfo"))
+    dt <- validate_bedtorch_table(dt) %>%
+    GenomicRanges::makeGRangesFromDataFrame(
+      keep.extra.columns = TRUE,
+      seqinfo = genome,
+      starts.in.df.are.0based = TRUE
+    )
+  else
+    dt <- validate_bedtorch_table(dt) %>%
     GenomicRanges::makeGRangesFromDataFrame(
       keep.extra.columns = TRUE,
       seqinfo = get_seqinfo(genome),
       starts.in.df.are.0based = TRUE
     )
+  
+  return(dt)
 }
 
 
@@ -182,42 +212,56 @@ as.GenomicRanges.data.frame <- function(x) {
 #' @param x An input. Must be either `GenomicRanges` or `data.frame`. If a
 #'   `data.frame`, the first three columns should be chrom, start and end. For
 #'   column names, refer to [GenomicRanges::makeGRangesFromDataFrame()].
+#' @param genome
 #' @return `data.table` converted from `x`.
 #' @export
 #' @examples
 #' gr <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"), 
 #'                use_gr = TRUE, genome = "hs37-1kg")
 #' as.bedtorch_table(gr)
-as.bedtorch_table <- function(x) {
+as.bedtorch_table <- function(x, genome = NULL) {
   UseMethod("as.bedtorch_table")
 }
 
 
 #' @export
-as.bedtorch_table.bedtorch_table <- function(x) {
+as.bedtorch_table.bedtorch_table <- function(x, genome = NULL) {
+  if (is_null(genome))
+    return(x)
+  
+  assert_that(is_scalar_character(genome))
+  data.table::setattr(x, "genome", genome)
   return(x)
 }
 
 
 #' @export
-as.bedtorch_table.data.frame <- function(x) {
-  genome <- attr(x, "genome")
+as.bedtorch_table.data.frame <- function(x, genome = NULL) {
+  assert_that(is_null(genome) || is_scalar_character(genome))
+  genome <- genome %||% attr(x, "genome")
   dt <- new_bedtorch_table(x, genome = genome)
   validate_bedtorch_table(dt)
 }
 
 
 #' @export
-as.bedtorch_table.GRanges <- function(x) {
+as.bedtorch_table.GRanges <- function(x, genome = NULL) {
+  assert_that(is_null(genome) || is_scalar_character(genome) || is(genome, "Seqinfo"))
+  
+  if (is(genome, "Seqinfo"))
+    genome <- GenomeInfoDb::genome(genome)[1]
+  
+  genome <- genome %||% GenomeInfoDb::genome(x)[[1]]
+  
   gr <- x
   dt <- data.table::as.data.table(gr)
   data.table::setnames(dt, "seqnames", "chrom")
   dt[, `:=`(start = as.integer(start - 1), width = NULL, strand = NULL)]
   # data.table::setkey(dt, "chrom", "start", "end")
   
-  genome <- GenomeInfoDb::genome(gr) %>% unique()
-  if (is.na(genome))
-    genome <- NULL
+  # genome <- GenomeInfoDb::genome(gr) %>% unique()
+  # if (is.na(genome))
+  #   genome <- NULL
   
   dt <- new_bedtorch_table(dt, genome = genome)
   validate_bedtorch_table(dt)

@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // c_read_tabix_table
 void c_read_tabix_table(std::string file_path, StringVector regions, std::string output_file, std::string index_path, bool download_index);
 RcppExport SEXP _bedtorch_c_read_tabix_table(SEXP file_pathSEXP, SEXP regionsSEXP, SEXP output_fileSEXP, SEXP index_pathSEXP, SEXP download_indexSEXP) {

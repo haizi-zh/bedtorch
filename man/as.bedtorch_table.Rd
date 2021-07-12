@@ -4,7 +4,7 @@
 \alias{as.bedtorch_table}
 \title{Convert a \code{GenomicRanges} or a \code{data.frame} BED to standard \code{data.table} BED}
 \usage{
-as.bedtorch_table(x)
+as.bedtorch_table(x, genome = NULL)
 }
 \arguments{
 \item{x}{An input. Must be either \code{GenomicRanges} or \code{data.frame}. If a

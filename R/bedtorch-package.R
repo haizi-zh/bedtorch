@@ -7,9 +7,9 @@
 #' @importFrom dplyr `%>%`
 #' @importFrom data.table setnames setkey fread fwrite shift setDT data.table rbindlist as.data.table
 #' @importFrom GenomicRanges makeGRangesFromDataFrame findOverlaps mcols `mcols<-` pintersect ranges `ranges<-` width 
-#' @importFrom GenomeInfoDb seqnames seqlengths
+#' @importFrom GenomeInfoDb seqnames seqlengths seqinfo `seqinfo<-` seqlevels `seqlevels<-` 
 #' @importFrom S4Vectors from to
-#' @importFrom rlang is_null is_character is_integer
+#' @importFrom rlang is_null is_character is_integer is_scalar_character
 #' @importFrom assertthat assert_that are_equal
 NULL
 
