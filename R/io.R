@@ -374,7 +374,7 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 #
 # If the file is empty (not containing any data), this function always returns a
 # null data.table
-read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
+read_bed_plain <- function(file_path, sep = "\t", na_strings = ".", ...) {
   # Read from the beginning, each time with at most `batch_size` lines
   batch_size <- 100L
 
@@ -412,7 +412,6 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
     }
   }
   
-  
   if (is_empty)
     return(data.table::data.table())
 
@@ -432,7 +431,8 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
         file = file_path,
         sep = sep,
         skip = skip_lines,
-        na.strings = na_strings
+        na.strings = na_strings,
+        ...
       )
     
     if (length(bed_col_names) == ncol(dt)) {
@@ -445,7 +445,8 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".") {
         file = file_path,
         sep = sep,
         skip = skip_lines,
-        na.strings = na_strings
+        na.strings = na_strings,
+        ...
       )
   }
 
@@ -547,10 +548,10 @@ read_bed <-
     na_strings <- "."
 
     if (is.null(range)) {
-      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
+      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
     } else if (!is_gzip(file_path = file_path)) {
       # Uncompressed file, directly perform the filtering by chromosomes
-      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings)
+      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
       dt <- dt[dt[[1]] %in% range]
     } else {
       assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
@@ -575,7 +576,7 @@ read_bed <-
         str_interp("tabix -D -h ${file_path} ${range_argument} > ${temp_bed}")
       system(cmd)
       dt <-
-        read_bed_plain(temp_bed, sep = sep, na_strings = na_strings)
+        read_bed_plain(temp_bed, sep = sep, na_strings = na_strings, ...)
     }
 
     dt %<>%
