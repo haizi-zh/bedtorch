@@ -641,7 +641,8 @@ slop_bed.bedtorch_table <-
     
     if (!is.null(chrom_sizes)) {
       n1 <- nrow(x)
-      idx <- x[, 1:3][chrom_sizes, nomatch=0][, id := seq_len(.N)]
+      idx <- merge(x[, 1:3], chrom_sizes, by = "chrom")[, id := seq_len(.N)]
+      # idx <- x[, 1:3][chrom_sizes, nomatch=0][, id := seq_len(.N)]
       n2 <- nrow(idx)
       
       if (n2 < n1)
