@@ -251,7 +251,12 @@ as.bedtorch_table.GRanges <- function(x, genome = NULL) {
   if (is(genome, "Seqinfo"))
     genome <- GenomeInfoDb::genome(genome)[1]
   
-  genome <- genome %||% GenomeInfoDb::genome(x)[[1]]
+  if (is_null(genome))
+    genome <- GenomeInfoDb::genome(x)[[1]]
+  
+  # If x doesn't have genome information
+  if (is.na(genome))
+    genome <- NULL
   
   gr <- x
   dt <- data.table::as.data.table(gr)
