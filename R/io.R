@@ -582,6 +582,9 @@ read_bed <-
     dt %<>%
       post_process_table() %>%
       new_bedtorch_table(genome = genome)
+    
+    if (is_null(dt))
+      return(NULL)
 
     if (use_gr)
       as.GenomicRanges(dt)

@@ -96,6 +96,10 @@ rollmean <- function(x, k, na_pad = FALSE, na.rm = FALSE, align = c("center", "l
 new_bedtorch_table <- function(dt, genome = NULL) {
   assert_that(!is_null(dt))
   assert_that(is(dt, "data.frame"))
+  
+  if (nrow(dt) == 0)
+    return(NULL)
+  
   dt <- data.table::copy(dt)
   data.table::setDT(dt)
   
