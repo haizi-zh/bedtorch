@@ -804,11 +804,17 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     should_comment <- !is.null(comments) && !isTRUE(args$append)
 
     if (should_comment) {
-      conn <- file(file_path)
+      if (identical(file_path, ""))
+        conn <- stdout()
+      else
+        conn <- file(file_path)
+      
       comments %>%
         map_chr(function(x) paste0("#", x)) %>%
         writeLines(conn)
-      close(conn)
+      
+      if (!identical(file_path, ""))
+        close(conn)
     }
     
     if (isTRUE(args$append))
