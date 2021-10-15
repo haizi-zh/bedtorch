@@ -656,9 +656,16 @@ read_bed <-
         #   ))
         # }
         
-        range_argument <- paste(range, collapse = " ")
-        cmd <-
-          str_interp("tabix -D -h ${file_path} ${range_argument}")
+        if (inherits(range, "GRanges")) {
+          range_bed <- tempfile(fileext = ".bed")
+          on.exit(rm(range_bed), add = TRUE)
+          write_bed(range, file_path = range_bed)
+          cmd <- str_interp("tabix -D -h -R ${range_bed} ${file_path}")
+        } else {
+          range_argument <- paste(range, collapse = " ")
+          cmd <-
+            str_interp("tabix -D -h ${file_path} ${range_argument}")
+        }
         dt <- read_bed_cmd(cmd = cmd, ...)
       }
     }
