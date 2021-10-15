@@ -374,7 +374,7 @@ read_metadata <- function(file_path) {
   
   # if (is_gzip(file_path) && is_remote(file_path)) {
   #   bed_file <- tempfile(fileext = ".bed")
-  #   on.exit(rm(bed_file), add = TRUE)
+  #   on.exit(unlink(bed_file), add = TRUE)
   # } else
   #   bed_file <- NULL
   
@@ -658,7 +658,7 @@ read_bed <-
         
         if (inherits(range, "GRanges")) {
           range_bed <- tempfile(fileext = ".bed")
-          on.exit(rm(range_bed), add = TRUE)
+          on.exit(unlink(range_bed), add = TRUE)
           write_bed(range, file_path = range_bed)
           cmd <- str_interp("tabix -D -h -R ${range_bed} ${file_path}")
         } else {
@@ -687,7 +687,7 @@ read_bed <-
 # Read a bed file by command
 read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
   bed_file <- tempfile(fileext = ".bed", tmpdir = tmpdir)
-  on.exit(rm(bed_file), add = TRUE)
+  on.exit(unlink(bed_file), add = TRUE)
   
   shell_func <- if (.Platform$OS.type == "unix") system else shell
   shell_func(paste0('(', cmd, ') > ', bed_file))
