@@ -4,12 +4,12 @@
 # is_gzip("http://foo.bar/example.bed.gz")
 # is_gzip(c("foo.gz", "bar.gz"))
 is_gzip <- function(file_path) {
-  str_split(file_path,
-            pattern = "\\.") %>% map_chr( ~ tail(., n = 1)) %in% c("gz", "bgz")
+  grepl("\\.gz$", file_path)
 }
 
+
 is_remote <- function(file_path) {
-  str_detect(file_path, pattern = "^[^:]+://")
+  grepl("^[^:]://", file_path)
 }
 
 
@@ -366,6 +366,73 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 }
 
 
+#' metadata are defined as # comment lines, in the form of #key=value
+#' @export
+read_metadata <- function(file_path) {
+  # Read from the beginning, each time with at most `batch_size` lines
+  batch_size <- 100L
+  
+  # if (is_gzip(file_path) && is_remote(file_path)) {
+  #   bed_file <- tempfile(fileext = ".bed")
+  #   on.exit(rm(bed_file), add = TRUE)
+  # } else
+  #   bed_file <- NULL
+  
+  # Read all header lines
+  header_lines <- character(0)
+  skip_lines <- 0
+  is_empty <- FALSE
+  while (TRUE) {
+    # if (!is_null(bed_file)) {
+    #   cmd <- str_interp("curl -L ${file_path} | zcat | tail -n +${skip_lines + 1} | head -n ${batch_size}")
+    #   shell_func <- if (.Platform$OS.type == "unix") system else shell
+    #   shell_func(paste0(cmd, " > ", bed_file))
+    # }
+    
+    lines <-
+      read_lines(
+        file = file_path,
+        skip = skip_lines,
+        skip_empty_rows = FALSE,
+        n_max = batch_size
+      ) %>% map_chr(str_trim)
+    
+    reached_end <- length(lines) < batch_size
+    
+    # Non-header lines?
+    processed_lines <- lines %>%
+      discard(~ . == "")
+    is_header <- processed_lines %>% map_lgl(~ grepl("^#", .))
+    
+    if (any(!is_header)) {
+      non_header_idx <- min(which(!is_header))
+      header_lines <-
+        c(header_lines, processed_lines[1:(non_header_idx - 1)])
+      break
+    }
+    
+    header_lines <- c(header_lines, processed_lines)
+    skip_lines <- skip_lines + length(lines)
+    
+    if (reached_end)
+      break
+  }
+  
+  matched_header <- header_lines %>% 
+    str_match(pattern = "#[ ]*([^=]+)=(.*)$")
+  matched_line <- matched_header[, 1]
+  matched_idx <- which(!is.na(matched_line))
+  
+  matched_key <- matched_header[matched_idx, 2]
+  matched_value <- matched_header[matched_idx, 3]
+  
+  metadata <- matched_value
+  names(metadata) <- matched_key
+  
+  metadata
+}
+
+
 # Read plain BED files.
 
 # The file can have multiple comment lines at the beginning. The last line that
@@ -374,7 +441,7 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 #
 # If the file is empty (not containing any data), this function always returns a
 # null data.table
-read_bed_plain <- function(file_path, sep = "\t", na_strings = ".", ...) {
+read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...) {
   # Read from the beginning, each time with at most `batch_size` lines
   batch_size <- 100L
 
@@ -517,68 +584,71 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = ".", ...) {
 #' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
 read_bed <-
-  function(file_path,
+  function(file_path = NULL,
+           cmd = NULL,
            range = NULL,
            # compression = c("detect", "bgzip", "text", "other"),
            # tabix_index = NULL,
            # download_index = FALSE,
            genome = NULL,
            use_gr = TRUE,
-           sep = "\t",
            ...) {
-    assertthat::assert_that(!is.null(file_path) && is.character(file_path))
-    if (length(file_path) > 1) {
-      bed_list <- file_path %>%
-        map(~ read_bed(
-          .,
-          range = range,
-          genome = genome,
-          use_gr = use_gr,
-          sep = sep,
-          ...
-        ))
-
-      if (use_gr)
-        return(do.call(c, args = bed_list))
-      else
-        return(data.table::rbindlist(bed_list) %>%
-                 new_bedtorch_table(genome = genome))
-    }
-
+    assert_that(missing(file_path) + missing(cmd) == 1, msg = "Either specify file_path or cmd as input.")
+    
+    sep = "\t"
     na_strings <- "."
-
-    if (is.null(range)) {
-      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
-    } else if (!is_gzip(file_path = file_path)) {
-      # Uncompressed file, directly perform the filtering by chromosomes
-      dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
-      dt <- dt[dt[[1]] %in% range]
+    
+    if (!missing(cmd)) {
+      if (!is_null(range))
+        warning("The argument range is disabled when loading BED from command.")
+      
+      dt <- read_bed_cmd(cmd = cmd, ...)
     } else {
-      assertthat::assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
-                              msg = "tabix is required")
-      # if (system("which tabix", ignore.stdout = TRUE) != 0) {
-      #   # No tabix, recourse to read_bed2
-      #   warning("Cannot find tabix in system")
-      #   return(read_bed2(
-      #     file_path,
-      #     range = range,
-      #     genome = genome,
-      #     use_gr = use_gr,
-      #     sep = sep,
-      #     ...
-      #   ))
-      # }
-      temp_bed <- tempfile(fileext = ".bed")
-      on.exit(unlink(temp_bed), add = TRUE)
-
-      range_argument <- paste(range, collapse = " ")
-      cmd <-
-        str_interp("tabix -D -h ${file_path} ${range_argument} > ${temp_bed}")
-      system(cmd)
-      dt <-
-        read_bed_plain(temp_bed, sep = sep, na_strings = na_strings, ...)
+      assertthat::assert_that(!is.null(file_path) && is.character(file_path))
+      if (length(file_path) > 1) {
+        bed_list <- file_path %>%
+          map(~ read_bed(
+            .,
+            range = range,
+            genome = genome,
+            use_gr = use_gr,
+            sep = sep,
+            ...
+          ))
+        
+        if (use_gr)
+          return(do.call(c, args = bed_list))
+        else
+          return(data.table::rbindlist(bed_list) %>%
+                   new_bedtorch_table(genome = genome))
+      }
+      
+      if (is_null(range)) {
+        dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
+      } else {
+        assert_that(is_gzip(file_path), msg = "Range seeking is only supported for bgzip data files.")
+        assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
+                                msg = "tabix is required.")
+        # if (system("which tabix", ignore.stdout = TRUE) != 0) {
+        #   # No tabix, recourse to read_bed2
+        #   warning("Cannot find tabix in system")
+        #   return(read_bed2(
+        #     file_path,
+        #     range = range,
+        #     genome = genome,
+        #     use_gr = use_gr,
+        #     sep = sep,
+        #     ...
+        #   ))
+        # }
+        
+        range_argument <- paste(range, collapse = " ")
+        cmd <-
+          str_interp("tabix -D -h ${file_path} ${range_argument}")
+        dt <- read_bed_cmd(cmd = cmd, ...)
+      }
     }
-
+      
     dt %<>%
       post_process_table() %>%
       new_bedtorch_table(genome = genome)
@@ -591,6 +661,18 @@ read_bed <-
     else
       dt
   }
+
+
+# Read a bed file by command
+read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
+  bed_file <- tempfile(fileext = ".bed", tmpdir = tmpdir)
+  on.exit(rm(bed_file), add = TRUE)
+  
+  shell_func <- if (.Platform$OS.type == "unix") system else shell
+  shell_func(paste0('(', cmd, ') > ', bed_file))
+  
+  read_bed_plain(file_path = bed_file, ...)
+}
 
 
 read_bed2 <-
