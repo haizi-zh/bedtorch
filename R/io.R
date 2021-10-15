@@ -9,7 +9,7 @@ is_gzip <- function(file_path) {
 
 
 is_remote <- function(file_path) {
-  grepl("^[^:]://", file_path)
+  grepl("^[^:]+://", file_path)
 }
 
 
@@ -584,19 +584,33 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
 #' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
 read_bed <-
-  function(file_path = NULL,
-           cmd = NULL,
-           range = NULL,
-           # compression = c("detect", "bgzip", "text", "other"),
-           # tabix_index = NULL,
-           # download_index = FALSE,
-           genome = NULL,
-           use_gr = TRUE,
-           ...) {
-    assert_that(missing(file_path) + missing(cmd) == 1, msg = "Either specify file_path or cmd as input.")
+  function(
+    input = NULL,
+    file_path = NULL,
+    cmd = NULL,
+    range = NULL,
+    # compression = c("detect", "bgzip", "text", "other"),
+    # tabix_index = NULL,
+    # download_index = FALSE,
+    genome = NULL,
+    use_gr = TRUE,
+    ...
+  ) {
+    assert_that(sum(!missing(file_path), !missing(cmd), !missing(input)) == 1, 
+                msg = "Either specify input, file_path or cmd as input.")
     
     sep = "\t"
     na_strings <- "."
+    
+    if (!missing(input)) {
+      assert_that(is_scalar_character(input), msg = "Invalid input.")
+      
+      # Guess whether a file or a command
+      if (file.exists(input) || is_remote(input))
+        file_path <- input
+      else
+        cmd <- input
+    }
     
     if (!missing(cmd)) {
       if (!is_null(range))
