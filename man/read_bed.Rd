@@ -5,11 +5,12 @@
 \title{Load a BED-format file}
 \usage{
 read_bed(
-  file_path,
+  input = NULL,
+  file_path = NULL,
+  cmd = NULL,
   range = NULL,
   genome = NULL,
   use_gr = TRUE,
-  sep = "\\t",
   ...
 )
 }
@@ -29,12 +30,6 @@ files: \url{https://github.com/igvteam/igv/tree/master/genomes/sizes}.}
 otherwise a \code{data.table} object. Generally, we recommend using
 \code{GenomicRanges}.}
 
-\item{sep}{The separator between columns. By default, BED files are
-tab-delimited, and \code{sep} should be \verb{\\t}. However, sometimes you will
-encounter non-standard table files. In such cases, you need to specify the
-separator. If \code{auto}, \code{read_bed} will try to guess the separator. For more
-details, refer to \code{\link[data.table:fread]{data.table::fread()}}.}
-
 \item{...}{Other arguments to be passed to \code{\link[data.table:fread]{data.table::fread()}}.}
 
 \item{compression}{Indicate the compression type. If \code{detect}, this function
@@ -46,6 +41,12 @@ from \code{file_path}.}
 
 \item{download_index}{Whether to download (cache) the tabix index at current
 directory.}
+
+\item{sep}{The separator between columns. By default, BED files are
+tab-delimited, and \code{sep} should be \verb{\\t}. However, sometimes you will
+encounter non-standard table files. In such cases, you need to specify the
+separator. If \code{auto}, \code{read_bed} will try to guess the separator. For more
+details, refer to \code{\link[data.table:fread]{data.table::fread()}}.}
 }
 \description{
 This function loads the input file as a \code{data.table} object. The file can be
