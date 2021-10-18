@@ -75,7 +75,7 @@ range in the following syntax: &quot;chr1:1-100&quot;." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.5</span>
       </span>
     </div>
 
@@ -124,11 +124,12 @@ range in the following syntax: "chr1:1-100".</p>
     </div>
 
     <pre class="usage"><span class='fu'>read_bed</span><span class='op'>(</span>
-  <span class='va'>file_path</span>,
+  input <span class='op'>=</span> <span class='cn'>NULL</span>,
+  file_path <span class='op'>=</span> <span class='cn'>NULL</span>,
+  cmd <span class='op'>=</span> <span class='cn'>NULL</span>,
   range <span class='op'>=</span> <span class='cn'>NULL</span>,
   genome <span class='op'>=</span> <span class='cn'>NULL</span>,
   use_gr <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  sep <span class='op'>=</span> <span class='st'>"\t"</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
@@ -159,14 +160,6 @@ otherwise a <code>data.table</code> object. Generally, we recommend using
 <code>GenomicRanges</code>.</p></td>
     </tr>
     <tr>
-      <th>sep</th>
-      <td><p>The separator between columns. By default, BED files are
-tab-delimited, and <code>sep</code> should be <code>\t</code>. However, sometimes you will
-encounter non-standard table files. In such cases, you need to specify the
-separator. If <code>auto</code>, <code>read_bed</code> will try to guess the separator. For more
-details, refer to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/fread.html'>data.table::fread()</a></code>.</p></td>
-    </tr>
-    <tr>
       <th>...</th>
       <td><p>Other arguments to be passed to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/fread.html'>data.table::fread()</a></code>.</p></td>
     </tr>
@@ -185,6 +178,14 @@ from <code>file_path</code>.</p></td>
       <th>download_index</th>
       <td><p>Whether to download (cache) the tabix index at current
 directory.</p></td>
+    </tr>
+    <tr>
+      <th>sep</th>
+      <td><p>The separator between columns. By default, BED files are
+tab-delimited, and <code>sep</code> should be <code>\t</code>. However, sometimes you will
+encounter non-standard table files. In such cases, you need to specify the
+separator. If <code>auto</code>, <code>read_bed</code> will try to guess the separator. For more
+details, refer to <code><a href='https://Rdatatable.gitlab.io/data.table/reference/fread.html'>data.table::fread()</a></code>.</p></td>
     </tr>
     </table>
 
