@@ -205,7 +205,7 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 get_seqinfo <- function(genome, genome_name = NULL) {
   if (is.null(genome))
     return(NULL)
-
+  
   if (file.exists(genome) || RCurl::url.exists(genome)) {
     # genome is a chromosome size file (local or remote)
     chrom_sizes <-
@@ -247,8 +247,11 @@ get_seqinfo <- function(genome, genome_name = NULL) {
       isCircular = rep(FALSE, nrow(chrom_sizes)),
       genome = genome
     )
-  } else
+  } else {
+    available_genomes <- (GenomeInfoDb::registered_NCBI_assemblies())$assembly
+    assert_that(genome %in% available_genomes)
     GenomeInfoDb::Seqinfo(genome = genome)
+  }
 }
 
 

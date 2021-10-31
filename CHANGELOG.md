@@ -1,3 +1,11 @@
+## 2021-10-31
+
+Version: v0.1.12.6
+
+Changes:
+
+* get_seqinfo checks whether the genome name is valid
+
 ## 2021-10-15 
 
 Version: v0.1.12.1
