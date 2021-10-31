@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.6</span>
       </span>
     </div>
 
@@ -145,64 +145,66 @@ Comput Biol 8(5): e1002529.
 <a href='https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002529'>doi:10.1371/journal.pcbi.1002529</a></p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Load BED tables</span>
-<span class='va'>x</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example2.bed.gz"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, use_gr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
-<span class='va'>y</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example2_window.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, use_gr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
-
-<span class='co'># Basic usages</span>
-<span class='fu'>reldist_bed</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span><span class='op'>)</span> 
-</div><div class='img'><img src='reldist_bed-1.png' alt='' width='700' height='433' /></div><div class='output co'>#&gt;     reldist count total        freq
-#&gt;  1:    0.00     6   270 0.022222222
-#&gt;  2:    0.01     8   270 0.029629630
-#&gt;  3:    0.02     4   270 0.014814815
-#&gt;  4:    0.03     3   270 0.011111111
-#&gt;  5:    0.04     2   270 0.007407407
-#&gt;  6:    0.05     8   270 0.029629630
-#&gt;  7:    0.06     3   270 0.011111111
-#&gt;  8:    0.07     3   270 0.011111111
-#&gt;  9:    0.08     7   270 0.025925926
-#&gt; 10:    0.09     5   270 0.018518519
-#&gt; 11:    0.10     8   270 0.029629630
-#&gt; 12:    0.11     6   270 0.022222222
-#&gt; 13:    0.12     5   270 0.018518519
-#&gt; 14:    0.13     5   270 0.018518519
-#&gt; 15:    0.14     5   270 0.018518519
-#&gt; 16:    0.15     4   270 0.014814815
-#&gt; 17:    0.16     5   270 0.018518519
-#&gt; 18:    0.17     2   270 0.007407407
-#&gt; 19:    0.18    10   270 0.037037037
-#&gt; 20:    0.19    10   270 0.037037037
-#&gt; 21:    0.20     6   270 0.022222222
-#&gt; 22:    0.21     3   270 0.011111111
-#&gt; 23:    0.22     3   270 0.011111111
-#&gt; 24:    0.23     6   270 0.022222222
-#&gt; 25:    0.24    10   270 0.037037037
-#&gt; 26:    0.25     8   270 0.029629630
-#&gt; 27:    0.26     8   270 0.029629630
-#&gt; 28:    0.27     7   270 0.025925926
-#&gt; 29:    0.28     5   270 0.018518519
-#&gt; 30:    0.29     8   270 0.029629630
-#&gt; 31:    0.30     6   270 0.022222222
-#&gt; 32:    0.31     4   270 0.014814815
-#&gt; 33:    0.32     6   270 0.022222222
-#&gt; 34:    0.33     3   270 0.011111111
-#&gt; 35:    0.34     5   270 0.018518519
-#&gt; 36:    0.35     2   270 0.007407407
-#&gt; 37:    0.36     6   270 0.022222222
-#&gt; 38:    0.37     3   270 0.011111111
-#&gt; 39:    0.38     2   270 0.007407407
-#&gt; 40:    0.39     8   270 0.029629630
-#&gt; 41:    0.40     6   270 0.022222222
-#&gt; 42:    0.41     7   270 0.025925926
-#&gt; 43:    0.42     5   270 0.018518519
-#&gt; 44:    0.43     5   270 0.018518519
-#&gt; 45:    0.44     4   270 0.014814815
-#&gt; 46:    0.45     9   270 0.033333333
-#&gt; 47:    0.46     6   270 0.022222222
-#&gt; 48:    0.47     3   270 0.011111111
-#&gt; 49:    0.48     3   270 0.011111111
-#&gt; 50:    0.49     4   270 0.014814815
-#&gt;     reldist count total        freq</div></pre>
+    <pre class="examples"><span class='r-in'><span class='co'># Load BED tables</span></span>
+<span class='r-in'><span class='va'>x</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example2.bed.gz"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, use_gr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
+<span class='r-in'><span class='va'>y</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example2_window.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, use_gr <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span></span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Basic usages</span></span>
+<span class='r-in'><span class='fu'>reldist_bed</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>y</span><span class='op'>)</span> </span>
+<span class='r-plt img'><img src='reldist_bed-1.png' alt='' width='700' height='433' /></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     reldist count total        freq</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  1:    0.00     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  2:    0.01     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  3:    0.02     4   270 0.014814815</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  4:    0.03     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  5:    0.04     2   270 0.007407407</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  6:    0.05     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  7:    0.06     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  8:    0.07     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>  9:    0.08     7   270 0.025925926</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 10:    0.09     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 11:    0.10     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 12:    0.11     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 13:    0.12     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 14:    0.13     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 15:    0.14     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 16:    0.15     4   270 0.014814815</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 17:    0.16     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 18:    0.17     2   270 0.007407407</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 19:    0.18    10   270 0.037037037</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 20:    0.19    10   270 0.037037037</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 21:    0.20     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 22:    0.21     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 23:    0.22     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 24:    0.23     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 25:    0.24    10   270 0.037037037</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 26:    0.25     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 27:    0.26     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 28:    0.27     7   270 0.025925926</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 29:    0.28     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 30:    0.29     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 31:    0.30     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 32:    0.31     4   270 0.014814815</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 33:    0.32     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 34:    0.33     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 35:    0.34     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 36:    0.35     2   270 0.007407407</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 37:    0.36     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 38:    0.37     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 39:    0.38     2   270 0.007407407</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 40:    0.39     8   270 0.029629630</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 41:    0.40     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 42:    0.41     7   270 0.025925926</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 43:    0.42     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 44:    0.43     5   270 0.018518519</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 45:    0.44     4   270 0.014814815</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 46:    0.45     9   270 0.033333333</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 47:    0.46     6   270 0.022222222</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 48:    0.47     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 49:    0.48     3   270 0.011111111</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> 50:    0.49     4   270 0.014814815</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>     reldist count total        freq</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -73,7 +73,7 @@ genome so that intervals are restricted by chromosome sizes." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.6</span>
       </span>
     </div>
 
@@ -146,34 +146,36 @@ specified chromosome(s).</p></td>
     <p>A <code>GRanges</code> object containing the generated windows.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='co'># Generate 500kbp intervals for chr20 and chr22, GRCh38</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>500e3L</span>, genome <span class='op'>=</span> <span class='st'>"GRCh38"</span>, chrom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"20"</span>, <span class='st'>"22"</span><span class='op'>)</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRanges object with 6 ranges and 0 metadata columns:
-#&gt;       seqnames          ranges strand
-#&gt;          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]       20        1-500000      *
-#&gt;   [2]       20  500001-1000000      *
-#&gt;   [3]       20 1000001-1500000      *
-#&gt;   [4]       20 1500001-2000000      *
-#&gt;   [5]       20 2000001-2500000      *
-#&gt;   [6]       20 2500001-3000000      *
-#&gt;   -------
-#&gt;   seqinfo: 455 sequences (1 circular) from GRCh38 genome</div><div class='input'>
-<span class='co'># Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)</span>
-<span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>5e6L</span>, genome <span class='op'>=</span> <span class='st'>"GRCh37"</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRanges object with 6 ranges and 0 metadata columns:
-#&gt;       seqnames            ranges strand
-#&gt;          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt;
-#&gt;   [1]        1         1-5000000      *
-#&gt;   [2]        1  5000001-10000000      *
-#&gt;   [3]        1 10000001-15000000      *
-#&gt;   [4]        1 15000001-20000000      *
-#&gt;   [5]        1 20000001-25000000      *
-#&gt;   [6]        1 25000001-30000000      *
-#&gt;   -------
-#&gt;   seqinfo: 92 sequences from GRCh37 genome</div></pre>
+    <pre class="examples"><span class='r-in'><span class='co'># Generate 500kbp intervals for chr20 and chr22, GRCh38</span></span>
+<span class='r-in'><span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>500e3L</span>, genome <span class='op'>=</span> <span class='st'>"GRCh38"</span>, chrom <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"20"</span>, <span class='st'>"22"</span><span class='op'>)</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> GRanges object with 6 ranges and 0 metadata columns:</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>       seqnames          ranges strand</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>          &lt;Rle&gt;       &lt;IRanges&gt;  &lt;Rle&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [1]       20        1-500000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [2]       20  500001-1000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [3]       20 1000001-1500000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [4]       20 1500001-2000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [5]       20 2000001-2500000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [6]       20 2500001-3000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   -------</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   seqinfo: 455 sequences (1 circular) from GRCh38 genome</span>
+<span class='r-in'></span>
+<span class='r-in'><span class='co'># Generate 5Mbp intervals for all chromosomes of GRCh37 (default reference genome)</span></span>
+<span class='r-in'><span class='va'>result</span> <span class='op'>&lt;-</span> <span class='fu'>make_windows</span><span class='op'>(</span>window_size <span class='op'>=</span> <span class='fl'>5e6L</span>, genome <span class='op'>=</span> <span class='st'>"GRCh37"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'><a href='https://rdrr.io/r/utils/head.html'>head</a></span><span class='op'>(</span><span class='va'>result</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> GRanges object with 6 ranges and 0 metadata columns:</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>       seqnames            ranges strand</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [1]        1         1-5000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [2]        1  5000001-10000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [3]        1 10000001-15000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [4]        1 15000001-20000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [5]        1 20000001-25000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [6]        1 25000001-30000000      *</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   -------</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   seqinfo: 92 sequences from GRCh37 genome</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">bedtorch</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.12.6</span>
       </span>
     </div>
 
@@ -133,25 +133,26 @@
     <p><code>GenomicRanges</code> converted from <code>x</code>.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, 
-               use_gr <span class='op'>=</span> <span class='cn'>FALSE</span>, genome <span class='op'>=</span> <span class='st'>"hs37-1kg"</span><span class='op'>)</span>
-<span class='fu'>as.GenomicRanges</span><span class='op'>(</span><span class='va'>dt</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; GRanges object with 20 ranges and 1 metadata column:
-#&gt;        seqnames    ranges strand |     score
-#&gt;           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;
-#&gt;    [1]       21       4-6      * |         8
-#&gt;    [2]       21     11-16      * |         5
-#&gt;    [3]       21     13-17      * |         4
-#&gt;    [4]       21     16-22      * |         5
-#&gt;    [5]       21     23-25      * |         7
-#&gt;    ...      ...       ...    ... .       ...
-#&gt;   [16]       22     52-59      * |         9
-#&gt;   [17]       22     54-57      * |         5
-#&gt;   [18]       22     58-65      * |         9
-#&gt;   [19]       22     63-70      * |         8
-#&gt;   [20]       22     66-72      * |         2
-#&gt;   -------
-#&gt;   seqinfo: 84 sequences from hs37-1kg genome</div></pre>
+    <pre class="examples"><span class='r-in'><span class='va'>dt</span> <span class='op'>&lt;-</span> <span class='fu'><a href='read_bed.html'>read_bed</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/system.file.html'>system.file</a></span><span class='op'>(</span><span class='st'>"extdata"</span>, <span class='st'>"example_merge.bed"</span>, package <span class='op'>=</span> <span class='st'>"bedtorch"</span><span class='op'>)</span>, </span>
+<span class='r-in'>               use_gr <span class='op'>=</span> <span class='cn'>FALSE</span>, genome <span class='op'>=</span> <span class='st'>"hs37-1kg"</span><span class='op'>)</span></span>
+<span class='r-in'><span class='fu'>as.GenomicRanges</span><span class='op'>(</span><span class='va'>dt</span><span class='op'>)</span></span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span> GRanges object with 20 ranges and 1 metadata column:</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>        seqnames    ranges strand |     score</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>           &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    [1]       21       4-6      * |         8</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    [2]       21     11-16      * |         5</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    [3]       21     13-17      * |         4</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    [4]       21     16-22      * |         5</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    [5]       21     23-25      * |         7</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>    ...      ...       ...    ... .       ...</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [16]       22     52-59      * |         9</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [17]       22     54-57      * |         5</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [18]       22     58-65      * |         9</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [19]       22     63-70      * |         8</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   [20]       22     66-72      * |         2</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   -------</span>
+<span class='r-out co'><span class='r-pr'>#&gt;</span>   seqinfo: 84 sequences from hs37-1kg genome</span>
+</pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
