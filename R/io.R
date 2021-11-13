@@ -195,63 +195,24 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 
 # Get a `GenomeInfoDb::Seqinfo` object
 #
-# @param genome A canonical genome name, e.g. GRCh37, or a custom genome name
-#   recognized by bedtorch, e.g. hs37-1kg, or a path/URL to a chromosome size
-#   file. If `NULL`, return `NULL`.
-# @param genome_name Optional character vector. Only works when `genome` is a
-#   file path/URL, and specify the name of the genome. If `NULL`, the name is
-#   guessed from the file name.
+# @param genome A canonical genome name. Should be either hs37-1kg, hs37d5, or
+#   one recognized in GenomeInfoDb::registered_NCBI_assemblies()
 #' @export
-get_seqinfo <- function(genome, genome_name = NULL) {
-  if (is.null(genome))
+get_seqinfo <- function(genome) {
+  if (is_null(genome))
     return(NULL)
+
+  assert_that(is_scalar_character(genome))
   
-  if (file.exists(genome) || RCurl::url.exists(genome)) {
-    # genome is a chromosome size file (local or remote)
-    chrom_sizes <-
-      fread(
-        genome,
-        col.names = c("chrom", "size")
-      )
-
-    if (is.null(genome_name)) {
-      guess_genome_name <- function(genome) {
-        # Guess genome name from file name
-        genome_name <- basename(genome)
-        # ends with chrom.sizes, sizes, or chromosome.sizes
-        pattern <- "^(.+?)(\\.chrom(osome)?)?(\\.sizes)$"
-        m <- str_match(genome_name, pattern = pattern)[1, 2]
-        if (!is.na(m))
-          m
-        else
-          genome_name
-      }
-      genome_name <- guess_genome_name(genome)
-    }
-
-    GenomeInfoDb::Seqinfo(
-      seqnames = chrom_sizes$chrom,
-      seqlengths = chrom_sizes$size,
-      isCircular = rep(FALSE, nrow(chrom_sizes)),
-      genome = genome_name %||% basename(genome)
-    )
-  } else if (genome == "hs37-1kg") {
-    chrom_sizes <-
-      fread(
-        system.file("extdata", "human_g1k_v37.chrom.sizes", package = "bedtorch"),
-        col.names = c("chrom", "size")
-      )
-    GenomeInfoDb::Seqinfo(
-      seqnames = chrom_sizes$chrom,
-      seqlengths = chrom_sizes$size,
-      isCircular = rep(FALSE, nrow(chrom_sizes)),
-      genome = genome
-    )
-  } else {
-    available_genomes <- (GenomeInfoDb::registered_NCBI_assemblies())$assembly
-    assert_that(genome %in% available_genomes)
-    GenomeInfoDb::Seqinfo(genome = genome)
-  }
+  if (genome == "hs37-1kg")
+    return(hs37_1kg_seqinfo)
+  else if (genome == "hs37d5")
+    return(hs37d5_seqinfo)
+  
+  assert_that(genome %in% GenomeInfoDb::registered_NCBI_assemblies()$assembly, 
+              msg = paste0("Unknown genome: ", genome))
+  
+  return(GenomeInfoDb::Seqinfo(genome = genome))
 }
 
 
@@ -601,6 +562,8 @@ read_bed <-
   ) {
     assert_that(sum(!missing(file_path), !missing(cmd), !missing(input)) == 1, 
                 msg = "Either specify input, file_path or cmd as input.")
+    # genome should be valid
+    assert_that(is_null(genome) || !is_null(get_seqinfo(genome = genome)))
     
     sep = "\t"
     na_strings <- "."
@@ -699,82 +662,82 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 }
 
 
-read_bed2 <-
-  function(file_path,
-           range = NULL,
-           compression = c("detect", "bgzip", "text", "other"),
-           tabix_index = NULL,
-           download_index = FALSE,
-           genome = NULL,
-           use_gr = TRUE,
-           sep = "\t",
-           ...) {
-    compression <- match.arg(compression)
-    na_strings <- "."
-
-    if (!is_remote(file_path))
-      file_path <- normalizePath(file_path, mustWork = TRUE)
-    else
-      stopifnot(RCurl::url.exists(file_path))
-
-    if (compression == "detect") {
-      file_type <- if (is_remote(file_path))
-        detect_remote_file_type(file_path)
-      else
-        detect_local_file_type(file_path)
-
-      if (file_type == "gzfile")
-        compression <- "bgzip"
-      else
-        compression <- "other"
-    }
-
-    if (is.null(range)) {
-      # Load directly
-      if (is_remote(file_path))
-        dt <- read_bed_remote_full(file_path, sep = sep, ...)
-      else
-        dt <- fread(file_path, sep = sep, na.strings = na_strings, ...)
-      dt <- post_process_table(dt)
-    } else {
-      stopifnot(length(range) == 1)
-
-      # Check whether the index exist
-      if (is.null(tabix_index))
-        tabix_index <- paste0(file_path, ".tbi")
-      if (is_remote(tabix_index))
-        index_exists <- RCurl::url.exists(tabix_index)
-      else
-        index_exists <- file.exists(tabix_index)
-
-      if (compression == "bgzip" && index_exists) {
-        dt <- read_tabix_bed(file_path,
-                             range,
-                             index_path = tabix_index,
-                             download_index = download_index,
-                             sep = sep, ...)
-      } else {
-        if (is_remote(file_path))
-          stop("Remote range filtering is only available for BGZIP files")
-        else {
-          warning("Cannot locate the index file. Recourse to full scan, which may affect performance.")
-          # Load directly
-          dt <-
-            fread(file_path, sep = sep, na.strings = na_strings, ...)
-          post_process_table(dt)
-
-          dt <- filter_by_region(dt, range)
-        }
-      }
-    }
-
-    dt <- new_bedtorch_table(dt, genome = genome)
-
-    if (use_gr)
-      as.GenomicRanges(dt)
-    else
-      dt
-  }
+# read_bed2 <-
+#   function(file_path,
+#            range = NULL,
+#            compression = c("detect", "bgzip", "text", "other"),
+#            tabix_index = NULL,
+#            download_index = FALSE,
+#            genome = NULL,
+#            use_gr = TRUE,
+#            sep = "\t",
+#            ...) {
+#     compression <- match.arg(compression)
+#     na_strings <- "."
+# 
+#     if (!is_remote(file_path))
+#       file_path <- normalizePath(file_path, mustWork = TRUE)
+#     else
+#       stopifnot(RCurl::url.exists(file_path))
+# 
+#     if (compression == "detect") {
+#       file_type <- if (is_remote(file_path))
+#         detect_remote_file_type(file_path)
+#       else
+#         detect_local_file_type(file_path)
+# 
+#       if (file_type == "gzfile")
+#         compression <- "bgzip"
+#       else
+#         compression <- "other"
+#     }
+# 
+#     if (is.null(range)) {
+#       # Load directly
+#       if (is_remote(file_path))
+#         dt <- read_bed_remote_full(file_path, sep = sep, ...)
+#       else
+#         dt <- fread(file_path, sep = sep, na.strings = na_strings, ...)
+#       dt <- post_process_table(dt)
+#     } else {
+#       stopifnot(length(range) == 1)
+# 
+#       # Check whether the index exist
+#       if (is.null(tabix_index))
+#         tabix_index <- paste0(file_path, ".tbi")
+#       if (is_remote(tabix_index))
+#         index_exists <- RCurl::url.exists(tabix_index)
+#       else
+#         index_exists <- file.exists(tabix_index)
+# 
+#       if (compression == "bgzip" && index_exists) {
+#         dt <- read_tabix_bed(file_path,
+#                              range,
+#                              index_path = tabix_index,
+#                              download_index = download_index,
+#                              sep = sep, ...)
+#       } else {
+#         if (is_remote(file_path))
+#           stop("Remote range filtering is only available for BGZIP files")
+#         else {
+#           warning("Cannot locate the index file. Recourse to full scan, which may affect performance.")
+#           # Load directly
+#           dt <-
+#             fread(file_path, sep = sep, na.strings = na_strings, ...)
+#           post_process_table(dt)
+# 
+#           dt <- filter_by_region(dt, range)
+#         }
+#       }
+#     }
+# 
+#     dt <- new_bedtorch_table(dt, genome = genome)
+# 
+#     if (use_gr)
+#       as.GenomicRanges(dt)
+#     else
+#       dt
+#   }
 
 
 #' Write a `data.table` to file

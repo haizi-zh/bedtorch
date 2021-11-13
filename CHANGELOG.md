@@ -1,3 +1,11 @@
+## 2021-11-13
+
+Version: v0.1.12.7
+
+Changes:
+
+* Improve get_seqinfo. Now all NCBI-registered assemblies are supported
+
 ## 2021-10-31
 
 Version: v0.1.12.6
