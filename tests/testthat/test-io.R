@@ -61,6 +61,9 @@ test_that("Reading data works", {
   data <- read_bed("example2.bed.gz", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")
   expect_equal(names(mcols(data)), c("score1", "score2"))
   expect_equal(length(data), 3L)
+
+  expect_equal(length(read_bed("example2 with space.bed.gz", use_gr = TRUE, genome = "GRCh37")), 3000L)
+  expect_equal(length(read_bed("example2 with space.bed.gz", use_gr = TRUE, genome = "GRCh37", range = "1:1101-1300")), 3L)
 })
 
 
