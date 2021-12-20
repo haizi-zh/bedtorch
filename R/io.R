@@ -204,11 +204,10 @@ get_seqinfo <- function(genome) {
 
   assert_that(is_scalar_character(genome))
   
-  if (genome == "hs37-1kg")
-    return(hs37_1kg_seqinfo)
-  else if (genome == "hs37d5")
-    return(hs37d5_seqinfo)
-  
+  if (genome %in% names(bedtorch::ncbi_seqinfo)) {
+    return(bedtorch::ncbi_seqinfo[[genome]])
+  }
+
   assert_that(genome %in% GenomeInfoDb::registered_NCBI_assemblies()$assembly, 
               msg = paste0("Unknown genome: ", genome))
   
