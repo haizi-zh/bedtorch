@@ -10,6 +10,8 @@ as.bedtorch_table(x, genome = NULL)
 \item{x}{An input. Must be either \code{GenomicRanges} or \code{data.frame}. If a
 \code{data.frame}, the first three columns should be chrom, start and end. For
 column names, refer to \code{\link[GenomicRanges:makeGRangesFromDataFrame]{GenomicRanges::makeGRangesFromDataFrame()}}.}
+
+\item{genome}{Genome name, e.g. GRCh37, etc.}
 }
 \value{
 \code{data.table} converted from \code{x}.

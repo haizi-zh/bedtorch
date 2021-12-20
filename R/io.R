@@ -655,8 +655,12 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
   bed_file <- tempfile(fileext = ".bed", tmpdir = tmpdir)
   on.exit(unlink(bed_file), add = TRUE)
   
-  shell_func <- if (.Platform$OS.type == "unix") system else shell
-  shell_func(paste0('(', cmd, ') > ', bed_file))
+  assert_that(.Platform$OS.type == "unix")
+  
+  retcode <- system(paste0('(', cmd, ') > ', bed_file))
+  if (retcode != 0) {
+    stop("Failed in loading BED")
+  }
   
   read_bed_plain(file_path = bed_file, ...)
 }

@@ -216,7 +216,7 @@ as.GenomicRanges.data.frame <- function(x, genome = NULL) {
 #' @param x An input. Must be either `GenomicRanges` or `data.frame`. If a
 #'   `data.frame`, the first three columns should be chrom, start and end. For
 #'   column names, refer to [GenomicRanges::makeGRangesFromDataFrame()].
-#' @param genome
+#' @param genome Genome name, e.g. GRCh37, etc.
 #' @return `data.table` converted from `x`.
 #' @export
 #' @examples
