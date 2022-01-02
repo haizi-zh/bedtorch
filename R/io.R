@@ -803,7 +803,6 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     # Since we need to write the data table to disk as a temporary file, it's
     # important to operate by batches, i.e. in each batch, process rows no more
     # than batch_size
-    browser()
     if (is.null(batch_size))
       batch_size <- nrow(x)
     
@@ -823,7 +822,6 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
         # temp_gz <- tempfile(fileext = ".gz")
         on.exit(unlink(temp_txt), add = TRUE)
 
-        browser()
         if (batch_idx < length(batch_plan) - 1) {
           # Not the last batch
           batch_data <- x[batch_plan[batch_idx]:(batch_plan[batch_idx + 1] - 1)]
