@@ -1,4 +1,4 @@
-#' ncbi_seqinfo
+#' hs_seqinfo
 #' 
-#' Prefetched NCBI seqinfo
-"ncbi_seqinfo"
+#' Prefetched Homo sapiens seqinfo
+"hs_seqinfo"

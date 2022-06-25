@@ -15,26 +15,26 @@ is_remote <- function(file_path) {
 
 isTabixRange <- function(range) {
   isValid <- function(x) {
-    ret = strsplit(x = x, split = ":")[[1]]
+    ret <- strsplit(x = x, split = ":")[[1]]
     if (length(ret) == 1) { # e.g. "chr1"
       return(TRUE)
     }
     if (length(ret) != 2) {
       return(FALSE)
     }
-    chrom = ret[1]
+    chrom <- ret[1]
     if (nchar(chrom) == 0) {
-      return (FALSE)
+      return(FALSE)
     }
-    ret = strsplit(x = ret[2], split = "-")[[1]]
+    ret <- strsplit(x = ret[2], split = "-")[[1]]
     if (length(ret) == 2) {
-      beg = suppressWarnings(as.integer(ret[1]))
-      end = suppressWarnings(as.integer(ret[2]))
+      beg <- suppressWarnings(as.integer(ret[1]))
+      end <- suppressWarnings(as.integer(ret[2]))
       if (is.na(beg) || is.na(end) || beg > end) {
         return(FALSE)
       }
     } else if (length(ret) == 1) {
-      beg = suppressWarnings(as.integer(ret[1]))
+      beg <- suppressWarnings(as.integer(ret[1]))
       if (is.na(beg)) {
         return(FALSE)
       }
@@ -71,21 +71,25 @@ normalize_tabix_range <- function(range) {
 # Set `dt`'s column names, types, and set the index
 # Modifies `dt` in-place.
 post_process_table <- function(dt) {
-  if (is.null(dt))
-    return(dt)
-  
-  if (nrow(dt) == 0) {
-    if (ncol(dt) >= 3)
-      data.table::setnames(dt,
-                           old = 1:3,
-                           new = c("chrom", "start", "end"))
-    
-    if (ncol(dt) >= 4)
-      data.table::setnames(dt, old = 4, new = "feature")
-    
+  if (is.null(dt)) {
     return(dt)
   }
-  
+
+  if (nrow(dt) == 0) {
+    if (ncol(dt) >= 3) {
+      data.table::setnames(dt,
+        old = 1:3,
+        new = c("chrom", "start", "end")
+      )
+    }
+
+    if (ncol(dt) >= 4) {
+      data.table::setnames(dt, old = 4, new = "feature")
+    }
+
+    return(dt)
+  }
+
   default_colnames <- all(str_detect(colnames(dt), pattern = "V[0-9]+"))
 
   # First 3 columns
@@ -93,16 +97,18 @@ post_process_table <- function(dt) {
 
   # Fourth columns: score if it is numeric, feature otherwise
   if (default_colnames && ncol(dt) >= 4) {
-    if (is.numeric(dt[[4]]))
+    if (is.numeric(dt[[4]])) {
       data.table::setnames(dt, 4, "score")
-    else
+    } else {
       data.table::setnames(dt, 4, "feature")
+    }
   }
 
   # 6th column may be strand
   if (default_colnames && ncol(dt) >= 6) {
-    if (is.character(dt[[6]]) && all(unique(dt[[6]]) %in% c("-", "+")))
+    if (is.character(dt[[6]]) && all(unique(dt[[6]]) %in% c("-", "+"))) {
       data.table::setnames(dt, 6, "strand")
+    }
   }
 
   v_chrom <- as.character(dt$chrom)
@@ -117,13 +123,14 @@ post_process_table <- function(dt) {
 filter_by_region <- function(dt, range) {
   stopifnot(length(range) == 1)
 
-  if (str_detect(range, pattern = "^[^:]+$"))
+  if (str_detect(range, pattern = "^[^:]+$")) {
     return(dt[chrom == range])
+  }
 
   m <- str_match(range, pattern = "([^:]+):([0-9]+)-([0-9]+)")
-  if (is.na(m[1, 1]))
+  if (is.na(m[1, 1])) {
     stop(str_interp("Invalid range: ${range}"))
-  else {
+  } else {
     c1 <- m[1, 2]
     s1 <- as.integer(m[1, 3]) - 1L
     e1 <- as.integer(m[1, 4])
@@ -137,7 +144,8 @@ parse_range <- function(range) {
   range <- normalize_tabix_range(range)
 
   range <- str_match(range,
-                     pattern = "^([^:]+):([0-9]+)-([0-9]+)")
+    pattern = "^([^:]+):([0-9]+)-([0-9]+)"
+  )
   range_bed <- as.data.table(range)[, 2:4]
   setnames(range_bed, c("chrom", "start", "end"))
   range_bed[, `:=`(start = as.integer(start) - 1L, end = as.integer(end))]
@@ -151,15 +159,17 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
   # Get UCSC-style range strings
   range %<>%
     parse_range %>%
-    pmap_chr(function(chrom, start, end)
-      str_interp("${chrom}:${start + 1L}-${end}"))
+    pmap_chr(function(chrom, start, end) {
+      str_interp("${chrom}:${start + 1L}-${end}")
+    })
 
   # Check index existence
   if (!is.null(index_path)) {
-    if (is_remote(index_path))
+    if (is_remote(index_path)) {
       index_exists <- RCurl::url.exists(index_path)
-    else
+    } else {
       index_exists <- file.exists(index_path)
+    }
 
     if (!index_exists) {
       warning(str_interp("Cannot find tabix index ${index_path}"))
@@ -168,8 +178,9 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
   } else if (is_remote(file_path)) {
     index_path <- paste0(file_path, ".tbi")
     index_exists <- RCurl::url.exists(index_path)
-    if (!index_exists)
+    if (!index_exists) {
       stop(str_interp("Cannot find remote tabix index ${index_path}"))
+    }
   }
 
   tempbed <- tempfile(fileext = ".bed")
@@ -196,22 +207,19 @@ read_tabix_bed <- function(file_path, range, index_path = NULL, download_index =
 # Get a `GenomeInfoDb::Seqinfo` object
 #
 # @param genome A canonical genome name. Should be either hs37-1kg, hs37d5, or
-#   one recognized in GenomeInfoDb::registered_NCBI_assemblies()
+#   one recognized in GenomeInfoDb
 #' @export
 get_seqinfo <- function(genome) {
-  if (is_null(genome))
+  if (is_null(genome)) {
     return(NULL)
-
-  assert_that(is_scalar_character(genome))
-  
-  if (genome %in% names(bedtorch::ncbi_seqinfo)) {
-    return(bedtorch::ncbi_seqinfo[[genome]])
   }
 
-  assert_that(genome %in% GenomeInfoDb::registered_NCBI_assemblies()$assembly, 
-              msg = paste0("Unknown genome: ", genome))
-  
-  return(GenomeInfoDb::Seqinfo(genome = genome))
+  assert_that(is_scalar_character(genome))
+  assert_that(genome %in% names(bedtorch::hs_seqinfo),
+    msg = paste0("Unknown genome: ", genome)
+  )
+
+  return(bedtorch::hs_seqinfo[[genome]])
 }
 
 
@@ -229,12 +237,14 @@ detect_remote_file_type <- function(url) {
     buf <- readBin(url_conn, raw(), block_size)
     total_bytes <- total_bytes + length(buf)
 
-    if (length(buf) == 0)
+    if (length(buf) == 0) {
       next
+    }
 
     total_buf <- c(total_buf, list(buf))
-    if (total_bytes >= block_size)
+    if (total_bytes >= block_size) {
       break
+    }
   }
   total_buf <- unlist(total_buf)
 
@@ -269,8 +279,9 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 
   # Try to extract the extension name
   ext <- str_match(url, pattern = "\\.([^/\\.]+)$")[1, 2]
-  if (is.na(ext))
+  if (is.na(ext)) {
     ext <- ""
+  }
 
   temp_downloaded <- tempfile(fileext = ext)
   on.exit(unlink(temp_downloaded), add = TRUE)
@@ -296,10 +307,12 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
       on.exit(unlink(temp_download_new), add = TRUE)
       temp_downloaded <- temp_download_new
     }
-    fread(file = temp_downloaded,
-          na.strings = na_strings,
-          sep = sep,
-          ...)
+    fread(
+      file = temp_downloaded,
+      na.strings = na_strings,
+      sep = sep,
+      ...
+    )
   } else if (file_type == "bzfile") {
     if (!endsWith(temp_downloaded, suffix = ".bz2")) {
       # Make sure the file extension name is correct
@@ -308,10 +321,12 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
       on.exit(unlink(temp_download_new), add = TRUE)
       temp_downloaded <- temp_download_new
     }
-    fread(file = temp_downloaded,
-          na.strings = na_strings,
-          sep = sep,
-          ...)
+    fread(
+      file = temp_downloaded,
+      na.strings = na_strings,
+      sep = sep,
+      ...
+    )
   } else if (file_type == "xzfile") {
     # LZMA or XZ
     fread(
@@ -321,10 +336,12 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
       ...
     )
   } else {
-    fread(file = temp_downloaded,
-          na.strings = na_strings,
-          sep = sep,
-          ...)
+    fread(
+      file = temp_downloaded,
+      na.strings = na_strings,
+      sep = sep,
+      ...
+    )
   }
 }
 
@@ -334,13 +351,13 @@ read_bed_remote_full <- function(url, sep = "\t", ...) {
 read_metadata <- function(file_path) {
   # Read from the beginning, each time with at most `batch_size` lines
   batch_size <- 100L
-  
+
   # if (is_gzip(file_path) && is_remote(file_path)) {
   #   bed_file <- tempfile(fileext = ".bed")
   #   on.exit(unlink(bed_file), add = TRUE)
   # } else
   #   bed_file <- NULL
-  
+
   # Read all header lines
   header_lines <- character(0)
   skip_lines <- 0
@@ -351,7 +368,7 @@ read_metadata <- function(file_path) {
     #   shell_func <- if (.Platform$OS.type == "unix") system else shell
     #   shell_func(paste0(cmd, " > ", bed_file))
     # }
-    
+
     lines <-
       read_lines(
         file = file_path,
@@ -359,39 +376,40 @@ read_metadata <- function(file_path) {
         skip_empty_rows = FALSE,
         n_max = batch_size
       ) %>% map_chr(str_trim)
-    
+
     reached_end <- length(lines) < batch_size
-    
+
     # Non-header lines?
     processed_lines <- lines %>%
       discard(~ . == "")
     is_header <- processed_lines %>% map_lgl(~ grepl("^#", .))
-    
+
     if (any(!is_header)) {
       non_header_idx <- min(which(!is_header))
       header_lines <-
         c(header_lines, processed_lines[1:(non_header_idx - 1)])
       break
     }
-    
+
     header_lines <- c(header_lines, processed_lines)
     skip_lines <- skip_lines + length(lines)
-    
-    if (reached_end)
+
+    if (reached_end) {
       break
+    }
   }
-  
-  matched_header <- header_lines %>% 
+
+  matched_header <- header_lines %>%
     str_match(pattern = "#[ ]*([^=]+)=(.*)$")
   matched_line <- matched_header[, 1]
   matched_idx <- which(!is.na(matched_line))
-  
+
   matched_key <- matched_header[matched_idx, 2]
   matched_value <- matched_header[matched_idx, 3]
-  
+
   metadata <- matched_value
   names(metadata) <- matched_key
-  
+
   metadata
 }
 
@@ -424,9 +442,10 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
     is_data <- !str_detect(lines, pattern = "^#") & lines != ""
     if (any(is_data)) {
       first_data_idx <- min(which(is_data))
-      if (first_data_idx > 1)
+      if (first_data_idx > 1) {
         header_lines <-
           c(header_lines, lines[1:(first_data_idx - 1)])
+      }
 
       skip_lines <- skip_lines + first_data_idx - 1
       break
@@ -441,9 +460,10 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
       break
     }
   }
-  
-  if (is_empty)
+
+  if (is_empty) {
     return(data.table::data.table())
+  }
 
 
   # Is the last comment line column headers?
@@ -455,7 +475,7 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
       str_trim() %>%
       str_split(pattern = "\t") %>%
       .[[1]]
-    
+
     dt <-
       data.table::fread(
         file = file_path,
@@ -464,7 +484,7 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
         na.strings = na_strings,
         ...
       )
-    
+
     if (length(bed_col_names) == ncol(dt)) {
       # Data file with header
       dt <- data.table::setnames(dt, bed_col_names)
@@ -527,60 +547,65 @@ read_bed_plain <- function(file_path, sep = "\t", na_strings = c(".", "NA"), ...
 #'
 #' # Basic usage
 #' bedtbl <- read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#'                   range = "1:3001-4000")
+#'   range = "1:3001-4000"
+#' )
 #' head(bedtbl)
 #'
 #' # Specify the reference genome
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#'               range = "1:3001-4000",
-#'               genome = "hs37-1kg"))
+#'   range = "1:3001-4000",
+#'   genome = "hs37-1kg"
+#' ))
 #'
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#'               range = "1:3001-4000",
-#'               genome = "GRCh37"))
+#'   range = "1:3001-4000",
+#'   genome = "GRCh37"
+#' ))
 #'
 #' head(read_bed(system.file("extdata", "example2.bed.gz", package = "bedtorch"),
-#'               range = "1:3001-4000",
-#'               genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"))
+#'   range = "1:3001-4000",
+#'   genome = "https://raw.githubusercontent.com/igvteam/igv/master/genomes/sizes/1kg_v37.chrom.sizes"
+#' ))
 #'
 #' # Load remote BGZIP files with tabix index specified
 #' head(read_bed("https://git.io/JYATB", range = "22:20000001-30000001", tabix_index = "https://git.io/JYAkT"))
 #' @export
 read_bed <-
-  function(
-    input = NULL,
-    file_path = NULL,
-    cmd = NULL,
-    range = NULL,
-    # compression = c("detect", "bgzip", "text", "other"),
-    # tabix_index = NULL,
-    # download_index = FALSE,
-    genome = NULL,
-    use_gr = TRUE,
-    ...
-  ) {
-    assert_that(sum(!missing(file_path), !missing(cmd), !missing(input)) == 1, 
-                msg = "Either specify input, file_path or cmd as input.")
+  function(input = NULL,
+           file_path = NULL,
+           cmd = NULL,
+           range = NULL,
+           # compression = c("detect", "bgzip", "text", "other"),
+           # tabix_index = NULL,
+           # download_index = FALSE,
+           genome = NULL,
+           use_gr = TRUE,
+           ...) {
+    assert_that(sum(!missing(file_path), !missing(cmd), !missing(input)) == 1,
+      msg = "Either specify input, file_path or cmd as input."
+    )
     # genome should be valid
     assert_that(is_null(genome) || !is_null(get_seqinfo(genome = genome)))
-    
-    sep = "\t"
+
+    sep <- "\t"
     na_strings <- "."
-    
+
     if (!missing(input)) {
       assert_that(is_scalar_character(input), msg = "Invalid input.")
-      
+
       # Guess whether a file or a command
-      if (file.exists(input) || is_remote(input))
+      if (file.exists(input) || is_remote(input)) {
         file_path <- input
-      else
+      } else {
         cmd <- input
+      }
     }
-    
+
     if (!missing(cmd)) {
-      if (!is_null(range))
+      if (!is_null(range)) {
         warning("The argument range is disabled when loading BED from command.")
-      
+      }
+
       dt <- read_bed_cmd(cmd = cmd, ...)
     } else {
       assertthat::assert_that(!is.null(file_path) && is.character(file_path))
@@ -594,20 +619,22 @@ read_bed <-
             sep = sep,
             ...
           ))
-        
-        if (use_gr)
+
+        if (use_gr) {
           return(do.call(c, args = bed_list))
-        else
+        } else {
           return(data.table::rbindlist(bed_list) %>%
-                   new_bedtorch_table(genome = genome))
+            new_bedtorch_table(genome = genome))
+        }
       }
-      
+
       if (is_null(range)) {
         dt <- read_bed_plain(file_path, sep = sep, na_strings = na_strings, ...)
       } else {
         assert_that(is_gzip(file_path), msg = "Range seeking is only supported for bgzip data files.")
         assert_that(system("which tabix", ignore.stdout = TRUE) == 0,
-                                msg = "tabix is required.")
+          msg = "tabix is required."
+        )
         # if (system("which tabix", ignore.stdout = TRUE) != 0) {
         #   # No tabix, recourse to read_bed2
         #   warning("Cannot find tabix in system")
@@ -620,7 +647,7 @@ read_bed <-
         #     ...
         #   ))
         # }
-        
+
         if (inherits(range, "GRanges")) {
           range_bed <- tempfile(fileext = ".bed")
           on.exit(unlink(range_bed), add = TRUE)
@@ -634,18 +661,20 @@ read_bed <-
         dt <- read_bed_cmd(cmd = cmd, ...)
       }
     }
-      
+
     dt %<>%
       post_process_table() %>%
       new_bedtorch_table(genome = genome)
-    
-    if (is_null(dt))
-      return(NULL)
 
-    if (use_gr)
+    if (is_null(dt)) {
+      return(NULL)
+    }
+
+    if (use_gr) {
       as.GenomicRanges(dt)
-    else
+    } else {
       dt
+    }
   }
 
 
@@ -653,14 +682,14 @@ read_bed <-
 read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
   bed_file <- tempfile(fileext = ".bed", tmpdir = tmpdir)
   on.exit(unlink(bed_file), add = TRUE)
-  
+
   assert_that(.Platform$OS.type == "unix")
-  
-  retcode <- system(paste0('(', cmd, ') > ', bed_file))
+
+  retcode <- system(paste0("(", cmd, ") > ", bed_file))
   if (retcode != 0) {
     stop("Failed in loading BED")
   }
-  
+
   read_bed_plain(file_path = bed_file, ...)
 }
 
@@ -677,24 +706,24 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 #            ...) {
 #     compression <- match.arg(compression)
 #     na_strings <- "."
-# 
+#
 #     if (!is_remote(file_path))
 #       file_path <- normalizePath(file_path, mustWork = TRUE)
 #     else
 #       stopifnot(RCurl::url.exists(file_path))
-# 
+#
 #     if (compression == "detect") {
 #       file_type <- if (is_remote(file_path))
 #         detect_remote_file_type(file_path)
 #       else
 #         detect_local_file_type(file_path)
-# 
+#
 #       if (file_type == "gzfile")
 #         compression <- "bgzip"
 #       else
 #         compression <- "other"
 #     }
-# 
+#
 #     if (is.null(range)) {
 #       # Load directly
 #       if (is_remote(file_path))
@@ -704,7 +733,7 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 #       dt <- post_process_table(dt)
 #     } else {
 #       stopifnot(length(range) == 1)
-# 
+#
 #       # Check whether the index exist
 #       if (is.null(tabix_index))
 #         tabix_index <- paste0(file_path, ".tbi")
@@ -712,7 +741,7 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 #         index_exists <- RCurl::url.exists(tabix_index)
 #       else
 #         index_exists <- file.exists(tabix_index)
-# 
+#
 #       if (compression == "bgzip" && index_exists) {
 #         dt <- read_tabix_bed(file_path,
 #                              range,
@@ -728,14 +757,14 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 #           dt <-
 #             fread(file_path, sep = sep, na.strings = na_strings, ...)
 #           post_process_table(dt)
-# 
+#
 #           dt <- filter_by_region(dt, range)
 #         }
 #       }
 #     }
-# 
+#
 #     dt <- new_bedtorch_table(dt, genome = genome)
-# 
+#
 #     if (use_gr)
 #       as.GenomicRanges(dt)
 #     else
@@ -761,13 +790,13 @@ read_bed_cmd <- function(cmd, tmpdir = tempdir(), ...) {
 #' bedtbl <- read_bed(system.file("extdata", "example_merge.bed", package = "bedtorch"))
 #'
 #' # Write data to uncompressed file
-#' write_bed(bedtbl,  tempfile(fileext = ".bed"))
+#' write_bed(bedtbl, tempfile(fileext = ".bed"))
 #'
 #' # Write data to file and create tabix index
 #' write_bed(bedtbl, tempfile(fileext = ".bed.gz"), tabix_index = TRUE)
 #'
 #' # Write data to uncompressed file, with header lines
-#' write_bed(bedtbl,  tempfile(fileext = ".bed"), comments = c("Author: X", "Date: N/A"))
+#' write_bed(bedtbl, tempfile(fileext = ".bed"), comments = c("Author: X", "Date: N/A"))
 #' @export
 write_bed <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, comments = NULL, ...) {
   UseMethod("write_bed")
@@ -803,17 +832,20 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     # Since we need to write the data table to disk as a temporary file, it's
     # important to operate by batches, i.e. in each batch, process rows no more
     # than batch_size
-    if (is.null(batch_size))
+    if (is.null(batch_size)) {
       batch_size <- nrow(x)
-    
+    }
+
     if (nrow(x) == 0) {
       batch_plan <- c(0, 0)
     } else {
       batch_plan <- seq(from = 1, to = nrow(x), by = batch_size)
-      if (tail(batch_plan, n = 1) != nrow(x))
+      if (tail(batch_plan, n = 1) != nrow(x)) {
         batch_plan <- c(batch_plan, nrow(x))
-      if (length(batch_plan) == 1)
+      }
+      if (length(batch_plan) == 1) {
         batch_plan <- c(batch_plan, nrow(x))
+      }
     }
 
     1:(length(batch_plan) - 1) %>%
@@ -828,14 +860,14 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
         } else {
           batch_data <- x[batch_plan[batch_idx]:batch_plan[batch_idx + 1]]
         }
-        
+
         # ... in write_bed will be passed to data.table::fwrite
         args <- list(x = batch_data, file = temp_txt)
         args <- c(args, list(...))
-        
+
         # User-specified append flag
         should_append <- isTRUE(args$append)
-        
+
         # Process comment lines
         should_comment <-
           (batch_idx == 1 && !is.null(comments) && !isTRUE(args$append))
@@ -847,22 +879,27 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
             writeLines(temp_txt)
           close(conn)
         }
-        
-        if (batch_idx > 1 || isTRUE(args$append))
+
+        if (batch_idx > 1 || isTRUE(args$append)) {
           args$col.names <- FALSE
-        else if (!"col.names" %in% names(args))
+        } else if (!"col.names" %in% names(args)) {
           args$col.names <- TRUE
-        
-        if (!isTRUE(args$append))
+        }
+
+        if (!isTRUE(args$append)) {
           args$append <- should_comment
-        
-        if (!"quote" %in% names(args))
+        }
+
+        if (!"quote" %in% names(args)) {
           args$quote <- FALSE
-        if (!"sep" %in% names(args))
+        }
+        if (!"sep" %in% names(args)) {
           args$sep <- "\t"
-        if (!"na" %in% names(args))
+        }
+        if (!"na" %in% names(args)) {
           args$na <- "."
-        
+        }
+
         rlang::exec(data.table::fwrite, !!!args)
         bgzip(
           temp_txt,
@@ -878,39 +915,46 @@ write_bed_core <- function(x, file_path, tabix_index = TRUE, batch_size = NULL, 
     # ... in write_bed will be passed to data.table::fwrite
     args <- list(x = x, file = file_path)
     args <- c(args, list(...))
-    
+
     # Process comment lines
     should_comment <- !is.null(comments) && !isTRUE(args$append)
 
     if (should_comment) {
-      if (identical(file_path, ""))
+      if (identical(file_path, "")) {
         conn <- stdout()
-      else
+      } else {
         conn <- file(file_path)
-      
+      }
+
       comments %>%
         map_chr(function(x) paste0("#", x)) %>%
         writeLines(conn)
-      
-      if (!identical(file_path, ""))
+
+      if (!identical(file_path, "")) {
         close(conn)
+      }
     }
-    
-    if (isTRUE(args$append))
+
+    if (isTRUE(args$append)) {
       args$col.names <- FALSE
-    else if (!"col.names" %in% names(args))
+    } else if (!"col.names" %in% names(args)) {
       args$col.names <- TRUE
-  
-    if (!isTRUE(args$append))
+    }
+
+    if (!isTRUE(args$append)) {
       args$append <- should_comment
-    
-    if (!"quote" %in% names(args))
+    }
+
+    if (!"quote" %in% names(args)) {
       args$quote <- FALSE
-    if (!"sep" %in% names(args))
+    }
+    if (!"sep" %in% names(args)) {
       args$sep <- "\t"
-    if (!"na" %in% names(args))
+    }
+    if (!"na" %in% names(args)) {
       args$na <- "."
-    
+    }
+
     rlang::exec(data.table::fwrite, !!!args)
   }
 }
